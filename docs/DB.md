@@ -100,7 +100,7 @@ PostgreSQL. Идентификаторы сущностей — `UUID`.
 | `preview_image_url` | `TEXT` | NOT NULL | Превью в каталоге дизайнов |
 | `theme_config` | `JSONB` | NOT NULL, default `{}` | Цвета, шрифты, анимации |
 | `is_active` | `BOOLEAN` | NOT NULL, default `true` | Показывать в выборе |
-| `sort_order` | `INTEGER` | NOT NULL, default `0` | Порядок в списке |
+| `sort_order` | `INTEGER` | NOT NULL, `> 0` | Порядок в списке |
 | `created_at` | `TIMESTAMPTZ` | NOT NULL | |
 | `updated_at` | `TIMESTAMPTZ` | NOT NULL | |
 
@@ -117,6 +117,7 @@ PostgreSQL. Идентификаторы сущностей — `UUID`.
 | `design_id` | `UUID` | NOT NULL, FK → `box_designs.id` | Выбранный дизайн |
 | `public_slug` | `VARCHAR(32)` | NOT NULL, UNIQUE | Публичный slug ссылки |
 | `title` | `VARCHAR(256)` | NOT NULL | Заголовок для получателя |
+| `recipient_name` | `VARCHAR(128)` | NOT NULL | Имя получателя |
 | `message` | `TEXT` | NULL | Текст внутри открытого бокса |
 | `preview_title` | `VARCHAR(256)` | NULL | Текст на экране до активации |
 | `preview_image_url` | `TEXT` | NULL | Изображение превью до активации |
@@ -177,7 +178,7 @@ PostgreSQL. Идентификаторы сущностей — `UUID`.
 | `box_id` | `UUID` | NOT NULL, FK → `boxes.id` ON DELETE CASCADE | |
 | `media_file_id` | `UUID` | NOT NULL, FK → `media_files.id` | |
 | `item_type` | `VARCHAR(16)` | NOT NULL | `image`, `gif`, `video`, `voice` |
-| `sort_order` | `INTEGER` | NOT NULL | Порядок в боксе (0, 1, 2, …) |
+| `sort_order` | `INTEGER` | NOT NULL, `> 0` | Порядок в боксе (1, 2, 3, …) |
 | `caption` | `TEXT` | NULL | Подпись к элементу |
 | `metadata` | `JSONB` | NOT NULL, default `{}` | Poster для видео, waveform и т.п. |
 | `created_at` | `TIMESTAMPTZ` | NOT NULL | |

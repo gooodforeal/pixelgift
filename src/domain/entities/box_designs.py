@@ -1,0 +1,23 @@
+from dataclasses import dataclass, field
+from typing import Any
+
+from src.domain.entities.base import BaseEntity
+from src.domain.values.box_design_description import BoxDesignDescription
+from src.domain.values.box_design_name import BoxDesignName
+from src.domain.values.sort_order import SortOrder
+from src.domain.values.url import Url
+
+
+def _default_sort_order() -> SortOrder:
+    return SortOrder(1)
+
+
+@dataclass(frozen=False, kw_only=True)
+class BoxDesign(BaseEntity):
+    code: str
+    name: BoxDesignName
+    preview_image_url: Url
+    description: BoxDesignDescription | None = None
+    theme_config: dict[str, Any] = field(default_factory=dict)
+    is_active: bool = True
+    sort_order: SortOrder = field(default_factory=_default_sort_order)

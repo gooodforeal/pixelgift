@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 
+from src.domain.exceptions.users import (
+    TelegramIdNonPositiveError,
+    TelegramIdNotNumericError,
+    TelegramIdTooLongError,
+)
 from src.domain.values.base import BaseValueObject
-from src.domain.exceptions.users import TelegramIdInvalidError
 
 
 @dataclass(frozen=True)
@@ -12,14 +16,12 @@ class TelegramId(BaseValueObject[str]):
 
     def validate(self, value: str) -> None:
         try:
-            int(value)
-        except Exception:
-            raise TelegramIdInvalidError(value)
+            numeric = int(value)
+        except (TypeError, ValueError):
+            raise TelegramIdNotNumericError(value)
 
-        if int(value) <= 0:
-            raise TelegramIdInvalidError(value)
+        if numeric <= 0:
+            raise TelegramIdNonPositiveError(value)
 
         if len(value) > 20:
-            raise TelegramIdInvalidError(value)
-
-        
+            raise TelegramIdTooLongError(value)

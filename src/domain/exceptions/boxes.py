@@ -1,4 +1,5 @@
 from datetime import datetime
+import uuid
 
 from src.domain.exceptions.base import BaseException
 
@@ -115,3 +116,64 @@ class BoxActivatesAtNotInFutureError(BoxActivatesAtError):
     def __init__(self, activates_at: datetime) -> None:
         self.activates_at = activates_at
         super().__init__("Box activation time must be in the future")
+
+
+class BoxItemAggregateError(BaseException):
+    """Базовая ошибка инвариантов элементов внутри агрегата Box."""
+
+
+class BoxItemDuplicateSortOrderError(BoxItemAggregateError):
+    def __init__(self, sort_order: int) -> None:
+        self.sort_order = sort_order
+        super().__init__(f"Box already has an item with sort_order={sort_order}")
+
+
+class BoxItemNotFoundError(BoxItemAggregateError):
+    def __init__(self, item_id: uuid.UUID) -> None:
+        self.item_id = item_id
+        super().__init__(f"Box item not found: {item_id}")
+
+
+class BoxItemReorderError(BoxItemAggregateError):
+    def __init__(self) -> None:
+        super().__init__(
+            "Reorder must include each existing item id exactly once"
+        )
+
+
+class BoxNotFoundError(BaseException):
+    def __init__(self, box_id: uuid.UUID) -> None:
+        self.box_id = box_id
+        super().__init__(f"Box not found: {box_id}")
+
+
+class BoxNotFoundBySlugError(BaseException):
+    def __init__(self, public_slug: str) -> None:
+        self.public_slug = public_slug
+        super().__init__(f"Box not found for slug: {public_slug!r}")
+
+
+class BoxAccessDeniedError(BaseException):
+    def __init__(self, box_id: uuid.UUID, actor_id: uuid.UUID) -> None:
+        self.box_id = box_id
+        self.actor_id = actor_id
+        super().__init__(f"Actor {actor_id} cannot modify box {box_id}")
+
+
+class BoxNotEditableError(BaseException):
+    def __init__(self, box_id: uuid.UUID, status: str) -> None:
+        self.box_id = box_id
+        self.status = status
+        super().__init__(f"Box {box_id} with status {status!r} cannot be edited")
+
+
+class PublicSlugAlreadyTakenError(PublicSlugError):
+    def __init__(self, slug: str) -> None:
+        self.slug = slug
+        super().__init__(f"Public slug already taken: {slug!r}")
+
+
+class BoxDesignNotAvailableError(BaseException):
+    def __init__(self, design_id: uuid.UUID) -> None:
+        self.design_id = design_id
+        super().__init__(f"Box design is not available: {design_id}")

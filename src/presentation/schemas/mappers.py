@@ -1,0 +1,78 @@
+from src.domain.aggregates.boxes import Box
+from src.domain.entities.box_items import BoxItem
+from src.domain.entities.media_files import MediaFile
+from src.presentation.schemas.boxes import (
+    BoxItemResponse,
+    BoxResponse,
+    MediaFileResponse,
+    PublicBoxResponse,
+)
+
+
+def box_item_to_response(item: BoxItem) -> BoxItemResponse:
+    return BoxItemResponse(
+        id=item.id,
+        media_file_id=item.media_file_id,
+        item_type=item.item_type.value,
+        sort_order=item.sort_order.value,
+        caption=item.caption.value if item.caption is not None else None,
+        metadata=dict(item.metadata),
+    )
+
+
+def box_to_response(box: Box) -> BoxResponse:
+    return BoxResponse(
+        id=box.id,
+        owner_id=box.owner_id,
+        design_id=box.design_id,
+        public_slug=box.public_slug.value,
+        title=box.title.value,
+        recipient_name=box.recipient_name.value,
+        activates_at=box.activates_at.value,
+        status=box.status.value,
+        timezone=box.timezone,
+        message=box.message.value if box.message is not None else None,
+        preview_title=box.preview_title.value if box.preview_title is not None else None,
+        preview_image_url=(
+            box.preview_image_url.value if box.preview_image_url is not None else None
+        ),
+        published_at=box.published_at,
+        first_opened_at=box.first_opened_at,
+        items=[box_item_to_response(item) for item in box.items],
+    )
+
+
+def public_box_to_response(box: Box, *, content_unlocked: bool) -> PublicBoxResponse:
+    return PublicBoxResponse(
+        public_slug=box.public_slug.value,
+        title=box.title.value,
+        recipient_name=box.recipient_name.value,
+        activates_at=box.activates_at.value,
+        status=box.status.value,
+        timezone=box.timezone,
+        preview_title=box.preview_title.value if box.preview_title is not None else None,
+        preview_image_url=(
+            box.preview_image_url.value if box.preview_image_url is not None else None
+        ),
+        content_unlocked=content_unlocked,
+        message=(
+            box.message.value
+            if content_unlocked and box.message is not None
+            else None
+        ),
+        items=(
+            [box_item_to_response(item) for item in box.items] if content_unlocked else []
+        ),
+    )
+
+
+def media_to_response(media: MediaFile) -> MediaFileResponse:
+    return MediaFileResponse(
+        id=media.id,
+        owner_id=media.owner_id,
+        storage_key=media.storage_key,
+        mime_type=media.mime_type,
+        media_kind=media.media_kind.value,
+        size_bytes=media.size_bytes,
+        original_filename=media.original_filename,
+    )

@@ -5,6 +5,7 @@ from abc import ABC
 
 T = TypeVar("T")
 
+
 @dataclass(frozen=True)
 class BaseValueObject(Generic[T], ABC):
     value: T

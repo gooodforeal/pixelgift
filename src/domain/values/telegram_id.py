@@ -10,7 +10,6 @@ from src.domain.values.base import BaseValueObject
 
 @dataclass(frozen=True)
 class TelegramId(BaseValueObject[str]):
-
     def __post_init__(self):
         self.validate(self.value)
 

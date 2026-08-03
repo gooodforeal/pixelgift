@@ -1,32 +1,44 @@
 import uuid
+from datetime import datetime, timezone
 
 import pytest
 
 from src.application.dto.boxes import (
     AddBoxItemCommand,
+    ArchiveBoxCommand,
     CreateBoxCommand,
+    PublishBoxCommand,
     RemoveBoxItemCommand,
     ReorderBoxItemsCommand,
+    UnarchiveBoxCommand,
     UpdateBoxCommand,
     UpdateBoxItemCommand,
 )
 from src.application.use_cases.boxes import (
     AddBoxItemUseCase,
+    ArchiveBoxUseCase,
     CreateBoxUseCase,
+    PublishBoxUseCase,
     RemoveBoxItemUseCase,
     ReorderBoxItemsUseCase,
+    UnarchiveBoxUseCase,
     UpdateBoxItemUseCase,
     UpdateBoxUseCase,
 )
-from src.domain.aggregates.boxes import Box, BoxStatus
+from src.domain.aggregates.boxes import MAX_BOX_ITEMS, Box, BoxStatus
 from src.domain.entities.box_designs import BoxDesign
 from src.domain.entities.box_items import BoxItemType
 from src.domain.entities.media_files import MediaFile, MediaKind
 from src.domain.exceptions.boxes import (
     BoxAccessDeniedError,
+    BoxAlreadyArchivedError,
+    BoxAlreadyOpenedError,
     BoxDesignNotAvailableError,
     BoxNotEditableError,
+    BoxItemsLimitExceededError,
     BoxNotFoundError,
+    BoxNotPublishableError,
+    BoxWithoutItemsError,
     PublicSlugAlreadyTakenError,
 )
 from src.domain.exceptions.media_files import (
@@ -423,6 +435,62 @@ class TestAddBoxItemUseCase:
         assert updated.items[0].caption.value == "Trip"
         assert uow.committed is True
 
+    async def test_adds_text_item_without_media(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+
+        updated = await AddBoxItemUseCase(uow).execute(
+            AddBoxItemCommand(
+                box_id=box.id,
+                actor_id=user_id,
+                item_type="text",
+                caption=BoxItemCaption("Просто текст"),
+            )
+        )
+
+        assert len(updated.items) == 1
+        assert updated.items[0].media_file_id is None
+        assert updated.items[0].item_type == BoxItemType.TEXT
+        assert updated.items[0].caption is not None
+        assert updated.items[0].caption.value == "Просто текст"
+        assert uow.committed is True
+
+    async def test_rejects_item_over_limit(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+
+        for _ in range(MAX_BOX_ITEMS):
+            await AddBoxItemUseCase(uow).execute(
+                AddBoxItemCommand(
+                    box_id=box.id,
+                    actor_id=user_id,
+                    item_type="text",
+                    caption=BoxItemCaption("Карточка"),
+                )
+            )
+
+        with pytest.raises(BoxItemsLimitExceededError):
+            await AddBoxItemUseCase(uow).execute(
+                AddBoxItemCommand(
+                    box_id=box.id,
+                    actor_id=user_id,
+                    item_type="text",
+                    caption=BoxItemCaption("Лишняя"),
+                )
+            )
+
     async def test_rejects_missing_media(
         self,
         activates_at: ActivatesAt,
@@ -528,3 +596,172 @@ class TestUpdateRemoveReorderBoxItemsUseCases:
         )
         assert [item.id for item in box.items] == [third.id, second.id]
         assert [item.sort_order.value for item in box.items] == [1, 2]
+
+
+class TestPublishAndArchiveBoxUseCases:
+    async def test_publishes_draft_with_items(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+        media = _media_file(owner_id=user_id)
+        await uow.media_files.add(media)
+        await AddBoxItemUseCase(uow).execute(
+            AddBoxItemCommand(
+                box_id=box.id, actor_id=user_id, media_file_id=media.id
+            )
+        )
+
+        published = await PublishBoxUseCase(uow).execute(
+            PublishBoxCommand(box_id=box.id, actor_id=user_id)
+        )
+
+        assert published.status == BoxStatus.SCHEDULED
+        assert published.published_at is not None
+        assert uow.committed is True
+
+    async def test_rejects_publishing_empty_box(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+
+        with pytest.raises(BoxWithoutItemsError):
+            await PublishBoxUseCase(uow).execute(
+                PublishBoxCommand(box_id=box.id, actor_id=user_id)
+            )
+
+    async def test_rejects_publishing_twice(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+        media = _media_file(owner_id=user_id)
+        await uow.media_files.add(media)
+        await AddBoxItemUseCase(uow).execute(
+            AddBoxItemCommand(
+                box_id=box.id, actor_id=user_id, media_file_id=media.id
+            )
+        )
+        await PublishBoxUseCase(uow).execute(
+            PublishBoxCommand(box_id=box.id, actor_id=user_id)
+        )
+
+        with pytest.raises(BoxNotPublishableError):
+            await PublishBoxUseCase(uow).execute(
+                PublishBoxCommand(box_id=box.id, actor_id=user_id)
+            )
+
+    async def test_rejects_foreign_owner(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+
+        with pytest.raises(BoxAccessDeniedError):
+            await PublishBoxUseCase(uow).execute(
+                PublishBoxCommand(box_id=box.id, actor_id=uuid.uuid4())
+            )
+
+    async def test_archives_box_once(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+
+        archived = await ArchiveBoxUseCase(uow).execute(
+            ArchiveBoxCommand(box_id=box.id, actor_id=user_id)
+        )
+        assert archived.status == BoxStatus.ARCHIVED
+
+        with pytest.raises(BoxAlreadyArchivedError):
+            await ArchiveBoxUseCase(uow).execute(
+                ArchiveBoxCommand(box_id=box.id, actor_id=user_id)
+            )
+
+    async def test_unarchives_unpublished_to_draft(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+        await ArchiveBoxUseCase(uow).execute(
+            ArchiveBoxCommand(box_id=box.id, actor_id=user_id)
+        )
+
+        restored = await UnarchiveBoxUseCase(uow).execute(
+            UnarchiveBoxCommand(box_id=box.id, actor_id=user_id)
+        )
+
+        assert restored.status == BoxStatus.DRAFT
+
+    async def test_unarchives_published_to_scheduled(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+        media = _media_file(owner_id=user_id)
+        await uow.media_files.add(media)
+        await AddBoxItemUseCase(uow).execute(
+            AddBoxItemCommand(
+                box_id=box.id, actor_id=user_id, media_file_id=media.id
+            )
+        )
+        await PublishBoxUseCase(uow).execute(
+            PublishBoxCommand(box_id=box.id, actor_id=user_id)
+        )
+        await ArchiveBoxUseCase(uow).execute(
+            ArchiveBoxCommand(box_id=box.id, actor_id=user_id)
+        )
+
+        restored = await UnarchiveBoxUseCase(uow).execute(
+            UnarchiveBoxCommand(box_id=box.id, actor_id=user_id)
+        )
+
+        assert restored.status == BoxStatus.SCHEDULED
+        assert restored.published_at is not None
+
+    async def test_rejects_unarchive_after_open(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+        box.first_opened_at = datetime(2026, 6, 2, tzinfo=timezone.utc)
+        box.status = BoxStatus.ARCHIVED
+        await uow.boxes.update(box)
+
+        with pytest.raises(BoxAlreadyOpenedError):
+            await UnarchiveBoxUseCase(uow).execute(
+                UnarchiveBoxCommand(box_id=box.id, actor_id=user_id)
+            )

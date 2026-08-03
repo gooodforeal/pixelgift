@@ -13,7 +13,7 @@ class TestBoxItemCaption:
         assert BoxItemCaption("Hello").value == "Hello"
 
     def test_max_length(self):
-        value = "a" * 10_000
+        value = "a" * 300
         assert BoxItemCaption(value).value == value
 
     def test_empty(self):
@@ -22,7 +22,7 @@ class TestBoxItemCaption:
 
     def test_too_long(self):
         with pytest.raises(BoxItemCaptionTooLongError):
-            BoxItemCaption("a" * 10_001)
+            BoxItemCaption("a" * 301)
 
     def test_padded(self):
         with pytest.raises(BoxItemCaptionSurroundingWhitespaceError):

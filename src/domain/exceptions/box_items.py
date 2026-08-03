@@ -21,3 +21,8 @@ class BoxItemCaptionTooLongError(BoxItemCaptionError):
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box item caption is too long")
+
+
+class BoxItemInvalidError(BaseException):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)

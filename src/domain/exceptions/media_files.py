@@ -15,3 +15,13 @@ class MediaFileAccessDeniedError(BaseException):
         super().__init__(
             f"Actor {actor_id} cannot use media file {media_file_id}"
         )
+
+
+class UnsupportedMediaTypeError(BaseException):
+    def __init__(self, content_type: str, filename: str | None = None) -> None:
+        self.content_type = content_type
+        self.filename = filename
+        detail = f"Unsupported media type: {content_type!r}"
+        if filename:
+            detail = f"{detail} (file={filename!r})"
+        super().__init__(detail)

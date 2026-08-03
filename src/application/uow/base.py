@@ -4,6 +4,7 @@ from typing import Self
 
 from src.domain.repository.boxes import BaseBoxesRepository
 from src.domain.repository.box_designs import BaseBoxDesignsRepository
+from src.domain.repository.design_assets import BaseDesignAssetsRepository
 from src.domain.repository.media_files import BaseMediaFilesRepository
 from src.domain.repository.telegram_login_challenges import (
     BaseTelegramLoginChallengesRepository,
@@ -16,6 +17,7 @@ class BaseUnitOfWork(ABC):
     users: BaseUsersRepository
     boxes: BaseBoxesRepository
     box_designs: BaseBoxDesignsRepository
+    design_assets: BaseDesignAssetsRepository
     media_files: BaseMediaFilesRepository
     telegram_login_challenges: BaseTelegramLoginChallengesRepository
     user_sessions: BaseUserSessionsRepository

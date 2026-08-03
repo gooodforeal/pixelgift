@@ -13,12 +13,19 @@ class BoxItemType(StrEnum):
     GIF = "gif"
     VIDEO = "video"
     VOICE = "voice"
+    TEXT = "text"
+    TOY = "toy"
+
+
+TOY_CODES: frozenset[str] = frozenset(
+    {"bear", "bunny", "fox", "kitty", "penguin", "dino"}
+)
 
 
 @dataclass(frozen=False, kw_only=True)
 class BoxItem(BaseEntity):
     box_id: uuid.UUID
-    media_file_id: uuid.UUID
+    media_file_id: uuid.UUID | None
     item_type: BoxItemType
     sort_order: SortOrder
     caption: BoxItemCaption | None = None

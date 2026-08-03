@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.application.uow.base import BaseUnitOfWork
 from src.domain.repository.boxes import BaseBoxesRepository
 from src.domain.repository.box_designs import BaseBoxDesignsRepository
+from src.domain.repository.design_assets import BaseDesignAssetsRepository
 from src.domain.repository.media_files import BaseMediaFilesRepository
 from src.domain.repository.telegram_login_challenges import (
     BaseTelegramLoginChallengesRepository,
@@ -59,6 +60,7 @@ class TestSqlAlchemyUnitOfWorkWiring:
             assert isinstance(uow.users, BaseUsersRepository)
             assert isinstance(uow.boxes, BaseBoxesRepository)
             assert isinstance(uow.box_designs, BaseBoxDesignsRepository)
+            assert isinstance(uow.design_assets, BaseDesignAssetsRepository)
             assert isinstance(uow.media_files, BaseMediaFilesRepository)
             assert isinstance(
                 uow.telegram_login_challenges, BaseTelegramLoginChallengesRepository

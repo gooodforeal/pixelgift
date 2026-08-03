@@ -7,7 +7,7 @@ from src.domain.exceptions.box_items import (
 )
 from src.domain.values.base import BaseValueObject
 
-MAX_LENGTH = 10_000
+MAX_LENGTH = 300
 
 
 @dataclass(frozen=True)

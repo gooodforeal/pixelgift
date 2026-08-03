@@ -45,7 +45,8 @@ class UpdateBoxCommand:
 class AddBoxItemCommand:
     box_id: uuid.UUID
     actor_id: uuid.UUID
-    media_file_id: uuid.UUID
+    media_file_id: uuid.UUID | None = None
+    item_type: str | None = None
     caption: BoxItemCaption | None = None
     sort_order: SortOrder | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -72,3 +73,21 @@ class ReorderBoxItemsCommand:
     box_id: uuid.UUID
     actor_id: uuid.UUID
     item_ids: tuple[uuid.UUID, ...]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PublishBoxCommand:
+    box_id: uuid.UUID
+    actor_id: uuid.UUID
+
+
+@dataclass(frozen=True, kw_only=True)
+class ArchiveBoxCommand:
+    box_id: uuid.UUID
+    actor_id: uuid.UUID
+
+
+@dataclass(frozen=True, kw_only=True)
+class UnarchiveBoxCommand:
+    box_id: uuid.UUID
+    actor_id: uuid.UUID

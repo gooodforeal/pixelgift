@@ -3,9 +3,12 @@ import uuid
 
 from src.application.dto.boxes import (
     AddBoxItemCommand,
+    ArchiveBoxCommand,
     CreateBoxCommand,
+    PublishBoxCommand,
     RemoveBoxItemCommand,
     ReorderBoxItemsCommand,
+    UnarchiveBoxCommand,
     UpdateBoxCommand,
     UpdateBoxItemCommand,
 )
@@ -13,6 +16,7 @@ from src.application.uow.base import BaseUnitOfWork
 from src.domain.aggregates.boxes import Box, BoxStatus
 from src.domain.entities.box_items import BoxItemType
 from src.domain.entities.media_files import MediaKind
+from src.domain.exceptions.box_items import BoxItemInvalidError
 from src.domain.exceptions.boxes import (
     BoxAccessDeniedError,
     BoxDesignNotAvailableError,
@@ -26,12 +30,12 @@ from src.domain.exceptions.media_files import (
 )
 from src.domain.values.public_slug import PublicSlug
 
+
 _EDITABLE_STATUSES = frozenset({BoxStatus.DRAFT, BoxStatus.SCHEDULED})
 _SLUG_GENERATE_ATTEMPTS = 5
 
 
 def generate_public_slug() -> PublicSlug:
-    # token_hex(8) -> 16 lowercase hex chars; always matches PublicSlug rules.
     return PublicSlug(secrets.token_hex(8))
 
 
@@ -39,7 +43,7 @@ def _item_type_from_media_kind(media_kind: MediaKind) -> BoxItemType:
     return BoxItemType(media_kind.value)
 
 
-async def _get_editable_box(
+async def _get_own_box(
     uow: BaseUnitOfWork,
     *,
     box_id: uuid.UUID,
@@ -51,6 +55,17 @@ async def _get_editable_box(
 
     if box.owner_id != actor_id:
         raise BoxAccessDeniedError(box_id, actor_id)
+
+    return box
+
+
+async def _get_editable_box(
+    uow: BaseUnitOfWork,
+    *,
+    box_id: uuid.UUID,
+    actor_id: uuid.UUID,
+) -> Box:
+    box = await _get_own_box(uow, box_id=box_id, actor_id=actor_id)
 
     if box.status not in _EDITABLE_STATUSES:
         raise BoxNotEditableError(box_id, box.status)
@@ -150,21 +165,52 @@ class AddBoxItemUseCase:
             box = await _get_editable_box(
                 uow, box_id=command.box_id, actor_id=command.actor_id
             )
-            media_file = await uow.media_files.get_by_id(command.media_file_id)
-            if media_file is None:
-                raise MediaFileNotFoundError(command.media_file_id)
-            if media_file.owner_id != command.actor_id:
-                raise MediaFileAccessDeniedError(
-                    command.media_file_id, command.actor_id
+
+            if command.item_type == BoxItemType.TEXT.value:
+                if command.media_file_id is not None:
+                    raise BoxItemInvalidError(
+                        "Text item must not reference a media file"
+                    )
+                if command.caption is None:
+                    raise BoxItemInvalidError("Text item requires non-empty text")
+                box.add_item(
+                    media_file_id=None,
+                    item_type=BoxItemType.TEXT,
+                    sort_order=command.sort_order,
+                    caption=command.caption,
+                    metadata=command.metadata,
+                )
+            elif command.item_type == BoxItemType.TOY.value:
+                if command.media_file_id is not None:
+                    raise BoxItemInvalidError(
+                        "Toy item must not reference a media file"
+                    )
+                box.add_item(
+                    media_file_id=None,
+                    item_type=BoxItemType.TOY,
+                    sort_order=command.sort_order,
+                    caption=command.caption,
+                    metadata=command.metadata,
+                )
+            else:
+                if command.media_file_id is None:
+                    raise BoxItemInvalidError("Media item requires a media file")
+                media_file = await uow.media_files.get_by_id(command.media_file_id)
+                if media_file is None:
+                    raise MediaFileNotFoundError(command.media_file_id)
+                if media_file.owner_id != command.actor_id:
+                    raise MediaFileAccessDeniedError(
+                        command.media_file_id, command.actor_id
+                    )
+
+                box.add_item(
+                    media_file_id=media_file.id,
+                    item_type=_item_type_from_media_kind(media_file.media_kind),
+                    sort_order=command.sort_order,
+                    caption=command.caption,
+                    metadata=command.metadata,
                 )
 
-            box.add_item(
-                media_file_id=media_file.id,
-                item_type=_item_type_from_media_kind(media_file.media_kind),
-                sort_order=command.sort_order,
-                caption=command.caption,
-                metadata=command.metadata,
-            )
             updated = await uow.boxes.update(box)
             await uow.commit()
             return updated
@@ -214,6 +260,51 @@ class ReorderBoxItemsUseCase:
                 uow, box_id=command.box_id, actor_id=command.actor_id
             )
             box.reorder_items(command.item_ids)
+            updated = await uow.boxes.update(box)
+            await uow.commit()
+            return updated
+
+
+class PublishBoxUseCase:
+    def __init__(self, uow: BaseUnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(self, command: PublishBoxCommand) -> Box:
+        async with self._uow as uow:
+            box = await _get_own_box(
+                uow, box_id=command.box_id, actor_id=command.actor_id
+            )
+            box.publish()
+            updated = await uow.boxes.update(box)
+            await uow.commit()
+            return updated
+
+
+class ArchiveBoxUseCase:
+    def __init__(self, uow: BaseUnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(self, command: ArchiveBoxCommand) -> Box:
+        async with self._uow as uow:
+            box = await _get_own_box(
+                uow, box_id=command.box_id, actor_id=command.actor_id
+            )
+            box.archive()
+            updated = await uow.boxes.update(box)
+            await uow.commit()
+            return updated
+
+
+class UnarchiveBoxUseCase:
+    def __init__(self, uow: BaseUnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(self, command: UnarchiveBoxCommand) -> Box:
+        async with self._uow as uow:
+            box = await _get_own_box(
+                uow, box_id=command.box_id, actor_id=command.actor_id
+            )
+            box.unarchive()
             updated = await uow.boxes.update(box)
             await uow.commit()
             return updated

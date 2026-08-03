@@ -1,13 +1,13 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal, Self
 import uuid
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class BoxItemResponse(BaseModel):
     id: uuid.UUID
-    media_file_id: uuid.UUID
+    media_file_id: uuid.UUID | None = None
     item_type: str
     sort_order: int
     caption: str | None = None
@@ -34,36 +34,54 @@ class BoxResponse(BaseModel):
 
 class CreateBoxRequest(BaseModel):
     design_id: uuid.UUID
-    title: str
-    recipient_name: str
+    title: str = Field(max_length=30)
+    recipient_name: str = Field(max_length=30)
     activates_at: datetime
     timezone: str = "UTC"
     public_slug: str | None = None
-    message: str | None = None
-    preview_title: str | None = None
+    message: str | None = Field(default=None, max_length=300)
+    preview_title: str | None = Field(default=None, max_length=30)
     preview_image_url: str | None = None
 
 
 class UpdateBoxRequest(BaseModel):
     design_id: uuid.UUID
-    title: str
-    recipient_name: str
+    title: str = Field(max_length=30)
+    recipient_name: str = Field(max_length=30)
     activates_at: datetime
     timezone: str = "UTC"
-    message: str | None = None
-    preview_title: str | None = None
+    message: str | None = Field(default=None, max_length=300)
+    preview_title: str | None = Field(default=None, max_length=30)
     preview_image_url: str | None = None
 
 
 class AddBoxItemRequest(BaseModel):
-    media_file_id: uuid.UUID
-    caption: str | None = None
+    media_file_id: uuid.UUID | None = None
+    item_type: Literal["text", "toy"] | None = None
+    caption: str | None = Field(default=None, max_length=300)
     sort_order: int | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
+    @model_validator(mode="after")
+    def validate_item_mode(self) -> Self:
+        if self.item_type == "text":
+            if self.media_file_id is not None:
+                raise ValueError("Text item must not include media_file_id")
+            if not self.caption or not self.caption.strip():
+                raise ValueError("Text item requires non-empty caption")
+        elif self.item_type == "toy":
+            if self.media_file_id is not None:
+                raise ValueError("Toy item must not include media_file_id")
+            toy_code = self.metadata.get("toy_code")
+            if not isinstance(toy_code, str) or not toy_code.strip():
+                raise ValueError("Toy item requires metadata.toy_code")
+        elif self.media_file_id is None:
+            raise ValueError("media_file_id is required for media items")
+        return self
+
 
 class UpdateBoxItemRequest(BaseModel):
-    caption: str | None = None
+    caption: str | None = Field(default=None, max_length=300)
     metadata: dict[str, Any] | None = None
 
 
@@ -92,4 +110,6 @@ class PublicBoxResponse(BaseModel):
     preview_image_url: str | None = None
     content_unlocked: bool
     message: str | None = None
+    design_code: str | None = None
+    theme_config: dict[str, Any] = Field(default_factory=dict)
     items: list[BoxItemResponse] = Field(default_factory=list)

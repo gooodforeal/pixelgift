@@ -6,15 +6,19 @@ from typing import Optional
 from src.application.uow.base import BaseUnitOfWork
 from src.domain.aggregates.boxes import Box
 from src.domain.entities.box_designs import BoxDesign
+from src.domain.entities.design_assets import DesignAsset
 from src.domain.entities.media_files import MediaFile
 from src.domain.entities.telegram_login_challenges import TelegramLoginChallenge
+from src.domain.entities.user_sessions import UserSession
 from src.domain.entities.users import User
 from src.domain.repository.box_designs import BaseBoxDesignsRepository
 from src.domain.repository.boxes import BaseBoxesRepository
+from src.domain.repository.design_assets import BaseDesignAssetsRepository
 from src.domain.repository.media_files import BaseMediaFilesRepository
 from src.domain.repository.telegram_login_challenges import (
     BaseTelegramLoginChallengesRepository,
 )
+from src.domain.repository.user_sessions import BaseUserSessionsRepository
 from src.domain.repository.users import BaseUsersRepository
 from src.domain.values.public_slug import PublicSlug
 
@@ -68,6 +72,34 @@ class InMemoryBoxDesignsRepository(BaseBoxDesignsRepository):
             if design.code == code:
                 return design
         return None
+
+    async def list_active(self) -> list[BoxDesign]:
+        designs = [design for design in self.items.values() if design.is_active]
+        return sorted(designs, key=lambda design: (design.sort_order.value, design.name.value))
+
+    async def list_all(self) -> list[BoxDesign]:
+        return sorted(
+            self.items.values(),
+            key=lambda design: (design.sort_order.value, design.name.value),
+        )
+
+
+class InMemoryDesignAssetsRepository(BaseDesignAssetsRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, DesignAsset] = {}
+
+    async def add(self, entity: DesignAsset) -> None:
+        self.items[entity.id] = entity
+
+    async def get_by_id(self, id_: uuid.UUID) -> Optional[DesignAsset]:
+        return self.items.get(id_)
+
+    async def update(self, entity: DesignAsset) -> DesignAsset:
+        self.items[entity.id] = entity
+        return entity
+
+    async def delete(self, id_: uuid.UUID) -> None:
+        self.items.pop(id_, None)
 
 
 class InMemoryMediaFilesRepository(BaseMediaFilesRepository):
@@ -136,35 +168,56 @@ class InMemoryTelegramLoginChallengesRepository(
     async def delete(self, id_: uuid.UUID) -> None:
         self.items.pop(id_, None)
 
-    async def get_by_code(self, code: str) -> Optional[TelegramLoginChallenge]:
+    async def get_by_code(
+        self, code: str, *, for_update: bool = False
+    ) -> Optional[TelegramLoginChallenge]:
+        del for_update  # in-memory store has no row locks
         for challenge in self.items.values():
             if challenge.code == code:
                 return challenge
         return None
 
 
-class _UnsupportedRepository:
-    async def add(self, entity) -> None:
-        raise NotImplementedError
+class InMemoryUserSessionsRepository(BaseUserSessionsRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, UserSession] = {}
 
-    async def get_by_id(self, id_: uuid.UUID):
-        raise NotImplementedError
+    async def add(self, entity: UserSession) -> None:
+        self.items[entity.id] = entity
 
-    async def update(self, entity):
-        raise NotImplementedError
+    async def get_by_id(self, id_: uuid.UUID) -> Optional[UserSession]:
+        return self.items.get(id_)
+
+    async def update(self, entity: UserSession) -> UserSession:
+        self.items[entity.id] = entity
+        return entity
 
     async def delete(self, id_: uuid.UUID) -> None:
-        raise NotImplementedError
+        self.items.pop(id_, None)
+
+    async def get_by_refresh_token_hash(
+        self, refresh_token_hash: str
+    ) -> UserSession | None:
+        for session in self.items.values():
+            if session.refresh_token_hash == refresh_token_hash:
+                return session
+        return None
+
+    async def list_by_user_id(self, user_id: uuid.UUID) -> list[UserSession]:
+        return [
+            session for session in self.items.values() if session.user_id == user_id
+        ]
 
 
 class InMemoryUnitOfWork(BaseUnitOfWork):
     def __init__(self) -> None:
         self.boxes = InMemoryBoxesRepository()
         self.box_designs = InMemoryBoxDesignsRepository()
+        self.design_assets = InMemoryDesignAssetsRepository()
         self.media_files = InMemoryMediaFilesRepository()
         self.users = InMemoryUsersRepository()
         self.telegram_login_challenges = InMemoryTelegramLoginChallengesRepository()
-        self.user_sessions = _UnsupportedRepository()  # type: ignore[assignment]
+        self.user_sessions = InMemoryUserSessionsRepository()
         self.committed = False
         self.rolled_back = False
 

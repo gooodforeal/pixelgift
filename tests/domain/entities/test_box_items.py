@@ -38,14 +38,16 @@ class TestBoxItem:
         assert item.caption.value == "Our trip"
         assert item.metadata == {"poster": "key"}
 
-    def test_base_entity_fields(self):
+    def test_create_text_item(self):
         item = BoxItem(
             box_id=uuid.uuid4(),
-            media_file_id=uuid.uuid4(),
-            item_type=BoxItemType.GIF,
+            media_file_id=None,
+            item_type=BoxItemType.TEXT,
             sort_order=SortOrder(1),
+            caption=BoxItemCaption("Просто текст"),
         )
 
-        assert item.id is not None
-        assert item.created_at.tzinfo is not None
-        assert item.updated_at.tzinfo is not None
+        assert item.media_file_id is None
+        assert item.item_type == BoxItemType.TEXT
+        assert item.caption is not None
+        assert item.caption.value == "Просто текст"

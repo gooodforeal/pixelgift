@@ -1,4 +1,5 @@
 from src.domain.aggregates.boxes import Box
+from src.domain.entities.box_designs import BoxDesign
 from src.domain.entities.box_items import BoxItem
 from src.domain.entities.media_files import MediaFile
 from src.presentation.schemas.boxes import (
@@ -7,6 +8,7 @@ from src.presentation.schemas.boxes import (
     MediaFileResponse,
     PublicBoxResponse,
 )
+from src.presentation.schemas.designs import AdminBoxDesignResponse, BoxDesignResponse
 
 
 def box_item_to_response(item: BoxItem) -> BoxItemResponse:
@@ -42,7 +44,12 @@ def box_to_response(box: Box) -> BoxResponse:
     )
 
 
-def public_box_to_response(box: Box, *, content_unlocked: bool) -> PublicBoxResponse:
+def public_box_to_response(
+    box: Box,
+    *,
+    content_unlocked: bool,
+    design: BoxDesign | None = None,
+) -> PublicBoxResponse:
     return PublicBoxResponse(
         public_slug=box.public_slug.value,
         title=box.title.value,
@@ -60,9 +67,40 @@ def public_box_to_response(box: Box, *, content_unlocked: bool) -> PublicBoxResp
             if content_unlocked and box.message is not None
             else None
         ),
+        design_code=design.code if design is not None else None,
+        theme_config=dict(design.theme_config) if design is not None else {},
         items=(
             [box_item_to_response(item) for item in box.items] if content_unlocked else []
         ),
+    )
+
+
+def box_design_to_response(design: BoxDesign) -> BoxDesignResponse:
+    return BoxDesignResponse(
+        id=design.id,
+        code=design.code,
+        name=design.name.value,
+        preview_image_url=design.preview_image_url.value,
+        sort_order=design.sort_order.value,
+        description=(
+            design.description.value if design.description is not None else None
+        ),
+        theme_config=dict(design.theme_config),
+    )
+
+
+def admin_box_design_to_response(design: BoxDesign) -> AdminBoxDesignResponse:
+    return AdminBoxDesignResponse(
+        id=design.id,
+        code=design.code,
+        name=design.name.value,
+        preview_image_url=design.preview_image_url.value,
+        sort_order=design.sort_order.value,
+        description=(
+            design.description.value if design.description is not None else None
+        ),
+        theme_config=dict(design.theme_config),
+        is_active=design.is_active,
     )
 
 

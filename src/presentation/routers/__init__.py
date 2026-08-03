@@ -1,3 +1,3 @@
-from src.presentation.routers import auth, boxes, media, public
+from src.presentation.routers import admin_designs, auth, boxes, designs, media, public
 
-__all__ = ["auth", "boxes", "media", "public"]
+__all__ = ["admin_designs", "auth", "boxes", "designs", "media", "public"]

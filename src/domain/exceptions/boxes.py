@@ -128,6 +128,12 @@ class BoxItemDuplicateSortOrderError(BoxItemAggregateError):
         super().__init__(f"Box already has an item with sort_order={sort_order}")
 
 
+class BoxItemsLimitExceededError(BoxItemAggregateError):
+    def __init__(self, limit: int) -> None:
+        self.limit = limit
+        super().__init__(f"Box cannot contain more than {limit} items")
+
+
 class BoxItemNotFoundError(BoxItemAggregateError):
     def __init__(self, item_id: uuid.UUID) -> None:
         self.item_id = item_id
@@ -171,6 +177,45 @@ class PublicSlugAlreadyTakenError(PublicSlugError):
     def __init__(self, slug: str) -> None:
         self.slug = slug
         super().__init__(f"Public slug already taken: {slug!r}")
+
+
+class BoxNotPublishableError(BaseException):
+    def __init__(self, box_id: uuid.UUID, status: str) -> None:
+        self.box_id = box_id
+        self.status = status
+        super().__init__(f"Box {box_id} with status {status!r} cannot be published")
+
+
+class BoxWithoutItemsError(BaseException):
+    def __init__(self, box_id: uuid.UUID) -> None:
+        self.box_id = box_id
+        super().__init__(f"Box {box_id} has no items and cannot be published")
+
+
+class BoxAlreadyArchivedError(BaseException):
+    def __init__(self, box_id: uuid.UUID) -> None:
+        self.box_id = box_id
+        super().__init__(f"Box {box_id} is already archived")
+
+
+class BoxNotArchivedError(BaseException):
+    def __init__(self, box_id: uuid.UUID) -> None:
+        self.box_id = box_id
+        super().__init__(f"Box {box_id} is not archived")
+
+
+class BoxAlreadyOpenedError(BaseException):
+    def __init__(self, box_id: uuid.UUID) -> None:
+        self.box_id = box_id
+        super().__init__(
+            f"Box {box_id} was already opened by the recipient and cannot be unarchived"
+        )
+
+
+class BoxContentLockedError(BaseException):
+    def __init__(self, public_slug: str) -> None:
+        self.public_slug = public_slug
+        super().__init__(f"Box content is still locked: {public_slug!r}")
 
 
 class BoxDesignNotAvailableError(BaseException):

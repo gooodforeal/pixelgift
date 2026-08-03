@@ -21,9 +21,21 @@ class Settings(BaseSettings):
 
     jwt_secret: str = "dev-change-me-to-a-long-random-secret"
     jwt_algorithm: str = "HS256"
-    jwt_access_token_ttl_minutes: int = 60 * 24
+    jwt_access_token_ttl_minutes: int = 15
+    jwt_refresh_token_ttl_days: int = 30
+
+    cookie_secure: bool = False
 
     login_challenge_ttl_minutes: int = 10
+
+    cors_origins: str = "http://localhost:5173,http://localhost:8080"
+
+    access_cookie_name: str = "access_token"
+    refresh_cookie_name: str = "refresh_token"
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 settings = Settings()

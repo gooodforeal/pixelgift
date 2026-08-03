@@ -23,7 +23,7 @@ class TestBoxTitle:
         assert BoxTitle("For you").value == "For you"
 
     def test_max_length(self):
-        value = "a" * 256
+        value = "a" * 30
         assert BoxTitle(value).value == value
 
     def test_empty(self):
@@ -40,7 +40,7 @@ class TestBoxTitle:
 
     def test_too_long(self):
         with pytest.raises(BoxTitleTooLongError):
-            BoxTitle("a" * 257)
+            BoxTitle("a" * 31)
 
 
 class TestBoxRecipientName:
@@ -48,7 +48,7 @@ class TestBoxRecipientName:
         assert BoxRecipientName("Маша").value == "Маша"
 
     def test_max_length(self):
-        value = "a" * 40
+        value = "a" * 30
         assert BoxRecipientName(value).value == value
 
     def test_empty(self):
@@ -65,7 +65,7 @@ class TestBoxRecipientName:
 
     def test_too_long(self):
         with pytest.raises(BoxRecipientNameTooLongError):
-            BoxRecipientName("a" * 41)
+            BoxRecipientName("a" * 31)
 
 
 class TestBoxPreviewTitle:
@@ -73,7 +73,7 @@ class TestBoxPreviewTitle:
         assert BoxPreviewTitle("Soon").value == "Soon"
 
     def test_max_length(self):
-        value = "a" * 256
+        value = "a" * 30
         assert BoxPreviewTitle(value).value == value
 
     def test_empty(self):
@@ -82,7 +82,7 @@ class TestBoxPreviewTitle:
 
     def test_too_long(self):
         with pytest.raises(BoxPreviewTitleTooLongError):
-            BoxPreviewTitle("a" * 257)
+            BoxPreviewTitle("a" * 31)
 
 
 class TestBoxMessage:

@@ -30,3 +30,8 @@ class UserInactiveError(BaseException):
     def __init__(self, user_id: uuid.UUID) -> None:
         self.user_id = user_id
         super().__init__(f"User is inactive: {user_id}")
+
+
+class InvalidRefreshTokenError(BaseException):
+    def __init__(self) -> None:
+        super().__init__("Invalid or expired refresh token")

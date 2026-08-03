@@ -24,10 +24,10 @@ class BoxItemModel(CreatedAtMixin, Base):
         ForeignKey("boxes.id", ondelete="CASCADE"),
         nullable=False,
     )
-    media_file_id: Mapped[uuid.UUID] = mapped_column(
+    media_file_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid,
         ForeignKey("media_files.id"),
-        nullable=False,
+        nullable=True,
     )
     item_type: Mapped[str] = mapped_column(String(16), nullable=False)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False)

@@ -4,29 +4,51 @@ import secrets
 from src.application.dto.auth import (
     CompleteLoginResult,
     CompleteTelegramLoginCommand,
+    LogoutCommand,
     PollTelegramLoginCommand,
+    RefreshAccessTokenCommand,
     StartTelegramLoginCommand,
     TelegramLoginStartResult,
     TelegramLoginStatusResult,
+    TokenPairResult,
 )
+from src.application.ports.storage.base import BaseObjectStorage
 from src.application.services.jwt import JwtService
+from src.application.services.refresh_tokens import (
+    generate_refresh_token,
+    hash_ip,
+    hash_refresh_token,
+)
 from src.application.uow.base import BaseUnitOfWork
 from src.domain.entities.telegram_login_challenges import (
     LoginChallengeStatus,
     TelegramLoginChallenge,
 )
+from src.domain.entities.user_sessions import UserSession
 from src.domain.entities.users import User
 from src.domain.exceptions.auth import (
+    InvalidRefreshTokenError,
     LoginChallengeInvalidError,
     LoginChallengeNotFoundError,
     UserInactiveError,
 )
 from src.domain.values.telegram_id import TelegramId
+from src.domain.values.url import Url
 from src.settings import Settings
 
 
 def generate_login_code() -> str:
     return secrets.token_urlsafe(32)
+
+
+def avatar_storage_key(user_id) -> str:
+    return f"avatars/{user_id}"
+
+
+def _truncate_user_agent(user_agent: str | None) -> str | None:
+    if not user_agent:
+        return None
+    return user_agent[:512]
 
 
 class StartTelegramLoginUseCase:
@@ -66,15 +88,19 @@ class PollTelegramLoginStatusUseCase:
         self,
         uow: BaseUnitOfWork,
         jwt_service: JwtService,
+        settings: Settings,
     ) -> None:
         self._uow = uow
         self._jwt_service = jwt_service
+        self._settings = settings
 
     async def execute(
         self, command: PollTelegramLoginCommand
     ) -> TelegramLoginStatusResult:
         async with self._uow as uow:
-            challenge = await uow.telegram_login_challenges.get_by_code(command.code)
+            challenge = await uow.telegram_login_challenges.get_by_code(
+                command.code, for_update=True
+            )
             if challenge is None:
                 raise LoginChallengeNotFoundError(command.code)
 
@@ -94,6 +120,15 @@ class PollTelegramLoginStatusUseCase:
             if challenge.status == LoginChallengeStatus.PENDING:
                 return TelegramLoginStatusResult(status=LoginChallengeStatus.PENDING)
 
+            if challenge.status == LoginChallengeStatus.CONSUMED:
+                return TelegramLoginStatusResult(
+                    status=LoginChallengeStatus.CONSUMED,
+                    user_id=challenge.user_id,
+                )
+
+            if challenge.status != LoginChallengeStatus.COMPLETED:
+                raise LoginChallengeInvalidError(command.code)
+
             if challenge.user_id is None:
                 raise LoginChallengeInvalidError(command.code)
 
@@ -101,20 +136,116 @@ class PollTelegramLoginStatusUseCase:
             if user is None or not user.is_active:
                 raise UserInactiveError(challenge.user_id)
 
+            challenge.status = LoginChallengeStatus.CONSUMED
+            await uow.telegram_login_challenges.update(challenge)
+
+            raw_refresh = generate_refresh_token()
+            session = UserSession(
+                user_id=user.id,
+                refresh_token_hash=hash_refresh_token(raw_refresh),
+                expires_at=now
+                + timedelta(days=self._settings.jwt_refresh_token_ttl_days),
+                user_agent=_truncate_user_agent(command.user_agent),
+                ip_hash=hash_ip(command.client_ip),
+            )
+            await uow.user_sessions.add(session)
+            await uow.commit()
+
             access_token = self._jwt_service.create_access_token(user.id)
             return TelegramLoginStatusResult(
                 status=LoginChallengeStatus.COMPLETED,
                 access_token=access_token,
+                refresh_token=raw_refresh,
                 token_type="bearer",
                 user_id=user.id,
             )
 
 
-class CompleteTelegramLoginUseCase:
-    """Completes a pending login challenge after Telegram /start login_<code>."""
+class RefreshAccessTokenUseCase:
+    def __init__(
+        self,
+        uow: BaseUnitOfWork,
+        jwt_service: JwtService,
+        settings: Settings,
+    ) -> None:
+        self._uow = uow
+        self._jwt_service = jwt_service
+        self._settings = settings
 
+    async def execute(self, command: RefreshAccessTokenCommand) -> TokenPairResult:
+        token_hash = hash_refresh_token(command.refresh_token)
+        now = datetime.now(timezone.utc)
+
+        async with self._uow as uow:
+            session = await uow.user_sessions.get_by_refresh_token_hash(token_hash)
+            if (
+                session is None
+                or session.revoked_at is not None
+                or session.expires_at <= now
+            ):
+                raise InvalidRefreshTokenError()
+
+            user = await uow.users.get_by_id(session.user_id)
+            if user is None or not user.is_active:
+                session.revoked_at = now
+                await uow.user_sessions.update(session)
+                await uow.commit()
+                raise UserInactiveError(session.user_id)
+
+            session.revoked_at = now
+            await uow.user_sessions.update(session)
+
+            raw_refresh = generate_refresh_token()
+            new_session = UserSession(
+                user_id=user.id,
+                refresh_token_hash=hash_refresh_token(raw_refresh),
+                expires_at=now
+                + timedelta(days=self._settings.jwt_refresh_token_ttl_days),
+                user_agent=_truncate_user_agent(command.user_agent)
+                or session.user_agent,
+                ip_hash=hash_ip(command.client_ip) or session.ip_hash,
+            )
+            await uow.user_sessions.add(new_session)
+            await uow.commit()
+
+        return TokenPairResult(
+            access_token=self._jwt_service.create_access_token(user.id),
+            refresh_token=raw_refresh,
+            user_id=user.id,
+        )
+
+
+class LogoutUseCase:
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
+
+    async def execute(self, command: LogoutCommand) -> None:
+        if not command.refresh_token:
+            return
+
+        token_hash = hash_refresh_token(command.refresh_token)
+        now = datetime.now(timezone.utc)
+
+        async with self._uow as uow:
+            session = await uow.user_sessions.get_by_refresh_token_hash(token_hash)
+            if session is None or session.revoked_at is not None:
+                return
+            session.revoked_at = now
+            await uow.user_sessions.update(session)
+            await uow.commit()
+
+
+class CompleteTelegramLoginUseCase:
+    def __init__(
+        self,
+        uow: BaseUnitOfWork,
+        storage: BaseObjectStorage | None = None,
+        *,
+        api_base_url: str = "http://localhost:8000",
+    ) -> None:
+        self._uow = uow
+        self._storage = storage
+        self._api_base_url = api_base_url.rstrip("/")
 
     async def execute(self, command: CompleteTelegramLoginCommand) -> CompleteLoginResult:
         async with self._uow as uow:
@@ -126,7 +257,10 @@ class CompleteTelegramLoginUseCase:
                 )
 
             now = datetime.now(timezone.utc)
-            if challenge.status == LoginChallengeStatus.COMPLETED:
+            if challenge.status in (
+                LoginChallengeStatus.COMPLETED,
+                LoginChallengeStatus.CONSUMED,
+            ):
                 return CompleteLoginResult(
                     ok=False,
                     reply_text="Этот код уже использован. Начните вход заново на сайте.",
@@ -177,6 +311,29 @@ class CompleteTelegramLoginUseCase:
             challenge.completed_at = now
             await uow.telegram_login_challenges.update(challenge)
             await uow.commit()
+
+        if (
+            self._storage is not None
+            and command.photo_bytes
+            and len(command.photo_bytes) > 0
+        ):
+            content_type = command.photo_content_type or "image/jpeg"
+            try:
+                await self._storage.upload(
+                    avatar_storage_key(user.id),
+                    command.photo_bytes,
+                    content_type=content_type,
+                )
+                async with self._uow as uow:
+                    stored = await uow.users.get_by_id(user.id)
+                    if stored is not None:
+                        stored.photo_url = Url(
+                            f"{self._api_base_url}/users/{stored.id}/avatar"
+                        )
+                        await uow.users.update(stored)
+                        await uow.commit()
+            except Exception:
+                pass
 
         return CompleteLoginResult(
             ok=True,

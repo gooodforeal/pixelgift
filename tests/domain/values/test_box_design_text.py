@@ -16,7 +16,7 @@ class TestBoxDesignName:
         assert BoxDesignName("Romantic Red").value == "Romantic Red"
 
     def test_max_length(self):
-        value = "a" * 128
+        value = "a" * 15
         assert BoxDesignName(value).value == value
 
     def test_empty(self):
@@ -33,7 +33,7 @@ class TestBoxDesignName:
 
     def test_too_long(self):
         with pytest.raises(BoxDesignNameTooLongError):
-            BoxDesignName("a" * 129)
+            BoxDesignName("a" * 16)
 
 
 class TestBoxDesignDescription:
@@ -41,7 +41,7 @@ class TestBoxDesignDescription:
         assert BoxDesignDescription("Short text").value == "Short text"
 
     def test_max_length(self):
-        value = "a" * 10_000
+        value = "a" * 40
         assert BoxDesignDescription(value).value == value
 
     def test_empty(self):
@@ -50,4 +50,4 @@ class TestBoxDesignDescription:
 
     def test_too_long(self):
         with pytest.raises(BoxDesignDescriptionTooLongError):
-            BoxDesignDescription("a" * 10_001)
+            BoxDesignDescription("a" * 41)

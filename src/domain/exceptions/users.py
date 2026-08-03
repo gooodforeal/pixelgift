@@ -1,8 +1,9 @@
 from src.domain.exceptions.base import BaseException
+import uuid
 
 
 class UserNotFoundError(BaseException):
-    def __init__(self, user_id: int | None = None) -> None:
+    def __init__(self, user_id: uuid.UUID | None = None) -> None:
         self.user_id = user_id
         super().__init__(f"User with id {user_id} not found!")
 

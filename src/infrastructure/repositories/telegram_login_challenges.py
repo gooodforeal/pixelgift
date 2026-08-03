@@ -43,11 +43,14 @@ class SqlAlchemyTelegramLoginChallengesRepository(
         if model is not None:
             await self._session.delete(model)
 
-    async def get_by_code(self, code: str) -> TelegramLoginChallenge | None:
-        result = await self._session.execute(
-            select(TelegramLoginChallengeModel).where(
-                TelegramLoginChallengeModel.code == code
-            )
+    async def get_by_code(
+        self, code: str, *, for_update: bool = False
+    ) -> TelegramLoginChallenge | None:
+        stmt = select(TelegramLoginChallengeModel).where(
+            TelegramLoginChallengeModel.code == code
         )
+        if for_update:
+            stmt = stmt.with_for_update()
+        result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
         return telegram_login_challenge_to_entity(model) if model is not None else None

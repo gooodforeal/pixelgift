@@ -34,10 +34,10 @@ class BoxModel(TimestampMixin, Base):
         nullable=False,
     )
     public_slug: Mapped[str] = mapped_column(String(32), nullable=False, unique=True)
-    title: Mapped[str] = mapped_column(String(256), nullable=False)
-    recipient_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    title: Mapped[str] = mapped_column(String(30), nullable=False)
+    recipient_name: Mapped[str] = mapped_column(String(30), nullable=False)
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    preview_title: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    preview_title: Mapped[str | None] = mapped_column(String(30), nullable=True)
     preview_image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     activates_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

@@ -4,11 +4,16 @@ from datetime import datetime, timezone
 import pytest
 
 from src.domain.entities.box_items import BoxItemType
-from src.domain.aggregates.boxes import Box, BoxStatus
+from src.domain.aggregates.boxes import MAX_BOX_ITEMS, Box, BoxStatus
+from src.domain.exceptions.box_items import BoxItemInvalidError
 from src.domain.exceptions.boxes import (
+    BoxAlreadyArchivedError,
+    BoxAlreadyOpenedError,
     BoxItemDuplicateSortOrderError,
     BoxItemNotFoundError,
     BoxItemReorderError,
+    BoxItemsLimitExceededError,
+    BoxNotArchivedError,
 )
 from src.domain.values.activates_at import ActivatesAt
 from src.domain.values.box_item_caption import BoxItemCaption
@@ -113,6 +118,41 @@ class TestBoxAggregateItems:
         assert item.caption.value == "Hi"
         assert box.updated_at >= before
 
+    def test_add_text_item_without_media(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+
+        item = box.add_item(
+            item_type=BoxItemType.TEXT,
+            caption=BoxItemCaption("Письмо"),
+        )
+
+        assert item.media_file_id is None
+        assert item.item_type == BoxItemType.TEXT
+        assert item.caption is not None
+        assert item.caption.value == "Письмо"
+
+    def test_add_toy_item_with_code(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+
+        item = box.add_item(
+            item_type=BoxItemType.TOY,
+            caption=BoxItemCaption("Для тебя"),
+            metadata={"toy_code": "bear"},
+        )
+
+        assert item.media_file_id is None
+        assert item.item_type == BoxItemType.TOY
+        assert item.metadata["toy_code"] == "bear"
+
+    def test_add_toy_item_rejects_invalid_code(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+
+        with pytest.raises(BoxItemInvalidError):
+            box.add_item(
+                item_type=BoxItemType.TOY,
+                metadata={"toy_code": "dragon"},
+            )
+
     def test_add_item_rejects_duplicate_sort_order(self, activates_at: ActivatesAt):
         box = _make_box(activates_at)
         box.add_item(
@@ -127,6 +167,35 @@ class TestBoxAggregateItems:
                 item_type=BoxItemType.GIF,
                 sort_order=SortOrder(1),
             )
+
+    def test_add_item_rejects_more_than_max_items(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+        for _ in range(MAX_BOX_ITEMS):
+            box.add_item(
+                media_file_id=uuid.uuid4(),
+                item_type=BoxItemType.IMAGE,
+            )
+
+        with pytest.raises(BoxItemsLimitExceededError):
+            box.add_item(
+                media_file_id=uuid.uuid4(),
+                item_type=BoxItemType.IMAGE,
+            )
+
+        assert len(box.items) == MAX_BOX_ITEMS
+
+    def test_add_item_allowed_again_after_remove(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+        for _ in range(MAX_BOX_ITEMS):
+            box.add_item(
+                media_file_id=uuid.uuid4(),
+                item_type=BoxItemType.IMAGE,
+            )
+
+        box.remove_item(box.items[0].id)
+        box.add_item(media_file_id=uuid.uuid4(), item_type=BoxItemType.IMAGE)
+
+        assert len(box.items) == MAX_BOX_ITEMS
 
     def test_remove_item_reindexes_sort_orders(self, activates_at: ActivatesAt):
         box = _make_box(activates_at)
@@ -224,3 +293,42 @@ class TestBoxAggregateItems:
         assert updated.caption is not None
         assert updated.caption.value == "New caption"
         assert updated.metadata == {"poster": "x"}
+
+
+class TestBoxArchiveUnarchive:
+    def test_unarchive_draft_restores_draft(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at, status=BoxStatus.DRAFT)
+        box.archive()
+        assert box.status == BoxStatus.ARCHIVED
+
+        box.unarchive()
+
+        assert box.status == BoxStatus.DRAFT
+
+    def test_unarchive_published_restores_scheduled(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at, status=BoxStatus.DRAFT)
+        box.add_item(media_file_id=uuid.uuid4(), item_type=BoxItemType.IMAGE)
+        box.publish()
+        box.archive()
+
+        box.unarchive()
+
+        assert box.status == BoxStatus.SCHEDULED
+        assert box.published_at is not None
+
+    def test_unarchive_rejects_opened_box(self, activates_at: ActivatesAt):
+        box = _make_box(
+            activates_at,
+            status=BoxStatus.ARCHIVED,
+            first_opened_at=datetime(2026, 6, 2, tzinfo=timezone.utc),
+            published_at=datetime(2026, 6, 1, tzinfo=timezone.utc),
+        )
+
+        with pytest.raises(BoxAlreadyOpenedError):
+            box.unarchive()
+
+    def test_unarchive_rejects_non_archived(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at, status=BoxStatus.DRAFT)
+
+        with pytest.raises(BoxNotArchivedError):
+            box.unarchive()

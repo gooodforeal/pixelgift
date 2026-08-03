@@ -43,3 +43,20 @@ class SqlAlchemyBoxDesignsRepository(BaseBoxDesignsRepository):
         )
         model = result.scalar_one_or_none()
         return box_design_to_entity(model) if model is not None else None
+
+    async def list_active(self) -> list[BoxDesign]:
+        result = await self._session.execute(
+            select(BoxDesignModel)
+            .where(BoxDesignModel.is_active.is_(True))
+            .order_by(BoxDesignModel.sort_order, BoxDesignModel.name)
+        )
+        return [box_design_to_entity(model) for model in result.scalars().all()]
+
+    async def list_all(self) -> list[BoxDesign]:
+        result = await self._session.execute(
+            select(BoxDesignModel).order_by(
+                BoxDesignModel.sort_order,
+                BoxDesignModel.name,
+            )
+        )
+        return [box_design_to_entity(model) for model in result.scalars().all()]

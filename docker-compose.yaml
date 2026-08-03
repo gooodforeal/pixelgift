@@ -62,7 +62,10 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_ALGORITHM: ${JWT_ALGORITHM}
       JWT_ACCESS_TOKEN_TTL_MINUTES: ${JWT_ACCESS_TOKEN_TTL_MINUTES}
+      JWT_REFRESH_TOKEN_TTL_DAYS: ${JWT_REFRESH_TOKEN_TTL_DAYS:-30}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       LOGIN_CHALLENGE_TTL_MINUTES: ${LOGIN_CHALLENGE_TTL_MINUTES}
+      CORS_ORIGINS: ${CORS_ORIGINS}
     depends_on:
       db:
         condition: service_healthy
@@ -79,6 +82,17 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+
+  front:
+    build: ./front
+    ports:
+      - "8080:80"
+    environment:
+      API_UPSTREAM: http://app:8000
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
 
   bot:
     build: .

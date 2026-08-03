@@ -10,6 +10,7 @@ from src.domain.values.telegram_id import TelegramId
 class LoginChallengeStatus(StrEnum):
     PENDING = "pending"
     COMPLETED = "completed"
+    CONSUMED = "consumed"
     EXPIRED = "expired"
 
 

@@ -1,10 +1,10 @@
 import httpx
 
-from bot.settings import BotSettings, bot_settings
-from src.presentation.schemas.auth import (
+from bot.schemas import (
     CompleteTelegramLoginRequest,
     CompleteTelegramLoginResponse,
 )
+from bot.settings import BotSettings, bot_settings
 
 
 class ApiClient:

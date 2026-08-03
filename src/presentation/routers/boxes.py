@@ -4,30 +4,43 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.application.dto.boxes import (
     AddBoxItemCommand,
+    ArchiveBoxCommand,
     CreateBoxCommand,
+    PublishBoxCommand,
     RemoveBoxItemCommand,
     ReorderBoxItemsCommand,
+    UnarchiveBoxCommand,
     UpdateBoxCommand,
     UpdateBoxItemCommand,
 )
 from src.application.use_cases.boxes import (
     AddBoxItemUseCase,
+    ArchiveBoxUseCase,
     CreateBoxUseCase,
+    PublishBoxUseCase,
     RemoveBoxItemUseCase,
     ReorderBoxItemsUseCase,
+    UnarchiveBoxUseCase,
     UpdateBoxItemUseCase,
     UpdateBoxUseCase,
 )
 from src.application.use_cases.queries import GetBoxUseCase, ListBoxesUseCase
 from src.domain.exceptions.boxes import (
     BoxAccessDeniedError,
+    BoxAlreadyArchivedError,
+    BoxAlreadyOpenedError,
     BoxDesignNotAvailableError,
     BoxItemNotFoundError,
     BoxItemReorderError,
+    BoxItemsLimitExceededError,
+    BoxNotArchivedError,
     BoxNotEditableError,
     BoxNotFoundError,
+    BoxNotPublishableError,
+    BoxWithoutItemsError,
     PublicSlugAlreadyTakenError,
 )
+from src.domain.exceptions.box_items import BoxItemInvalidError
 from src.domain.exceptions.media_files import (
     MediaFileAccessDeniedError,
     MediaFileNotFoundError,
@@ -43,12 +56,15 @@ from src.domain.values.sort_order import SortOrder
 from src.domain.values.url import Url
 from src.presentation.deps import (
     get_add_box_item_uc,
+    get_archive_box_uc,
     get_create_box_uc,
     get_current_user_id,
     get_get_box_uc,
     get_list_boxes_uc,
+    get_publish_box_uc,
     get_remove_box_item_uc,
     get_reorder_box_items_uc,
+    get_unarchive_box_uc,
     get_update_box_item_uc,
     get_update_box_uc,
 )
@@ -73,7 +89,14 @@ def _http_error(exc: Exception) -> HTTPException:
         (BoxAccessDeniedError, status.HTTP_403_FORBIDDEN),
         (MediaFileAccessDeniedError, status.HTTP_403_FORBIDDEN),
         (BoxNotEditableError, status.HTTP_409_CONFLICT),
+        (BoxNotPublishableError, status.HTTP_409_CONFLICT),
+        (BoxAlreadyArchivedError, status.HTTP_409_CONFLICT),
+        (BoxNotArchivedError, status.HTTP_409_CONFLICT),
+        (BoxAlreadyOpenedError, status.HTTP_409_CONFLICT),
+        (BoxItemsLimitExceededError, status.HTTP_409_CONFLICT),
+        (BoxWithoutItemsError, status.HTTP_400_BAD_REQUEST),
         (BoxDesignNotAvailableError, status.HTTP_400_BAD_REQUEST),
+        (BoxItemInvalidError, status.HTTP_400_BAD_REQUEST),
         (PublicSlugAlreadyTakenError, status.HTTP_409_CONFLICT),
         (BoxItemReorderError, status.HTTP_400_BAD_REQUEST),
     ]
@@ -166,6 +189,45 @@ async def update_box(
     return box_to_response(box)
 
 
+@router.post("/{box_id}/publish", response_model=BoxResponse)
+async def publish_box(
+    box_id: uuid.UUID,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    uc: PublishBoxUseCase = Depends(get_publish_box_uc),
+) -> BoxResponse:
+    try:
+        box = await uc.execute(PublishBoxCommand(box_id=box_id, actor_id=user_id))
+    except Exception as exc:
+        raise _http_error(exc) from exc
+    return box_to_response(box)
+
+
+@router.post("/{box_id}/archive", response_model=BoxResponse)
+async def archive_box(
+    box_id: uuid.UUID,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    uc: ArchiveBoxUseCase = Depends(get_archive_box_uc),
+) -> BoxResponse:
+    try:
+        box = await uc.execute(ArchiveBoxCommand(box_id=box_id, actor_id=user_id))
+    except Exception as exc:
+        raise _http_error(exc) from exc
+    return box_to_response(box)
+
+
+@router.post("/{box_id}/unarchive", response_model=BoxResponse)
+async def unarchive_box(
+    box_id: uuid.UUID,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    uc: UnarchiveBoxUseCase = Depends(get_unarchive_box_uc),
+) -> BoxResponse:
+    try:
+        box = await uc.execute(UnarchiveBoxCommand(box_id=box_id, actor_id=user_id))
+    except Exception as exc:
+        raise _http_error(exc) from exc
+    return box_to_response(box)
+
+
 @router.post("/{box_id}/items", response_model=BoxResponse)
 async def add_box_item(
     box_id: uuid.UUID,
@@ -179,6 +241,7 @@ async def add_box_item(
                 box_id=box_id,
                 actor_id=user_id,
                 media_file_id=body.media_file_id,
+                item_type=body.item_type,
                 caption=BoxItemCaption(body.caption) if body.caption else None,
                 sort_order=SortOrder(body.sort_order) if body.sort_order else None,
                 metadata=body.metadata,

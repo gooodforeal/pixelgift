@@ -8,3 +8,9 @@ from src.domain.repository.base import BaseRepository
 class BaseBoxDesignsRepository(BaseRepository[BoxDesign], ABC):
     @abstractmethod
     async def get_by_code(self, code: str) -> Optional[BoxDesign]: ...
+
+    @abstractmethod
+    async def list_active(self) -> list[BoxDesign]: ...
+
+    @abstractmethod
+    async def list_all(self) -> list[BoxDesign]: ...

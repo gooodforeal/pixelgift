@@ -8,6 +8,7 @@ from src.infrastructure.database import get_session_factory
 from src.infrastructure.repositories import (
     SqlAlchemyBoxDesignsRepository,
     SqlAlchemyBoxesRepository,
+    SqlAlchemyDesignAssetsRepository,
     SqlAlchemyMediaFilesRepository,
     SqlAlchemyTelegramLoginChallengesRepository,
     SqlAlchemyUserSessionsRepository,
@@ -28,6 +29,7 @@ class SqlAlchemyUnitOfWork(BaseUnitOfWork):
         self.users = SqlAlchemyUsersRepository(self._session)
         self.boxes = SqlAlchemyBoxesRepository(self._session)
         self.box_designs = SqlAlchemyBoxDesignsRepository(self._session)
+        self.design_assets = SqlAlchemyDesignAssetsRepository(self._session)
         self.media_files = SqlAlchemyMediaFilesRepository(self._session)
         self.telegram_login_challenges = SqlAlchemyTelegramLoginChallengesRepository(
             self._session

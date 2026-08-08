@@ -6,6 +6,7 @@ import type {
   BoxPayload,
   CurrentUser,
   DesignAssetUpload,
+  DesignRating,
   MediaFile,
   PublicBox,
   TelegramLoginStart,
@@ -128,6 +129,12 @@ export const api = {
   me: () => request<CurrentUser>("/auth/me"),
 
   designs: () => request<BoxDesign[]>("/designs"),
+
+  rateDesign: (designId: string, stars: number) =>
+    request<DesignRating>(`/designs/${designId}/rating`, {
+      method: "PUT",
+      body: JSON.stringify({ stars }),
+    }),
 
   adminDesigns: () => request<AdminBoxDesign[]>("/admin/designs"),
 

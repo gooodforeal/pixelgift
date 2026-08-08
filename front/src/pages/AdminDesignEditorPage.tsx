@@ -107,6 +107,9 @@ export function AdminDesignEditorPage() {
       description: form.description,
       is_active: form.is_active,
       theme_config: form.theme_config,
+      rating_avg: 0,
+      rating_count: 0,
+      my_rating: null,
     }),
     [designId, form],
   );

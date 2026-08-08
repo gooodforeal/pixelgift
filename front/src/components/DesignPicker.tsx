@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { DesignCover } from "./DesignCover";
+import { DesignRatingStars } from "./DesignRatingStars";
 import {
   DesignPreviewPopover,
   type DesignPreviewAnchor,
 } from "./DesignPreviewPopover";
+import { ApiError, api } from "../lib/api";
+import { useAuth } from "../hooks/useAuth";
 import { gradientCss, resolveTheme } from "../lib/theme";
-import type { BoxDesign } from "../lib/types";
+import type { BoxDesign, DesignRating } from "../lib/types";
 
 interface DesignPickerProps {
   designs: BoxDesign[];
@@ -17,15 +21,53 @@ interface DesignPickerProps {
   disabled?: boolean;
 }
 
+function patchDesignRating(
+  designs: BoxDesign[] | undefined,
+  rating: DesignRating,
+): BoxDesign[] | undefined {
+  if (!designs) return designs;
+  return designs.map((design) =>
+    design.id === rating.design_id
+      ? {
+          ...design,
+          rating_avg: rating.rating_avg,
+          rating_count: rating.rating_count,
+          my_rating: rating.stars,
+        }
+      : design,
+  );
+}
+
 export function DesignPicker({
   designs,
   selectedId,
   onSelect,
   disabled = false,
 }: DesignPickerProps) {
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
   const [previewAnchor, setPreviewAnchor] = useState<DesignPreviewAnchor | null>(
     null,
   );
+  const [ratingError, setRatingError] = useState<string | null>(null);
+
+  const rateMutation = useMutation({
+    mutationFn: ({ designId, stars }: { designId: string; stars: number }) =>
+      api.rateDesign(designId, stars),
+    onSuccess: (rating) => {
+      setRatingError(null);
+      queryClient.setQueryData<BoxDesign[]>(["designs"], (current) =>
+        patchDesignRating(current, rating),
+      );
+    },
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 409) {
+        setRatingError("Вы уже оценили этот дизайн");
+        return;
+      }
+      setRatingError("Не удалось сохранить оценку");
+    },
+  });
 
   const closePreview = useCallback(() => {
     setPreviewAnchor(null);
@@ -57,6 +99,9 @@ export function DesignPicker({
           const theme = resolveTheme(design);
           const selected = design.id === selectedId;
           const previewOpen = previewAnchor?.design.id === design.id;
+          const ratingPending =
+            rateMutation.isPending &&
+            rateMutation.variables?.designId === design.id;
 
           return (
             <div key={design.id} className="relative min-w-0">
@@ -95,6 +140,24 @@ export function DesignPicker({
                         {design.description}
                       </p>
                     )}
+                    <div
+                      className="mt-2"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }}
+                    >
+                      <DesignRatingStars
+                        average={design.rating_avg ?? 0}
+                        count={design.rating_count ?? 0}
+                        myRating={design.my_rating ?? null}
+                        interactive={isAuthenticated && !disabled}
+                        pending={ratingPending}
+                        onRate={(stars) =>
+                          rateMutation.mutate({ designId: design.id, stars })
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
               </motion.button>
@@ -124,6 +187,12 @@ export function DesignPicker({
           );
         })}
       </div>
+
+      {ratingError && (
+        <p className="mt-3 text-sm text-rose-300" role="alert">
+          {ratingError}
+        </p>
+      )}
 
       <DesignPreviewPopover
         anchor={previewAnchor}

@@ -81,6 +81,16 @@ export interface BoxDesign {
   sort_order: number;
   description: string | null;
   theme_config: ThemeConfig;
+  rating_avg: number;
+  rating_count: number;
+  my_rating: number | null;
+}
+
+export interface DesignRating {
+  design_id: string;
+  stars: number;
+  rating_avg: number;
+  rating_count: number;
 }
 
 export interface AdminBoxDesign extends BoxDesign {

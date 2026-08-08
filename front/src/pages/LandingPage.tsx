@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { designCoverUrl } from "../components/DesignCover";
+import { DesignRatingStars } from "../components/DesignRatingStars";
 import { PageTransition } from "../components/PageTransition";
 import { api } from "../lib/api";
 import { gradientCss, resolveTheme } from "../lib/theme";
@@ -256,6 +257,12 @@ export function LandingPage() {
                     {design.description && (
                       <p className="design-banner__pill">{design.description}</p>
                     )}
+                    <DesignRatingStars
+                      average={design.rating_avg ?? 0}
+                      count={design.rating_count ?? 0}
+                      myRating={design.my_rating ?? null}
+                      className="mt-2"
+                    />
                     <Link
                       to="/login"
                       className="design-banner__cta"

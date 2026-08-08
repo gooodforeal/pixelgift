@@ -30,6 +30,7 @@ from src.application.use_cases.designs import (
     GetDesignAssetContentUseCase,
     ListAllBoxDesignsUseCase,
     ListBoxDesignsUseCase,
+    RateDesignUseCase,
     UpdateBoxDesignUseCase,
     UploadDesignAssetUseCase,
 )
@@ -153,6 +154,10 @@ def get_list_designs_uc() -> ListBoxDesignsUseCase:
     return ListBoxDesignsUseCase(SqlAlchemyUnitOfWork())
 
 
+def get_rate_design_uc() -> RateDesignUseCase:
+    return RateDesignUseCase(SqlAlchemyUnitOfWork())
+
+
 def get_list_all_designs_uc() -> ListAllBoxDesignsUseCase:
     return ListAllBoxDesignsUseCase(SqlAlchemyUnitOfWork())
 
@@ -256,6 +261,25 @@ async def get_current_user_id(
     if not raw:
         raw = request.cookies.get(cfg.access_cookie_name)
     return _decode_user_id(jwt_service, raw)
+
+
+async def get_optional_current_user_id(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    jwt_service: JwtService = Depends(get_jwt_service),
+    cfg: Settings = Depends(get_settings),
+) -> uuid.UUID | None:
+    raw: str | None = None
+    if credentials is not None and credentials.scheme.lower() == "bearer":
+        raw = credentials.credentials
+    if not raw:
+        raw = request.cookies.get(cfg.access_cookie_name)
+    if not raw:
+        return None
+    try:
+        return _decode_user_id(jwt_service, raw)
+    except HTTPException:
+        return None
 
 
 async def require_admin(

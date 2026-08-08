@@ -31,10 +31,24 @@ class BoxDesignResponse(BaseModel):
     sort_order: int
     description: str | None = None
     theme_config: dict[str, Any] = Field(default_factory=dict)
+    rating_avg: float = 0.0
+    rating_count: int = 0
+    my_rating: int | None = None
 
 
 class AdminBoxDesignResponse(BoxDesignResponse):
     is_active: bool
+
+
+class RateDesignRequest(BaseModel):
+    stars: int = Field(..., ge=1, le=5)
+
+
+class DesignRatingResponse(BaseModel):
+    design_id: uuid.UUID
+    stars: int
+    rating_avg: float
+    rating_count: int
 
 
 class CreateBoxDesignRequest(BaseModel):

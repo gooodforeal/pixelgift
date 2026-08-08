@@ -3,19 +3,24 @@ from typing import Any
 import re
 import uuid
 
+from src.application.dto.designs import BoxDesignWithRating, DesignRatingResult
 from src.application.dto.media import MediaContent
 from src.application.ports.storage.base import BaseObjectStorage
 from src.application.uow.base import BaseUnitOfWork
 from src.domain.entities.box_designs import BoxDesign
 from src.domain.entities.design_assets import DesignAsset
+from src.domain.entities.design_ratings import DesignRating
 from src.domain.exceptions.box_designs import (
     BoxDesignCodeConflictError,
     BoxDesignNotFoundError,
     DesignAssetNotFoundError,
 )
+from src.domain.exceptions.boxes import BoxDesignNotAvailableError
+from src.domain.exceptions.design_ratings import DesignAlreadyRatedError
 from src.domain.exceptions.media_files import UnsupportedMediaTypeError
 from src.domain.values.box_design_description import BoxDesignDescription
 from src.domain.values.box_design_name import BoxDesignName
+from src.domain.values.rating_stars import RatingStars
 from src.domain.values.sort_order import SortOrder
 from src.domain.values.url import Url
 
@@ -33,9 +38,92 @@ class ListBoxDesignsUseCase:
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
-    async def execute(self) -> list[BoxDesign]:
+    async def execute(
+        self,
+        *,
+        user_id: uuid.UUID | None = None,
+    ) -> list[BoxDesignWithRating]:
         async with self._uow as uow:
-            return await uow.box_designs.list_active()
+            designs = await uow.box_designs.list_active()
+            design_ids = [design.id for design in designs]
+            aggregates = {
+                item.design_id: item
+                for item in await uow.design_ratings.list_aggregates_by_design_ids(
+                    design_ids
+                )
+            }
+            my_ratings: dict[uuid.UUID, int] = {}
+            if user_id is not None:
+                ratings = await uow.design_ratings.list_user_ratings_for_designs(
+                    user_id=user_id,
+                    design_ids=design_ids,
+                )
+                my_ratings = {
+                    rating.design_id: rating.stars.value for rating in ratings
+                }
+
+            return [
+                BoxDesignWithRating(
+                    design=design,
+                    rating_avg=(
+                        round(aggregates[design.id].average, 2)
+                        if design.id in aggregates
+                        else 0.0
+                    ),
+                    rating_count=(
+                        aggregates[design.id].count if design.id in aggregates else 0
+                    ),
+                    my_rating=my_ratings.get(design.id),
+                )
+                for design in designs
+            ]
+
+
+class RateDesignUseCase:
+    def __init__(self, uow: BaseUnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(
+        self,
+        *,
+        user_id: uuid.UUID,
+        design_id: uuid.UUID,
+        stars: int,
+    ) -> DesignRatingResult:
+        rating_stars = RatingStars(stars)
+        async with self._uow as uow:
+            design = await uow.box_designs.get_by_id(design_id)
+            if design is None or not design.is_active:
+                raise BoxDesignNotAvailableError(design_id)
+
+            existing = await uow.design_ratings.get_by_user_and_design(
+                user_id=user_id,
+                design_id=design_id,
+            )
+            if existing is not None:
+                raise DesignAlreadyRatedError(design_id=design_id, user_id=user_id)
+
+            now = datetime.now(timezone.utc)
+            rating = DesignRating(
+                user_id=user_id,
+                design_id=design_id,
+                stars=rating_stars,
+                created_at=now,
+                updated_at=now,
+            )
+            await uow.design_ratings.add(rating)
+            await uow.commit()
+
+            aggregates = await uow.design_ratings.list_aggregates_by_design_ids(
+                [design_id]
+            )
+            aggregate = aggregates[0] if aggregates else None
+            return DesignRatingResult(
+                design_id=design_id,
+                stars=rating_stars.value,
+                rating_avg=round(aggregate.average, 2) if aggregate else 0.0,
+                rating_count=aggregate.count if aggregate else 0,
+            )
 
 
 class ListAllBoxDesignsUseCase:

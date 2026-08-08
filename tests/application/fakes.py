@@ -7,6 +7,7 @@ from src.application.uow.base import BaseUnitOfWork
 from src.domain.aggregates.boxes import Box
 from src.domain.entities.box_designs import BoxDesign
 from src.domain.entities.design_assets import DesignAsset
+from src.domain.entities.design_ratings import DesignRating
 from src.domain.entities.media_files import MediaFile
 from src.domain.entities.telegram_login_challenges import TelegramLoginChallenge
 from src.domain.entities.user_sessions import UserSession
@@ -14,6 +15,10 @@ from src.domain.entities.users import User
 from src.domain.repository.box_designs import BaseBoxDesignsRepository
 from src.domain.repository.boxes import BaseBoxesRepository
 from src.domain.repository.design_assets import BaseDesignAssetsRepository
+from src.domain.repository.design_ratings import (
+    BaseDesignRatingsRepository,
+    DesignRatingAggregate,
+)
 from src.domain.repository.media_files import BaseMediaFilesRepository
 from src.domain.repository.telegram_login_challenges import (
     BaseTelegramLoginChallengesRepository,
@@ -100,6 +105,70 @@ class InMemoryDesignAssetsRepository(BaseDesignAssetsRepository):
 
     async def delete(self, id_: uuid.UUID) -> None:
         self.items.pop(id_, None)
+
+
+class InMemoryDesignRatingsRepository(BaseDesignRatingsRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, DesignRating] = {}
+
+    async def add(self, entity: DesignRating) -> None:
+        self.items[entity.id] = entity
+
+    async def get_by_id(self, id_: uuid.UUID) -> Optional[DesignRating]:
+        return self.items.get(id_)
+
+    async def update(self, entity: DesignRating) -> DesignRating:
+        self.items[entity.id] = entity
+        return entity
+
+    async def delete(self, id_: uuid.UUID) -> None:
+        self.items.pop(id_, None)
+
+    async def get_by_user_and_design(
+        self,
+        *,
+        user_id: uuid.UUID,
+        design_id: uuid.UUID,
+    ) -> Optional[DesignRating]:
+        for rating in self.items.values():
+            if rating.user_id == user_id and rating.design_id == design_id:
+                return rating
+        return None
+
+    async def list_aggregates_by_design_ids(
+        self,
+        design_ids: list[uuid.UUID],
+    ) -> list[DesignRatingAggregate]:
+        by_design: dict[uuid.UUID, list[int]] = {design_id: [] for design_id in design_ids}
+        for rating in self.items.values():
+            if rating.design_id in by_design:
+                by_design[rating.design_id].append(rating.stars.value)
+
+        aggregates: list[DesignRatingAggregate] = []
+        for design_id, stars in by_design.items():
+            if not stars:
+                continue
+            aggregates.append(
+                DesignRatingAggregate(
+                    design_id=design_id,
+                    average=sum(stars) / len(stars),
+                    count=len(stars),
+                )
+            )
+        return aggregates
+
+    async def list_user_ratings_for_designs(
+        self,
+        *,
+        user_id: uuid.UUID,
+        design_ids: list[uuid.UUID],
+    ) -> list[DesignRating]:
+        design_id_set = set(design_ids)
+        return [
+            rating
+            for rating in self.items.values()
+            if rating.user_id == user_id and rating.design_id in design_id_set
+        ]
 
 
 class InMemoryMediaFilesRepository(BaseMediaFilesRepository):
@@ -214,6 +283,7 @@ class InMemoryUnitOfWork(BaseUnitOfWork):
         self.boxes = InMemoryBoxesRepository()
         self.box_designs = InMemoryBoxDesignsRepository()
         self.design_assets = InMemoryDesignAssetsRepository()
+        self.design_ratings = InMemoryDesignRatingsRepository()
         self.media_files = InMemoryMediaFilesRepository()
         self.users = InMemoryUsersRepository()
         self.telegram_login_challenges = InMemoryTelegramLoginChallengesRepository()

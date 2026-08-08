@@ -9,6 +9,7 @@ from src.infrastructure.repositories import (
     SqlAlchemyBoxDesignsRepository,
     SqlAlchemyBoxesRepository,
     SqlAlchemyDesignAssetsRepository,
+    SqlAlchemyDesignRatingsRepository,
     SqlAlchemyMediaFilesRepository,
     SqlAlchemyTelegramLoginChallengesRepository,
     SqlAlchemyUserSessionsRepository,
@@ -30,6 +31,7 @@ class SqlAlchemyUnitOfWork(BaseUnitOfWork):
         self.boxes = SqlAlchemyBoxesRepository(self._session)
         self.box_designs = SqlAlchemyBoxDesignsRepository(self._session)
         self.design_assets = SqlAlchemyDesignAssetsRepository(self._session)
+        self.design_ratings = SqlAlchemyDesignRatingsRepository(self._session)
         self.media_files = SqlAlchemyMediaFilesRepository(self._session)
         self.telegram_login_challenges = SqlAlchemyTelegramLoginChallengesRepository(
             self._session

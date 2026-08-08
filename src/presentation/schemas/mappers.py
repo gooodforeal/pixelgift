@@ -1,3 +1,4 @@
+from src.application.dto.designs import BoxDesignWithRating
 from src.domain.aggregates.boxes import Box
 from src.domain.entities.box_designs import BoxDesign
 from src.domain.entities.box_items import BoxItem
@@ -75,7 +76,13 @@ def public_box_to_response(
     )
 
 
-def box_design_to_response(design: BoxDesign) -> BoxDesignResponse:
+def box_design_to_response(
+    design: BoxDesign,
+    *,
+    rating_avg: float = 0.0,
+    rating_count: int = 0,
+    my_rating: int | None = None,
+) -> BoxDesignResponse:
     return BoxDesignResponse(
         id=design.id,
         code=design.code,
@@ -86,6 +93,20 @@ def box_design_to_response(design: BoxDesign) -> BoxDesignResponse:
             design.description.value if design.description is not None else None
         ),
         theme_config=dict(design.theme_config),
+        rating_avg=rating_avg,
+        rating_count=rating_count,
+        my_rating=my_rating,
+    )
+
+
+def box_design_with_rating_to_response(
+    item: BoxDesignWithRating,
+) -> BoxDesignResponse:
+    return box_design_to_response(
+        item.design,
+        rating_avg=item.rating_avg,
+        rating_count=item.rating_count,
+        my_rating=item.my_rating,
     )
 
 
@@ -101,6 +122,9 @@ def admin_box_design_to_response(design: BoxDesign) -> AdminBoxDesignResponse:
         ),
         theme_config=dict(design.theme_config),
         is_active=design.is_active,
+        rating_avg=0.0,
+        rating_count=0,
+        my_rating=None,
     )
 
 

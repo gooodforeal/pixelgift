@@ -1,31 +1,25 @@
 import type { ReactNode } from "react";
 
+import { toProxiedAssetUrl } from "../lib/api";
 import { gradientCss, resolveTheme } from "../lib/theme";
-import type { BoxDesign, ThemeConfig } from "../lib/types";
+import type { ThemeConfig } from "../lib/types";
 
-/** Resolve cover URL: prefer API preview, fall back to local seed JPGs for CDN placeholders. */
-const LEGACY_DESIGN_COVERS: Record<string, string> = {
-  romantic: "romantic-night",
-  birthday: "birthday-confetti",
-  winter: "winter-magic",
-  golden: "golden-anniversary",
-  spring: "spring-bloom",
-  retro: "retro-pixel",
-};
-
+/** Resolve cover URL from design.preview_image_url (API /designs/assets/{id}). */
 export function designCoverUrl(
-  design: Pick<BoxDesign, "code" | "preview_image_url"> | string,
+  design:
+    | { preview_image_url?: string | null }
+    | string
+    | null
+    | undefined,
 ): string {
-  if (typeof design === "string") {
-    const fileCode = LEGACY_DESIGN_COVERS[design] ?? design;
-    return `/designs/${fileCode}.jpg`;
+  if (!design || typeof design === "string") {
+    return "";
   }
   const preview = design.preview_image_url;
-  if (preview && !preview.includes("cdn.pixelgift.app")) {
-    return preview;
+  if (!preview) {
+    return "";
   }
-  const fileCode = LEGACY_DESIGN_COVERS[design.code] ?? design.code;
-  return `/designs/${fileCode}.jpg`;
+  return toProxiedAssetUrl(preview);
 }
 
 interface DesignCoverProps {
@@ -38,7 +32,7 @@ interface DesignCoverProps {
 }
 
 export function DesignCover({
-  code,
+  code: _code,
   previewImageUrl = null,
   themeConfig = null,
   className = "",
@@ -47,27 +41,26 @@ export function DesignCover({
 }: DesignCoverProps) {
   const theme = resolveTheme(themeConfig);
   const objectPosition = theme.cover_object_position;
-  const coverUrl = designCoverUrl({
-    code,
-    preview_image_url: previewImageUrl ?? `https://cdn.pixelgift.app/designs/${code}.jpg`,
-  });
+  const coverUrl = designCoverUrl({ preview_image_url: previewImageUrl });
 
   return (
     <div
       className={`design-cover relative w-full min-w-0 shrink-0 overflow-hidden ${heightClassName} ${className}`}
       style={{ background: gradientCss(theme.gradient) }}
     >
-      <div
-        className="design-cover__media pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage: `url(${coverUrl})`,
-          backgroundSize: "cover",
-          backgroundPosition: objectPosition,
-          backgroundRepeat: "no-repeat",
-        }}
-        role="img"
-        aria-hidden
-      />
+      {coverUrl ? (
+        <div
+          className="design-cover__media pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage: `url(${coverUrl})`,
+            backgroundSize: "cover",
+            backgroundPosition: objectPosition,
+            backgroundRepeat: "no-repeat",
+          }}
+          role="img"
+          aria-hidden
+        />
+      ) : null}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-950/55 via-ink-950/10 to-transparent" />
       {children}
     </div>

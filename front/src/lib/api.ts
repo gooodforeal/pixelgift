@@ -222,7 +222,7 @@ export const api = {
 
   addGeopointItem: (
     boxId: string,
-    coords: { lat: number; lng: number; label?: string | null },
+    coords: { lat: number; lng: number },
     caption?: string | null,
   ) =>
     request<Box>(`/boxes/${boxId}/items`, {
@@ -233,7 +233,6 @@ export const api = {
         metadata: {
           lat: coords.lat,
           lng: coords.lng,
-          ...(coords.label?.trim() ? { label: coords.label.trim() } : {}),
         },
       }),
     }),

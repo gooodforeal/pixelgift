@@ -88,9 +88,6 @@ class AddBoxItemRequest(BaseModel):
                 raise ValueError("metadata.lat must be between -90 and 90")
             if not (-180 <= float(lng) <= 180):
                 raise ValueError("metadata.lng must be between -180 and 180")
-            label = self.metadata.get("label")
-            if label is not None and not isinstance(label, str):
-                raise ValueError("metadata.label must be a string if provided")
         elif self.media_file_id is None:
             raise ValueError("media_file_id is required for media items")
         return self

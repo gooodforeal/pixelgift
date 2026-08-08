@@ -30,7 +30,7 @@ const EMPTY_GIFT_BOX = {
   ribbonDark: "#b8820f",
 };
 
-const PLACEHOLDER_PREVIEW_URL = "https://cdn.pixelgift.app/designs/placeholder.jpg";
+const PLACEHOLDER_PREVIEW_URL = "";
 
 function blankForm(): AdminDesignPayload {
   return {

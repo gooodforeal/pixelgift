@@ -1,7 +1,6 @@
 export interface GeopointCoords {
   lat: number;
   lng: number;
-  label?: string;
 }
 
 /** Default map center (Moscow). */
@@ -18,12 +17,7 @@ export function geopointFromMetadata(
   if (typeof lat !== "number" || typeof lng !== "number") return null;
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
   if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
-  const label = metadata?.label;
-  return {
-    lat,
-    lng,
-    label: typeof label === "string" && label.trim() ? label.trim() : undefined,
-  };
+  return { lat, lng };
 }
 
 export function formatGeopointCoords(coords: GeopointCoords): string {

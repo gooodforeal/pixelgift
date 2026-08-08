@@ -14,10 +14,11 @@ RUN uv sync --frozen --no-dev
 COPY alembic.ini ./
 COPY migrations ./migrations
 COPY scripts ./scripts
+COPY assets ./assets
 COPY src ./src
 COPY bot ./bot
 
-RUN chmod +x /app/scripts/entrypoint.sh
+RUN chmod +x /app/scripts/entrypoint.sh /app/scripts/seed_static_assets.py
 
 EXPOSE 8000
 

@@ -477,7 +477,7 @@ class TestAddBoxItemUseCase:
                 actor_id=user_id,
                 item_type="geopoint",
                 caption=BoxItemCaption("Наше место"),
-                metadata={"lat": 55.7558, "lng": 37.6173, "label": "Москва"},
+                metadata={"lat": 55.7558, "lng": 37.6173},
             )
         )
 

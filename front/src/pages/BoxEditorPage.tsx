@@ -677,10 +677,9 @@ export function BoxEditorPage() {
                             <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-emerald-500/20 to-sky-500/15 p-2 text-center">
                               <span className="text-lg leading-none">📍</span>
                               <span className="line-clamp-2 text-[0.6rem] leading-snug text-slate-200">
-                                {point?.label ??
-                                  (point
-                                    ? formatGeopointCoords(point)
-                                    : "Точка")}
+                                {point
+                                  ? formatGeopointCoords(point)
+                                  : "Точка"}
                               </span>
                             </div>
                           );

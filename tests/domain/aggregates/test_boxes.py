@@ -159,14 +159,15 @@ class TestBoxAggregateItems:
         item = box.add_item(
             item_type=BoxItemType.GEOPOINT,
             caption=BoxItemCaption("Наше место"),
-            metadata={"lat": 55.7558, "lng": 37.6173, "label": "Красная площадь"},
+            metadata={"lat": 55.7558, "lng": 37.6173},
         )
 
         assert item.media_file_id is None
         assert item.item_type == BoxItemType.GEOPOINT
         assert item.metadata["lat"] == 55.7558
         assert item.metadata["lng"] == 37.6173
-        assert item.metadata["label"] == "Красная площадь"
+        assert item.caption is not None
+        assert item.caption.value == "Наше место"
 
     def test_add_geopoint_item_rejects_missing_coords(self, activates_at: ActivatesAt):
         box = _make_box(activates_at)

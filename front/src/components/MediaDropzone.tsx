@@ -67,7 +67,6 @@ export function MediaDropzone({
   const [geoCoords, setGeoCoords] = useState<GeopointCoords | null>(
     DEFAULT_GEOPOINT,
   );
-  const [geoLabel, setGeoLabel] = useState("");
   const [geoCaption, setGeoCaption] = useState("");
   const option = getMediaKindOption(kind);
   const Icon = ICONS[kind];
@@ -100,13 +99,7 @@ export function MediaDropzone({
 
   const submitGeopoint = () => {
     if (!geoCoords || disabled || uploading) return;
-    onAddGeopoint?.(
-      {
-        ...geoCoords,
-        label: geoLabel.trim() || undefined,
-      },
-      geoCaption.trim(),
-    );
+    onAddGeopoint?.(geoCoords, geoCaption.trim());
     setGeoCaption("");
   };
 
@@ -285,20 +278,6 @@ export function MediaDropzone({
             Нажмите на карту или перетащите маркер
             {geoCoords ? ` · ${formatGeopointCoords(geoCoords)}` : ""}
           </p>
-          <div>
-            <label className="label" htmlFor="geo-label">
-              Название места
-            </label>
-            <input
-              id="geo-label"
-              className="field"
-              placeholder="Например: то кафе, где мы встретились"
-              value={geoLabel}
-              disabled={disabled || uploading}
-              maxLength={120}
-              onChange={(event) => setGeoLabel(event.target.value)}
-            />
-          </div>
           <div>
             <label className="label" htmlFor="geo-caption">
               Подпись

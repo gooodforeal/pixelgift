@@ -117,7 +117,7 @@ export function MediaPreview({
         className={`flex h-full min-h-[14rem] w-full flex-col overflow-hidden bg-ink-900 ${className}`}
       >
         <iframe
-          title={point.label ?? "Точка на карте"}
+          title="Точка на карте"
           src={mapSrc}
           className="min-h-[12rem] w-full flex-1 border-0"
           loading="lazy"
@@ -126,7 +126,7 @@ export function MediaPreview({
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-ink-800/90 px-3 py-2.5">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-slate-100">
-              {point.label ?? "Точка на карте"}
+              Точка на карте
             </p>
             <p className="text-[0.7rem] text-slate-400">
               {formatGeopointCoords(point)}

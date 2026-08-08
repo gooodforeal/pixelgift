@@ -90,9 +90,6 @@ class Box(BaseEntity):
                 parse_geopoint_metadata(metadata)
             except ValueError as exc:
                 raise BoxItemInvalidError(str(exc)) from exc
-            label = (metadata or {}).get("label")
-            if label is not None and not isinstance(label, str):
-                raise BoxItemInvalidError("metadata.label must be a string if provided")
         elif media_file_id is None:
             raise BoxItemInvalidError("Media item requires a media file")
 

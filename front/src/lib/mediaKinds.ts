@@ -14,6 +14,8 @@ export interface MediaKindOption {
   isText?: boolean;
   /** Toy cards pick a preset plush from the catalog. */
   isToy?: boolean;
+  /** Geopoint cards pick a location on the map. */
+  isGeopoint?: boolean;
 }
 
 export const MEDIA_KIND_OPTIONS: MediaKindOption[] = [
@@ -83,6 +85,16 @@ export const MEDIA_KIND_OPTIONS: MediaKindOption[] = [
     mimeTypes: [],
     isToy: true,
   },
+  {
+    kind: "geopoint",
+    label: "Геоточка",
+    hint: "Точка на карте",
+    shortHint: "Карта",
+    accept: "",
+    extensions: [],
+    mimeTypes: [],
+    isGeopoint: true,
+  },
 ];
 
 export function getMediaKindOption(kind: BoxItemType): MediaKindOption {
@@ -91,7 +103,7 @@ export function getMediaKindOption(kind: BoxItemType): MediaKindOption {
 
 export function fileMatchesMediaKind(file: File, kind: BoxItemType): boolean {
   const option = getMediaKindOption(kind);
-  if (option.isText || option.isToy) return false;
+  if (option.isText || option.isToy || option.isGeopoint) return false;
   const mime = file.type.toLowerCase();
   if (mime && option.mimeTypes.includes(mime)) return true;
 

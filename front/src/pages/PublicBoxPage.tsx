@@ -15,6 +15,7 @@ import { formatDateTime } from "../lib/format";
 import { getMediaKindOption } from "../lib/mediaKinds";
 import { radialGlowCss, resolveTheme, themeBackgroundLayers } from "../lib/theme";
 import type { BoxItem, PublicBox } from "../lib/types";
+import { geopointFromMetadata } from "../lib/geopoint";
 import { toyCodeFromMetadata, toyImageUrl } from "../lib/toys";
 
 type RevealStep =
@@ -428,8 +429,12 @@ function ItemStep({
           fit="contain"
           caption={item.caption}
           toyCode={toyCodeFromMetadata(item.metadata)}
+          geopoint={geopointFromMetadata(item.metadata)}
+          metadata={item.metadata}
           className={
-            item.item_type === "voice" || item.item_type === "text"
+            item.item_type === "voice" ||
+            item.item_type === "text" ||
+            item.item_type === "geopoint"
               ? "w-full rounded-2xl"
               : "max-h-[min(58dvh,32rem)] rounded-2xl"
           }

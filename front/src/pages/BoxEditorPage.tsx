@@ -47,6 +47,11 @@ import {
   splitDateTimeLocal,
   toDateTimeLocal,
 } from "../lib/format";
+import {
+  formatGeopointCoords,
+  geopointFromMetadata,
+  type GeopointCoords,
+} from "../lib/geopoint";
 import { getMediaKindOption } from "../lib/mediaKinds";
 import type { Box, BoxItemType, BoxPayload } from "../lib/types";
 import { getToyOption, toyCodeFromMetadata, toyImageUrl } from "../lib/toys";
@@ -211,6 +216,16 @@ export function BoxEditorPage() {
     onSuccess: (updated) => {
       setBoxData(updated);
       toast("Игрушка добавлена в бокс");
+    },
+    onError: (error: Error) => toast(error.message, "error"),
+  });
+
+  const addGeopointItem = useMutation({
+    mutationFn: (input: { coords: GeopointCoords; caption: string }) =>
+      api.addGeopointItem(boxId!, input.coords, input.caption || null),
+    onSuccess: (updated) => {
+      setBoxData(updated);
+      toast("Геоточка добавлена в бокс");
     },
     onError: (error: Error) => toast(error.message, "error"),
   });
@@ -598,6 +613,9 @@ export function BoxEditorPage() {
                   onAddToy={(toyCode, caption) =>
                     addToyItem.mutate({ toyCode, caption })
                   }
+                  onAddGeopoint={(coords, caption) =>
+                    addGeopointItem.mutate({ coords, caption })
+                  }
                   onRejected={(files, kind) => {
                     const option = getMediaKindOption(kind);
                     toast(
@@ -611,7 +629,8 @@ export function BoxEditorPage() {
                   uploading={
                     uploadFiles.isPending ||
                     addTextItem.isPending ||
-                    addToyItem.isPending
+                    addToyItem.isPending ||
+                    addGeopointItem.isPending
                   }
                 />
                 {freeSlots === 0 && (
@@ -651,6 +670,21 @@ export function BoxEditorPage() {
                           }
                           className="h-full w-full object-cover"
                         />
+                      ) : item.item_type === "geopoint" ? (
+                        (() => {
+                          const point = geopointFromMetadata(item.metadata);
+                          return (
+                            <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-emerald-500/20 to-sky-500/15 p-2 text-center">
+                              <span className="text-lg leading-none">📍</span>
+                              <span className="line-clamp-2 text-[0.6rem] leading-snug text-slate-200">
+                                {point?.label ??
+                                  (point
+                                    ? formatGeopointCoords(point)
+                                    : "Точка")}
+                              </span>
+                            </div>
+                          );
+                        })()
                       ) : item.media_file_id ? (
                         <MediaPreview
                           src={ownMediaUrl(item.media_file_id)}
@@ -671,7 +705,9 @@ export function BoxEditorPage() {
                                     ? "Текст карточки"
                                     : item.item_type === "toy"
                                       ? "Подпись к игрушке"
-                                      : "Подпись к файлу"
+                                      : item.item_type === "geopoint"
+                                        ? "Подпись к точке"
+                                        : "Подпись к файлу"
                                 }
                             defaultValue={item.caption ?? ""}
                             onBlur={(event) => {

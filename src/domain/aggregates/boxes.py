@@ -8,6 +8,7 @@ import uuid
 from src.domain.entities.base import BaseEntity
 from src.domain.entities.box_items import BoxItem, BoxItemType, TOY_CODES
 from src.domain.exceptions.box_items import BoxItemInvalidError
+from src.domain.helpers.box_items import parse_geopoint_metadata
 
 from src.domain.exceptions.boxes import (
     BoxAlreadyArchivedError,
@@ -80,6 +81,18 @@ class Box(BaseEntity):
                 raise BoxItemInvalidError(
                     f"Toy item requires a valid toy_code ({', '.join(sorted(TOY_CODES))})"
                 )
+        elif item_type == BoxItemType.GEOPOINT:
+            if media_file_id is not None:
+                raise BoxItemInvalidError(
+                    "Geopoint item must not reference a media file"
+                )
+            try:
+                parse_geopoint_metadata(metadata)
+            except ValueError as exc:
+                raise BoxItemInvalidError(str(exc)) from exc
+            label = (metadata or {}).get("label")
+            if label is not None and not isinstance(label, str):
+                raise BoxItemInvalidError("metadata.label must be a string if provided")
         elif media_file_id is None:
             raise BoxItemInvalidError("Media item requires a media file")
 

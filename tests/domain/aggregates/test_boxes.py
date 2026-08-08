@@ -153,6 +153,39 @@ class TestBoxAggregateItems:
                 metadata={"toy_code": "dragon"},
             )
 
+    def test_add_geopoint_item_with_coords(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+
+        item = box.add_item(
+            item_type=BoxItemType.GEOPOINT,
+            caption=BoxItemCaption("Наше место"),
+            metadata={"lat": 55.7558, "lng": 37.6173, "label": "Красная площадь"},
+        )
+
+        assert item.media_file_id is None
+        assert item.item_type == BoxItemType.GEOPOINT
+        assert item.metadata["lat"] == 55.7558
+        assert item.metadata["lng"] == 37.6173
+        assert item.metadata["label"] == "Красная площадь"
+
+    def test_add_geopoint_item_rejects_missing_coords(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+
+        with pytest.raises(BoxItemInvalidError):
+            box.add_item(
+                item_type=BoxItemType.GEOPOINT,
+                metadata={"lat": 55.7558},
+            )
+
+    def test_add_geopoint_item_rejects_out_of_range(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+
+        with pytest.raises(BoxItemInvalidError):
+            box.add_item(
+                item_type=BoxItemType.GEOPOINT,
+                metadata={"lat": 99.0, "lng": 37.0},
+            )
+
     def test_add_item_rejects_duplicate_sort_order(self, activates_at: ActivatesAt):
         box = _make_box(activates_at)
         box.add_item(

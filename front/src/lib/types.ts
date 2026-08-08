@@ -1,6 +1,13 @@
 export type BoxStatus = "draft" | "scheduled" | "active" | "archived";
 
-export type BoxItemType = "image" | "gif" | "video" | "voice" | "text" | "toy";
+export type BoxItemType =
+  | "image"
+  | "gif"
+  | "video"
+  | "voice"
+  | "text"
+  | "toy"
+  | "geopoint";
 
 export interface BoxItem {
   id: string;

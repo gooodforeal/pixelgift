@@ -4,17 +4,24 @@ import {
   Gift,
   ImagePlus,
   Loader2,
+  MapPin,
   Mic,
   Sparkles,
   Type,
   type LucideIcon,
 } from "lucide-react";
 
+import { MapPointPicker } from "./MapPointPicker";
 import {
   filterFilesByMediaKind,
   getMediaKindOption,
   MEDIA_KIND_OPTIONS,
 } from "../lib/mediaKinds";
+import {
+  DEFAULT_GEOPOINT,
+  formatGeopointCoords,
+  type GeopointCoords,
+} from "../lib/geopoint";
 import { MAX_BOX_ITEM_CAPTION } from "../lib/limits";
 import { TOY_OPTIONS, toyImageUrl } from "../lib/toys";
 import type { BoxItemType } from "../lib/types";
@@ -26,6 +33,7 @@ const ICONS: Record<BoxItemType, LucideIcon> = {
   voice: Mic,
   text: Type,
   toy: Gift,
+  geopoint: MapPin,
 };
 
 interface MediaDropzoneProps {
@@ -34,6 +42,7 @@ interface MediaDropzoneProps {
   onFiles: (files: File[]) => void;
   onAddText?: (text: string) => void;
   onAddToy?: (toyCode: string, caption: string) => void;
+  onAddGeopoint?: (coords: GeopointCoords, caption: string) => void;
   onRejected?: (files: File[], kind: BoxItemType) => void;
   uploading: boolean;
   disabled?: boolean;
@@ -45,6 +54,7 @@ export function MediaDropzone({
   onFiles,
   onAddText,
   onAddToy,
+  onAddGeopoint,
   onRejected,
   uploading,
   disabled = false,
@@ -54,13 +64,19 @@ export function MediaDropzone({
   const [textDraft, setTextDraft] = useState("");
   const [toyCode, setToyCode] = useState(TOY_OPTIONS[0]?.code ?? "bear");
   const [toyCaption, setToyCaption] = useState("");
+  const [geoCoords, setGeoCoords] = useState<GeopointCoords | null>(
+    DEFAULT_GEOPOINT,
+  );
+  const [geoLabel, setGeoLabel] = useState("");
+  const [geoCaption, setGeoCaption] = useState("");
   const option = getMediaKindOption(kind);
   const Icon = ICONS[kind];
   const isText = Boolean(option.isText);
   const isToy = Boolean(option.isToy);
+  const isGeopoint = Boolean(option.isGeopoint);
 
   const handleFiles = (fileList: FileList | null) => {
-    if (!fileList || disabled || isText || isToy) return;
+    if (!fileList || disabled || isText || isToy || isGeopoint) return;
     const { accepted, rejected } = filterFilesByMediaKind(
       Array.from(fileList),
       kind,
@@ -82,6 +98,18 @@ export function MediaDropzone({
     setToyCaption("");
   };
 
+  const submitGeopoint = () => {
+    if (!geoCoords || disabled || uploading) return;
+    onAddGeopoint?.(
+      {
+        ...geoCoords,
+        label: geoLabel.trim() || undefined,
+      },
+      geoCaption.trim(),
+    );
+    setGeoCaption("");
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -89,7 +117,7 @@ export function MediaDropzone({
         <div
           role="tablist"
           aria-label="Тип карточки"
-          className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+          className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4"
         >
           {MEDIA_KIND_OPTIONS.map((item) => {
             const ItemIcon = ICONS[item.kind];
@@ -238,6 +266,70 @@ export function MediaDropzone({
                 </>
               ) : (
                 "Добавить игрушку"
+              )}
+            </button>
+          </div>
+        </div>
+      ) : isGeopoint ? (
+        <div className="space-y-4 rounded-3xl border border-white/12 bg-white/[0.02] p-4 sm:p-5">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+            <MapPin className="size-4 text-glow-violet" />
+            Точка на карте
+          </div>
+          <MapPointPicker
+            value={geoCoords}
+            onChange={setGeoCoords}
+            disabled={disabled || uploading}
+          />
+          <p className="text-xs text-slate-400">
+            Нажмите на карту или перетащите маркер
+            {geoCoords ? ` · ${formatGeopointCoords(geoCoords)}` : ""}
+          </p>
+          <div>
+            <label className="label" htmlFor="geo-label">
+              Название места
+            </label>
+            <input
+              id="geo-label"
+              className="field"
+              placeholder="Например: то кафе, где мы встретились"
+              value={geoLabel}
+              disabled={disabled || uploading}
+              maxLength={120}
+              onChange={(event) => setGeoLabel(event.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label" htmlFor="geo-caption">
+              Подпись
+            </label>
+            <input
+              id="geo-caption"
+              className="field"
+              placeholder="Помнишь это место?"
+              value={geoCaption}
+              disabled={disabled || uploading}
+              maxLength={MAX_BOX_ITEM_CAPTION}
+              onChange={(event) => setGeoCaption(event.target.value)}
+            />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-slate-400">
+              Получатель увидит точку на карте
+            </p>
+            <button
+              type="button"
+              className="btn-primary px-5 py-2.5 text-sm"
+              disabled={disabled || uploading || !geoCoords}
+              onClick={submitGeopoint}
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Добавляем…
+                </>
+              ) : (
+                "Добавить точку"
               )}
             </button>
           </div>

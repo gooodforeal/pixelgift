@@ -57,7 +57,7 @@ class UpdateBoxRequest(BaseModel):
 
 class AddBoxItemRequest(BaseModel):
     media_file_id: uuid.UUID | None = None
-    item_type: Literal["text", "toy"] | None = None
+    item_type: Literal["text", "toy", "geopoint"] | None = None
     caption: str | None = Field(default=None, max_length=300)
     sort_order: int | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -75,6 +75,22 @@ class AddBoxItemRequest(BaseModel):
             toy_code = self.metadata.get("toy_code")
             if not isinstance(toy_code, str) or not toy_code.strip():
                 raise ValueError("Toy item requires metadata.toy_code")
+        elif self.item_type == "geopoint":
+            if self.media_file_id is not None:
+                raise ValueError("Geopoint item must not include media_file_id")
+            lat = self.metadata.get("lat")
+            lng = self.metadata.get("lng")
+            if not isinstance(lat, (int, float)) or isinstance(lat, bool):
+                raise ValueError("Geopoint item requires numeric metadata.lat")
+            if not isinstance(lng, (int, float)) or isinstance(lng, bool):
+                raise ValueError("Geopoint item requires numeric metadata.lng")
+            if not (-90 <= float(lat) <= 90):
+                raise ValueError("metadata.lat must be between -90 and 90")
+            if not (-180 <= float(lng) <= 180):
+                raise ValueError("metadata.lng must be between -180 and 180")
+            label = self.metadata.get("label")
+            if label is not None and not isinstance(label, str):
+                raise ValueError("metadata.label must be a string if provided")
         elif self.media_file_id is None:
             raise ValueError("media_file_id is required for media items")
         return self

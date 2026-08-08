@@ -15,6 +15,7 @@ class BoxItemType(StrEnum):
     VOICE = "voice"
     TEXT = "text"
     TOY = "toy"
+    GEOPOINT = "geopoint"
 
 
 TOY_CODES: frozenset[str] = frozenset(

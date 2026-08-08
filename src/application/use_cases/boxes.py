@@ -192,6 +192,18 @@ class AddBoxItemUseCase:
                     caption=command.caption,
                     metadata=command.metadata,
                 )
+            elif command.item_type == BoxItemType.GEOPOINT.value:
+                if command.media_file_id is not None:
+                    raise BoxItemInvalidError(
+                        "Geopoint item must not reference a media file"
+                    )
+                box.add_item(
+                    media_file_id=None,
+                    item_type=BoxItemType.GEOPOINT,
+                    sort_order=command.sort_order,
+                    caption=command.caption,
+                    metadata=command.metadata,
+                )
             else:
                 if command.media_file_id is None:
                     raise BoxItemInvalidError("Media item requires a media file")

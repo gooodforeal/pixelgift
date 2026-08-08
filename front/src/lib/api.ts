@@ -220,6 +220,24 @@ export const api = {
       }),
     }),
 
+  addGeopointItem: (
+    boxId: string,
+    coords: { lat: number; lng: number; label?: string | null },
+    caption?: string | null,
+  ) =>
+    request<Box>(`/boxes/${boxId}/items`, {
+      method: "POST",
+      body: JSON.stringify({
+        item_type: "geopoint",
+        caption: caption?.trim() || null,
+        metadata: {
+          lat: coords.lat,
+          lng: coords.lng,
+          ...(coords.label?.trim() ? { label: coords.label.trim() } : {}),
+        },
+      }),
+    }),
+
   updateItem: (boxId: string, itemId: string, caption: string | null) =>
     request<Box>(`/boxes/${boxId}/items/${itemId}`, {
       method: "PATCH",

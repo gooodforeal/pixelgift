@@ -131,6 +131,21 @@ class TestBoxAggregateItems:
         assert item.caption is not None
         assert item.caption.value == "Письмо"
 
+    def test_add_drawing_item_with_media(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+        media_file_id = uuid.uuid4()
+
+        item = box.add_item(
+            media_file_id=media_file_id,
+            item_type=BoxItemType.DRAWING,
+            caption=BoxItemCaption("Нарисовал сам"),
+        )
+
+        assert item.media_file_id == media_file_id
+        assert item.item_type == BoxItemType.DRAWING
+        assert item.caption is not None
+        assert item.caption.value == "Нарисовал сам"
+
     def test_add_toy_item_with_code(self, activates_at: ActivatesAt):
         box = _make_box(activates_at)
 

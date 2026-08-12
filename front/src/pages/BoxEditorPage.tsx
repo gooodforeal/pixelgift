@@ -210,6 +210,21 @@ export function BoxEditorPage() {
     onError: (error: Error) => toast(error.message, "error"),
   });
 
+  const addDrawingItem = useMutation({
+    mutationFn: async (blob: Blob) => {
+      const file = new File([blob], `drawing-${Date.now()}.png`, {
+        type: "image/png",
+      });
+      const media = await api.uploadMedia(file, "image");
+      return api.addItem(boxId!, media.id, null, "drawing");
+    },
+    onSuccess: (updated) => {
+      setBoxData(updated);
+      toast("Рисунок добавлен в бокс");
+    },
+    onError: (error: Error) => toast(error.message, "error"),
+  });
+
   const addToyItem = useMutation({
     mutationFn: (input: { toyCode: string; caption: string }) =>
       api.addToyItem(boxId!, input.toyCode, input.caption || null),
@@ -610,6 +625,7 @@ export function BoxEditorPage() {
                     uploadFiles.mutate(files.slice(0, freeSlots));
                   }}
                   onAddText={(text) => addTextItem.mutate(text)}
+                  onAddDrawing={(blob) => addDrawingItem.mutate(blob)}
                   onAddToy={(toyCode, caption) =>
                     addToyItem.mutate({ toyCode, caption })
                   }
@@ -629,6 +645,7 @@ export function BoxEditorPage() {
                   uploading={
                     uploadFiles.isPending ||
                     addTextItem.isPending ||
+                    addDrawingItem.isPending ||
                     addToyItem.isPending ||
                     addGeopointItem.isPending
                   }
@@ -706,6 +723,8 @@ export function BoxEditorPage() {
                                       ? "Подпись к игрушке"
                                       : item.item_type === "geopoint"
                                         ? "Подпись к точке"
+                                        : item.item_type === "drawing"
+                                          ? "Подпись к рисунку"
                                         : "Подпись к файлу"
                                 }
                             defaultValue={item.caption ?? ""}

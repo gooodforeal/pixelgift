@@ -90,6 +90,9 @@ class Box(BaseEntity):
                 parse_geopoint_metadata(metadata)
             except ValueError as exc:
                 raise BoxItemInvalidError(str(exc)) from exc
+        elif item_type == BoxItemType.DRAWING:
+            if media_file_id is None:
+                raise BoxItemInvalidError("Drawing item requires an image file")
         elif media_file_id is None:
             raise BoxItemInvalidError("Media item requires a media file")
 

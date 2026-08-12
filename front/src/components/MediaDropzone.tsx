@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import {
+  Brush,
   Film,
   Gift,
   ImagePlus,
@@ -11,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { DrawingCanvas } from "./DrawingCanvas";
 import { MapPointPicker } from "./MapPointPicker";
 import {
   filterFilesByMediaKind,
@@ -28,6 +30,7 @@ import type { BoxItemType } from "../lib/types";
 
 const ICONS: Record<BoxItemType, LucideIcon> = {
   image: ImagePlus,
+  drawing: Brush,
   gif: Sparkles,
   video: Film,
   voice: Mic,
@@ -41,6 +44,7 @@ interface MediaDropzoneProps {
   onKindChange: (kind: BoxItemType) => void;
   onFiles: (files: File[]) => void;
   onAddText?: (text: string) => void;
+  onAddDrawing?: (blob: Blob) => void;
   onAddToy?: (toyCode: string, caption: string) => void;
   onAddGeopoint?: (coords: GeopointCoords, caption: string) => void;
   onRejected?: (files: File[], kind: BoxItemType) => void;
@@ -53,6 +57,7 @@ export function MediaDropzone({
   onKindChange,
   onFiles,
   onAddText,
+  onAddDrawing,
   onAddToy,
   onAddGeopoint,
   onRejected,
@@ -71,11 +76,12 @@ export function MediaDropzone({
   const option = getMediaKindOption(kind);
   const Icon = ICONS[kind];
   const isText = Boolean(option.isText);
+  const isDrawing = kind === "drawing";
   const isToy = Boolean(option.isToy);
   const isGeopoint = Boolean(option.isGeopoint);
 
   const handleFiles = (fileList: FileList | null) => {
-    if (!fileList || disabled || isText || isToy || isGeopoint) return;
+    if (!fileList || disabled || isText || isDrawing || isToy || isGeopoint) return;
     const { accepted, rejected } = filterFilesByMediaKind(
       Array.from(fileList),
       kind,
@@ -187,6 +193,12 @@ export function MediaDropzone({
             </button>
           </div>
         </div>
+      ) : isDrawing ? (
+        <DrawingCanvas
+          disabled={disabled}
+          uploading={uploading}
+          onSubmit={(blob) => onAddDrawing?.(blob)}
+        />
       ) : isToy ? (
         <div className="space-y-4 rounded-3xl border border-white/12 bg-white/[0.02] p-4 sm:p-5">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">

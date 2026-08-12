@@ -10,6 +10,7 @@ from src.domain.values.sort_order import SortOrder
 
 class BoxItemType(StrEnum):
     IMAGE = "image"
+    DRAWING = "drawing"
     GIF = "gif"
     VIDEO = "video"
     VOICE = "voice"

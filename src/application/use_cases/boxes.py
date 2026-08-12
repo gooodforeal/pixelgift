@@ -204,6 +204,26 @@ class AddBoxItemUseCase:
                     caption=command.caption,
                     metadata=command.metadata,
                 )
+            elif command.item_type == BoxItemType.DRAWING.value:
+                if command.media_file_id is None:
+                    raise BoxItemInvalidError("Drawing item requires an image file")
+                media_file = await uow.media_files.get_by_id(command.media_file_id)
+                if media_file is None:
+                    raise MediaFileNotFoundError(command.media_file_id)
+                if media_file.owner_id != command.actor_id:
+                    raise MediaFileAccessDeniedError(
+                        command.media_file_id, command.actor_id
+                    )
+                if media_file.media_kind != MediaKind.IMAGE:
+                    raise BoxItemInvalidError("Drawing item requires an image file")
+
+                box.add_item(
+                    media_file_id=media_file.id,
+                    item_type=BoxItemType.DRAWING,
+                    sort_order=command.sort_order,
+                    caption=command.caption,
+                    metadata=command.metadata,
+                )
             else:
                 if command.media_file_id is None:
                     raise BoxItemInvalidError("Media item requires a media file")

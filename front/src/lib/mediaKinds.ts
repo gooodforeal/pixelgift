@@ -29,6 +29,15 @@ export const MEDIA_KIND_OPTIONS: MediaKindOption[] = [
     mimeTypes: ["image/jpeg", "image/png", "image/webp"],
   },
   {
+    kind: "drawing",
+    label: "Рисунок",
+    hint: "Нарисуйте на холсте и сохраним как PNG",
+    shortHint: "Холст",
+    accept: "",
+    extensions: [],
+    mimeTypes: [],
+  },
+  {
     kind: "gif",
     label: "GIF",
     hint: "Анимированные GIF",
@@ -103,7 +112,7 @@ export function getMediaKindOption(kind: BoxItemType): MediaKindOption {
 
 export function fileMatchesMediaKind(file: File, kind: BoxItemType): boolean {
   const option = getMediaKindOption(kind);
-  if (option.isText || option.isToy || option.isGeopoint) return false;
+  if (option.isText || option.isToy || option.isGeopoint || kind === "drawing") return false;
   const mime = file.type.toLowerCase();
   if (mime && option.mimeTypes.includes(mime)) return true;
 

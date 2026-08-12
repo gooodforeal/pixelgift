@@ -198,10 +198,19 @@ export const api = {
     return request<MediaFile>("/media", { method: "POST", body });
   },
 
-  addItem: (boxId: string, mediaFileId: string, caption?: string | null) =>
+  addItem: (
+    boxId: string,
+    mediaFileId: string,
+    caption?: string | null,
+    itemType?: "drawing",
+  ) =>
     request<Box>(`/boxes/${boxId}/items`, {
       method: "POST",
-      body: JSON.stringify({ media_file_id: mediaFileId, caption: caption ?? null }),
+      body: JSON.stringify({
+        media_file_id: mediaFileId,
+        caption: caption ?? null,
+        item_type: itemType ?? null,
+      }),
     }),
 
   addTextItem: (boxId: string, text: string) =>

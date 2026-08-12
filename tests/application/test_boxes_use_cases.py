@@ -29,6 +29,7 @@ from src.domain.aggregates.boxes import MAX_BOX_ITEMS, Box, BoxStatus
 from src.domain.entities.box_designs import BoxDesign
 from src.domain.entities.box_items import BoxItemType
 from src.domain.entities.media_files import MediaFile, MediaKind
+from src.domain.exceptions.box_items import BoxItemInvalidError
 from src.domain.exceptions.boxes import (
     BoxAccessDeniedError,
     BoxAlreadyArchivedError,
@@ -487,6 +488,57 @@ class TestAddBoxItemUseCase:
         assert updated.items[0].metadata["lat"] == 55.7558
         assert updated.items[0].metadata["lng"] == 37.6173
         assert uow.committed is True
+
+    async def test_adds_drawing_item_from_owned_image(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+        media = _media_file(owner_id=user_id, kind=MediaKind.IMAGE)
+        await uow.media_files.add(media)
+
+        updated = await AddBoxItemUseCase(uow).execute(
+            AddBoxItemCommand(
+                box_id=box.id,
+                actor_id=user_id,
+                media_file_id=media.id,
+                item_type="drawing",
+                caption=BoxItemCaption("Мой рисунок"),
+            )
+        )
+
+        assert len(updated.items) == 1
+        assert updated.items[0].media_file_id == media.id
+        assert updated.items[0].item_type == BoxItemType.DRAWING
+        assert updated.items[0].caption is not None
+        assert updated.items[0].caption.value == "Мой рисунок"
+        assert uow.committed is True
+
+    async def test_rejects_drawing_item_for_non_image_media(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+        media = _media_file(owner_id=user_id, kind=MediaKind.VIDEO)
+        await uow.media_files.add(media)
+
+        with pytest.raises(BoxItemInvalidError):
+            await AddBoxItemUseCase(uow).execute(
+                AddBoxItemCommand(
+                    box_id=box.id,
+                    actor_id=user_id,
+                    media_file_id=media.id,
+                    item_type="drawing",
+                )
+            )
 
     async def test_rejects_item_over_limit(
         self,

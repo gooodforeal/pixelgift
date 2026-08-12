@@ -2,6 +2,7 @@ export type BoxStatus = "draft" | "scheduled" | "active" | "archived";
 
 export type BoxItemType =
   | "image"
+  | "drawing"
   | "gif"
   | "video"
   | "voice"

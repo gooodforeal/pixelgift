@@ -9,10 +9,12 @@ import { CountdownTimer } from "../components/CountdownTimer";
 import { GiftBox3D, resolveGiftBoxPalette } from "../components/GiftBox3D";
 import { MediaPreview } from "../components/MediaPreview";
 import { Particles } from "../components/Particles";
+import { ScratchReveal } from "../components/ScratchReveal";
 import { Spinner } from "../components/Spinner";
 import { api, publicMediaUrl } from "../lib/api";
 import { formatDateTime } from "../lib/format";
 import { getMediaKindOption } from "../lib/mediaKinds";
+import { isSecretPhotoItem } from "../lib/secret";
 import { radialGlowCss, resolveTheme, themeBackgroundLayers } from "../lib/theme";
 import type { BoxItem, PublicBox } from "../lib/types";
 import { geopointFromMetadata } from "../lib/geopoint";
@@ -63,6 +65,7 @@ export function PublicBoxPage() {
   const [stepIndex, setStepIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [confetti, setConfetti] = useState(false);
+  const [secretRevealed, setSecretRevealed] = useState(true);
 
   const boxQuery = useQuery({
     queryKey: ["public-box", slug],
@@ -79,6 +82,13 @@ export function PublicBoxPage() {
   const steps = useMemo(() => (box ? buildSteps(box) : []), [box]);
   const step = steps[stepIndex] ?? null;
   const isLast = stepIndex >= steps.length - 1;
+  const needsSecretScratch =
+    step?.kind === "item" && isSecretPhotoItem(step.item);
+  const canGoNext = !needsSecretScratch || secretRevealed;
+
+  useEffect(() => {
+    setSecretRevealed(!(step?.kind === "item" && isSecretPhotoItem(step.item)));
+  }, [step]);
 
   const refetchOnUnlock = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["public-box", slug] });
@@ -242,6 +252,7 @@ export function PublicBoxPage() {
                       index={step.index}
                       total={step.total}
                       accent={theme.accent}
+                      onSecretRevealed={() => setSecretRevealed(true)}
                     />
                   )}
 
@@ -253,23 +264,33 @@ export function PublicBoxPage() {
             </div>
 
             {step.kind !== "intro" && (
-              <div className="mt-8 flex justify-center pb-2">
+              <div className="mt-8 flex flex-col items-center gap-2 pb-2">
                 {!isLast ? (
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={goNext}
-                    className="btn px-8 py-3.5 text-base font-bold"
-                    style={{
-                      background: theme.accent,
-                      color: "#0b0718",
-                      boxShadow: `0 20px 50px -20px ${theme.accent}`,
-                    }}
-                  >
-                    Далее
-                    <ArrowRight className="size-5" />
-                  </motion.button>
+                  <>
+                    <motion.button
+                      type="button"
+                      disabled={!canGoNext}
+                      whileHover={canGoNext ? { scale: 1.04 } : undefined}
+                      whileTap={canGoNext ? { scale: 0.97 } : undefined}
+                      onClick={goNext}
+                      className="btn px-8 py-3.5 text-base font-bold disabled:cursor-not-allowed disabled:opacity-45"
+                      style={{
+                        background: theme.accent,
+                        color: "#0b0718",
+                        boxShadow: canGoNext
+                          ? `0 20px 50px -20px ${theme.accent}`
+                          : undefined,
+                      }}
+                    >
+                      Далее
+                      <ArrowRight className="size-5" />
+                    </motion.button>
+                    {needsSecretScratch && !secretRevealed ? (
+                      <p className="text-center text-xs opacity-60">
+                        Сначала сотри слой, чтобы увидеть фото
+                      </p>
+                    ) : null}
+                  </>
                 ) : (
                   <Link
                     to="/"
@@ -399,13 +420,44 @@ function ItemStep({
   index,
   total,
   accent,
+  onSecretRevealed,
 }: {
   box: PublicBox;
   item: BoxItem;
   index: number;
   total: number;
   accent: string;
+  onSecretRevealed?: () => void;
 }) {
+  const secret = isSecretPhotoItem(item);
+  const previewClassName =
+    item.item_type === "voice" ||
+    item.item_type === "text" ||
+    item.item_type === "geopoint"
+      ? "w-full rounded-2xl"
+      : secret
+        ? "!h-auto !w-auto max-h-[min(58dvh,32rem)] max-w-full"
+        : "max-h-[min(58dvh,32rem)] rounded-2xl";
+
+  const preview = (
+    <MediaPreview
+      src={
+        item.item_type === "toy"
+          ? toyImageUrl(toyCodeFromMetadata(item.metadata) ?? "bear")
+          : item.media_file_id
+            ? publicMediaUrl(box.public_slug, item.id)
+            : ""
+      }
+      type={item.item_type}
+      fit="contain"
+      caption={item.caption}
+      toyCode={toyCodeFromMetadata(item.metadata)}
+      geopoint={geopointFromMetadata(item.metadata)}
+      metadata={item.metadata}
+      className={previewClassName}
+    />
+  );
+
   return (
     <section className="glass overflow-hidden">
       <div className="flex items-center justify-between gap-4 px-6 py-4 text-xs opacity-70 sm:px-8 sm:py-5">
@@ -417,28 +469,17 @@ function ItemStep({
       </div>
 
       <div className="relative mx-auto flex min-h-[18rem] max-h-[min(62dvh,34rem)] w-full items-center justify-center bg-black/25 px-3 py-4 sm:min-h-[22rem] sm:px-5">
-        <MediaPreview
-          src={
-            item.item_type === "toy"
-              ? toyImageUrl(toyCodeFromMetadata(item.metadata) ?? "bear")
-              : item.media_file_id
-                ? publicMediaUrl(box.public_slug, item.id)
-                : ""
-          }
-          type={item.item_type}
-          fit="contain"
-          caption={item.caption}
-          toyCode={toyCodeFromMetadata(item.metadata)}
-          geopoint={geopointFromMetadata(item.metadata)}
-          metadata={item.metadata}
-          className={
-            item.item_type === "voice" ||
-            item.item_type === "text" ||
-            item.item_type === "geopoint"
-              ? "w-full rounded-2xl"
-              : "max-h-[min(58dvh,32rem)] rounded-2xl"
-          }
-        />
+        {secret ? (
+          <ScratchReveal
+            className="max-h-[min(58dvh,32rem)] w-full max-w-full rounded-2xl"
+            accent={accent}
+            onRevealed={onSecretRevealed}
+          >
+            {preview}
+          </ScratchReveal>
+        ) : (
+          preview
+        )}
       </div>
 
       {item.item_type !== "voice" &&

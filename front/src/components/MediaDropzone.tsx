@@ -14,6 +14,7 @@ import {
 
 import { DrawingCanvas } from "./DrawingCanvas";
 import { MapPointPicker } from "./MapPointPicker";
+import { ToggleSwitch } from "./ToggleSwitch";
 import {
   filterFilesByMediaKind,
   getMediaKindOption,
@@ -25,6 +26,7 @@ import {
   type GeopointCoords,
 } from "../lib/geopoint";
 import { MAX_BOX_ITEM_CAPTION } from "../lib/limits";
+import { isSecretPhotoType } from "../lib/secret";
 import { TOY_OPTIONS, toyImageUrl } from "../lib/toys";
 import type { BoxItemType } from "../lib/types";
 
@@ -48,6 +50,8 @@ interface MediaDropzoneProps {
   onAddToy?: (toyCode: string, caption: string) => void;
   onAddGeopoint?: (coords: GeopointCoords, caption: string) => void;
   onRejected?: (files: File[], kind: BoxItemType) => void;
+  secretPhoto?: boolean;
+  onSecretPhotoChange?: (secret: boolean) => void;
   uploading: boolean;
   disabled?: boolean;
 }
@@ -61,6 +65,8 @@ export function MediaDropzone({
   onAddToy,
   onAddGeopoint,
   onRejected,
+  secretPhoto = false,
+  onSecretPhotoChange,
   uploading,
   disabled = false,
 }: MediaDropzoneProps) {
@@ -326,51 +332,69 @@ export function MediaDropzone({
           </div>
         </div>
       ) : (
-        <div
-          onDragOver={(event) => {
-            event.preventDefault();
-            if (!disabled) setDragging(true);
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(event) => {
-            event.preventDefault();
-            setDragging(false);
-            handleFiles(event.dataTransfer.files);
-          }}
-          onClick={() => !disabled && inputRef.current?.click()}
-          className={`media-dropzone flex cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed px-6 py-10 text-center transition ${
-            dragging
-              ? "is-dragging border-glow-violet/70 bg-glow-violet/10"
-              : "border-white/12 bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.05]"
-          } ${disabled ? "pointer-events-none opacity-50" : ""}`}
-        >
-          <input
-            ref={inputRef}
-            type="file"
-            multiple
-            accept={option.accept}
-            className="hidden"
-            onChange={(event) => {
-              handleFiles(event.target.files);
-              event.target.value = "";
-            }}
-          />
-          <span className="grid size-12 place-items-center rounded-2xl bg-glow-violet/15 text-glow-violet">
-            {uploading ? (
-              <Loader2 className="size-6 animate-spin" />
-            ) : (
-              <Icon className="size-6" />
-            )}
-          </span>
-          <div>
-            <div className="text-sm font-semibold text-slate-100">
-              {uploading
-                ? `Загружаем ${option.label.toLowerCase()}…`
-                : `Добавить: ${option.label.toLowerCase()}`}
+        <div className="space-y-3">
+          {isSecretPhotoType(kind) && onSecretPhotoChange ? (
+            <div className="rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-3">
+              <ToggleSwitch
+                checked={secretPhoto}
+                disabled={disabled || uploading}
+                label="Секретное фото"
+                onChange={onSecretPhotoChange}
+              />
+              <p className="mt-1.5 text-[0.7rem] leading-snug text-slate-500">
+                Получатель сотрёт верхний слой ластиком, чтобы увидеть снимок
+              </p>
             </div>
-            <p className="mt-1 text-xs text-slate-400">
-              {option.hint} — до 10 файлов за раз
-            </p>
+          ) : null}
+          <div
+            onDragOver={(event) => {
+              event.preventDefault();
+              if (!disabled) setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragging(false);
+              handleFiles(event.dataTransfer.files);
+            }}
+            onClick={() => !disabled && inputRef.current?.click()}
+            className={`media-dropzone flex cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed px-6 py-10 text-center transition ${
+              dragging
+                ? "is-dragging border-glow-violet/70 bg-glow-violet/10"
+                : "border-white/12 bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.05]"
+            } ${disabled ? "pointer-events-none opacity-50" : ""}`}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              multiple
+              accept={option.accept}
+              className="hidden"
+              onChange={(event) => {
+                handleFiles(event.target.files);
+                event.target.value = "";
+              }}
+            />
+            <span className="grid size-12 place-items-center rounded-2xl bg-glow-violet/15 text-glow-violet">
+              {uploading ? (
+                <Loader2 className="size-6 animate-spin" />
+              ) : (
+                <Icon className="size-6" />
+              )}
+            </span>
+            <div>
+              <div className="text-sm font-semibold text-slate-100">
+                {uploading
+                  ? `Загружаем ${option.label.toLowerCase()}…`
+                  : `Добавить: ${option.label.toLowerCase()}`}
+              </div>
+              <p className="mt-1 text-xs text-slate-400">
+                {option.hint} — до 10 файлов за раз
+                {isSecretPhotoType(kind) && secretPhoto
+                  ? " · секретный режим"
+                  : ""}
+              </p>
+            </div>
           </div>
         </div>
       )}

@@ -28,8 +28,14 @@ import { MediaPreview } from "../components/MediaPreview";
 import { PageTransition } from "../components/PageTransition";
 import { Spinner } from "../components/Spinner";
 import { StatusBadge } from "../components/StatusBadge";
+import { ToggleSwitch } from "../components/ToggleSwitch";
 import { useToast } from "../components/Toast";
 import { api, ownMediaUrl } from "../lib/api";
+import {
+  isSecretPhotoType,
+  secretFromMetadata,
+  withSecretMetadata,
+} from "../lib/secret";
 import {
   MAX_BOX_ITEM_CAPTION,
   MAX_BOX_ITEMS,
@@ -112,6 +118,7 @@ export function BoxEditorPage() {
 
   const [form, setForm] = useState<FormState>(emptyForm);
   const [uploadKind, setUploadKind] = useState<BoxItemType>("image");
+  const [secretPhoto, setSecretPhoto] = useState(false);
 
   const stepParam = searchParams.get("step");
   const step: BoxWizardStepId =
@@ -186,11 +193,12 @@ export function BoxEditorPage() {
   });
 
   const uploadFiles = useMutation({
-    mutationFn: async (files: File[]) => {
+    mutationFn: async (input: { files: File[]; secret: boolean }) => {
       let latest: Box | null = null;
-      for (const file of files.slice(0, 10)) {
+      const metadata = input.secret ? { secret: true } : undefined;
+      for (const file of input.files.slice(0, 10)) {
         const media = await api.uploadMedia(file, uploadKind);
-        latest = await api.addItem(boxId!, media.id);
+        latest = await api.addItem(boxId!, media.id, null, undefined, metadata);
       }
       return latest;
     },
@@ -248,6 +256,16 @@ export function BoxEditorPage() {
   const updateCaption = useMutation({
     mutationFn: (input: { itemId: string; caption: string | null }) =>
       api.updateItem(boxId!, input.itemId, input.caption),
+    onSuccess: setBoxData,
+    onError: (error: Error) => toast(error.message, "error"),
+  });
+
+  const updateSecret = useMutation({
+    mutationFn: (input: {
+      itemId: string;
+      caption: string | null;
+      metadata: Record<string, unknown>;
+    }) => api.updateItem(boxId!, input.itemId, input.caption, input.metadata),
     onSuccess: setBoxData,
     onError: (error: Error) => toast(error.message, "error"),
   });
@@ -615,6 +633,8 @@ export function BoxEditorPage() {
                   kind={uploadKind}
                   onKindChange={setUploadKind}
                   disabled={freeSlots === 0}
+                  secretPhoto={secretPhoto}
+                  onSecretPhotoChange={setSecretPhoto}
                   onFiles={(files) => {
                     if (files.length > freeSlots) {
                       toast(
@@ -622,7 +642,10 @@ export function BoxEditorPage() {
                         "error",
                       );
                     }
-                    uploadFiles.mutate(files.slice(0, freeSlots));
+                    uploadFiles.mutate({
+                      files: files.slice(0, freeSlots),
+                      secret: uploadKind === "image" && secretPhoto,
+                    });
                   }}
                   onAddText={(text) => addTextItem.mutate(text)}
                   onAddDrawing={(blob) => addDrawingItem.mutate(blob)}
@@ -743,6 +766,29 @@ export function BoxEditorPage() {
                               }
                             }}
                           />
+                          {isSecretPhotoType(item.item_type) && (
+                            <div className="mt-2">
+                              <ToggleSwitch
+                                checked={secretFromMetadata(item.metadata)}
+                                disabled={updateSecret.isPending}
+                                label="Секретное фото"
+                                onChange={(secret) =>
+                                  updateSecret.mutate({
+                                    itemId: item.id,
+                                    caption: item.caption,
+                                    metadata: withSecretMetadata(
+                                      item.metadata,
+                                      secret,
+                                    ),
+                                  })
+                                }
+                              />
+                              <p className="mt-1 text-[0.65rem] leading-snug text-slate-500">
+                                Получатель сотрёт верхний слой ластиком, чтобы увидеть
+                                снимок
+                              </p>
+                            </div>
+                          )}
                           <div className="mt-2 flex items-center gap-1.5">
                             <button
                               type="button"

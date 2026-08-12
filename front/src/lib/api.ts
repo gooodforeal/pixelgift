@@ -203,6 +203,7 @@ export const api = {
     mediaFileId: string,
     caption?: string | null,
     itemType?: "drawing",
+    metadata?: Record<string, unknown>,
   ) =>
     request<Box>(`/boxes/${boxId}/items`, {
       method: "POST",
@@ -210,6 +211,9 @@ export const api = {
         media_file_id: mediaFileId,
         caption: caption ?? null,
         item_type: itemType ?? null,
+        ...(metadata && Object.keys(metadata).length > 0
+          ? { metadata }
+          : {}),
       }),
     }),
 
@@ -246,10 +250,18 @@ export const api = {
       }),
     }),
 
-  updateItem: (boxId: string, itemId: string, caption: string | null) =>
+  updateItem: (
+    boxId: string,
+    itemId: string,
+    caption: string | null,
+    metadata?: Record<string, unknown>,
+  ) =>
     request<Box>(`/boxes/${boxId}/items/${itemId}`, {
       method: "PATCH",
-      body: JSON.stringify({ caption }),
+      body: JSON.stringify({
+        caption,
+        ...(metadata !== undefined ? { metadata } : {}),
+      }),
     }),
 
   removeItem: (boxId: string, itemId: string) =>

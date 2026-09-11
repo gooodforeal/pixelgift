@@ -64,3 +64,16 @@ class TestBoxItem:
 
         assert item.media_file_id == media_file_id
         assert item.item_type == BoxItemType.DRAWING
+
+    def test_create_circle_item(self):
+        media_file_id = uuid.uuid4()
+
+        item = BoxItem(
+            box_id=uuid.uuid4(),
+            media_file_id=media_file_id,
+            item_type=BoxItemType.CIRCLE,
+            sort_order=SortOrder(4),
+        )
+
+        assert item.media_file_id == media_file_id
+        assert item.item_type == BoxItemType.CIRCLE

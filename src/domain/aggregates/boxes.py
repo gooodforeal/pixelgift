@@ -93,6 +93,9 @@ class Box(BaseEntity):
         elif item_type == BoxItemType.DRAWING:
             if media_file_id is None:
                 raise BoxItemInvalidError("Drawing item requires an image file")
+        elif item_type == BoxItemType.CIRCLE:
+            if media_file_id is None:
+                raise BoxItemInvalidError("Circle item requires a video file")
         elif media_file_id is None:
             raise BoxItemInvalidError("Media item requires a media file")
 

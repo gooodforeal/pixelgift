@@ -540,6 +540,57 @@ class TestAddBoxItemUseCase:
                 )
             )
 
+    async def test_adds_circle_item_from_owned_video(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+        media = _media_file(owner_id=user_id, kind=MediaKind.VIDEO)
+        await uow.media_files.add(media)
+
+        updated = await AddBoxItemUseCase(uow).execute(
+            AddBoxItemCommand(
+                box_id=box.id,
+                actor_id=user_id,
+                media_file_id=media.id,
+                item_type="circle",
+                caption=BoxItemCaption("Мой кружок"),
+            )
+        )
+
+        assert len(updated.items) == 1
+        assert updated.items[0].media_file_id == media.id
+        assert updated.items[0].item_type == BoxItemType.CIRCLE
+        assert updated.items[0].caption is not None
+        assert updated.items[0].caption.value == "Мой кружок"
+        assert uow.committed is True
+
+    async def test_rejects_circle_item_for_non_video_media(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+        media = _media_file(owner_id=user_id, kind=MediaKind.IMAGE)
+        await uow.media_files.add(media)
+
+        with pytest.raises(BoxItemInvalidError):
+            await AddBoxItemUseCase(uow).execute(
+                AddBoxItemCommand(
+                    box_id=box.id,
+                    actor_id=user_id,
+                    media_file_id=media.id,
+                    item_type="circle",
+                )
+            )
+
     async def test_rejects_item_over_limit(
         self,
         activates_at: ActivatesAt,

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import {
   Brush,
+  CirclePlay,
   Film,
   Gift,
   ImagePlus,
@@ -12,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { CircleRecorder } from "./CircleRecorder";
 import { DrawingCanvas } from "./DrawingCanvas";
 import { MapPointPicker } from "./MapPointPicker";
 import { ToggleSwitch } from "./ToggleSwitch";
@@ -35,6 +37,7 @@ const ICONS: Record<BoxItemType, LucideIcon> = {
   drawing: Brush,
   gif: Sparkles,
   video: Film,
+  circle: CirclePlay,
   voice: Mic,
   text: Type,
   toy: Gift,
@@ -47,6 +50,7 @@ interface MediaDropzoneProps {
   onFiles: (files: File[]) => void;
   onAddText?: (text: string) => void;
   onAddDrawing?: (blob: Blob) => void;
+  onAddCircle?: (blob: Blob) => void;
   onAddToy?: (toyCode: string, caption: string) => void;
   onAddGeopoint?: (coords: GeopointCoords, caption: string) => void;
   onRejected?: (files: File[], kind: BoxItemType) => void;
@@ -62,6 +66,7 @@ export function MediaDropzone({
   onFiles,
   onAddText,
   onAddDrawing,
+  onAddCircle,
   onAddToy,
   onAddGeopoint,
   onRejected,
@@ -83,11 +88,13 @@ export function MediaDropzone({
   const Icon = ICONS[kind];
   const isText = Boolean(option.isText);
   const isDrawing = kind === "drawing";
+  const isCircle = kind === "circle";
   const isToy = Boolean(option.isToy);
   const isGeopoint = Boolean(option.isGeopoint);
 
   const handleFiles = (fileList: FileList | null) => {
-    if (!fileList || disabled || isText || isDrawing || isToy || isGeopoint) return;
+    if (!fileList || disabled || isText || isDrawing || isCircle || isToy || isGeopoint)
+      return;
     const { accepted, rejected } = filterFilesByMediaKind(
       Array.from(fileList),
       kind,
@@ -204,6 +211,12 @@ export function MediaDropzone({
           disabled={disabled}
           uploading={uploading}
           onSubmit={(blob) => onAddDrawing?.(blob)}
+        />
+      ) : isCircle ? (
+        <CircleRecorder
+          disabled={disabled}
+          uploading={uploading}
+          onSubmit={(blob) => onAddCircle?.(blob)}
         />
       ) : isToy ? (
         <div className="space-y-4 rounded-3xl border border-white/12 bg-white/[0.02] p-4 sm:p-5">

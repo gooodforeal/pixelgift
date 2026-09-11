@@ -146,6 +146,27 @@ class TestBoxAggregateItems:
         assert item.caption is not None
         assert item.caption.value == "Нарисовал сам"
 
+    def test_add_circle_item_with_media(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+        media_file_id = uuid.uuid4()
+
+        item = box.add_item(
+            media_file_id=media_file_id,
+            item_type=BoxItemType.CIRCLE,
+            caption=BoxItemCaption("Кружок"),
+        )
+
+        assert item.media_file_id == media_file_id
+        assert item.item_type == BoxItemType.CIRCLE
+        assert item.caption is not None
+        assert item.caption.value == "Кружок"
+
+    def test_add_circle_item_requires_media(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+
+        with pytest.raises(BoxItemInvalidError):
+            box.add_item(item_type=BoxItemType.CIRCLE)
+
     def test_add_toy_item_with_code(self, activates_at: ActivatesAt):
         box = _make_box(activates_at)
 

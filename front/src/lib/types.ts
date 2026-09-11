@@ -5,6 +5,7 @@ export type BoxItemType =
   | "drawing"
   | "gif"
   | "video"
+  | "circle"
   | "voice"
   | "text"
   | "toy"

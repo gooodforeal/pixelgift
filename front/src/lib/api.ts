@@ -202,7 +202,7 @@ export const api = {
     boxId: string,
     mediaFileId: string,
     caption?: string | null,
-    itemType?: "drawing",
+    itemType?: "drawing" | "circle",
     metadata?: Record<string, unknown>,
   ) =>
     request<Box>(`/boxes/${boxId}/items`, {

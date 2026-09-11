@@ -56,6 +56,15 @@ export const MEDIA_KIND_OPTIONS: MediaKindOption[] = [
     mimeTypes: ["video/mp4", "video/webm", "video/quicktime", "video/x-mov"],
   },
   {
+    kind: "circle",
+    label: "Кружок",
+    hint: "Запишите видео до 60 секунд, как в Telegram",
+    shortHint: "Камера",
+    accept: "",
+    extensions: [],
+    mimeTypes: [],
+  },
+  {
     kind: "voice",
     label: "Аудио",
     hint: "MP3, OGG, M4A, WAV, WebM",
@@ -112,7 +121,14 @@ export function getMediaKindOption(kind: BoxItemType): MediaKindOption {
 
 export function fileMatchesMediaKind(file: File, kind: BoxItemType): boolean {
   const option = getMediaKindOption(kind);
-  if (option.isText || option.isToy || option.isGeopoint || kind === "drawing") return false;
+  if (
+    option.isText ||
+    option.isToy ||
+    option.isGeopoint ||
+    kind === "drawing" ||
+    kind === "circle"
+  )
+    return false;
   const mime = file.type.toLowerCase();
   if (mime && option.mimeTypes.includes(mime)) return true;
 

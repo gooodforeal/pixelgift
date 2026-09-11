@@ -1,5 +1,6 @@
 import { MapPin } from "lucide-react";
 
+import { CirclePlayer } from "./CirclePlayer";
 import type { BoxItemType } from "../lib/types";
 import {
   formatGeopointCoords,
@@ -15,6 +16,8 @@ interface MediaPreviewProps {
   className?: string;
   /** `cover` crops to fill; `contain` shows the whole media (default for gift reveal). */
   fit?: "cover" | "contain";
+  /** Circle items play on tap when true; editor thumbs pass false. */
+  interactive?: boolean;
   caption?: string | null;
   toyCode?: string | null;
   geopoint?: GeopointCoords | null;
@@ -26,12 +29,23 @@ export function MediaPreview({
   type,
   className = "",
   fit = "contain",
+  interactive = true,
   caption,
   toyCode,
   geopoint,
   metadata,
 }: MediaPreviewProps) {
   const objectFit = fit === "cover" ? "object-cover" : "object-contain";
+
+  if (type === "circle") {
+    return (
+      <CirclePlayer
+        src={src}
+        className={className}
+        interactive={interactive}
+      />
+    );
+  }
 
   if (type === "video") {
     return (

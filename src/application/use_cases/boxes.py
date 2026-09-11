@@ -224,6 +224,26 @@ class AddBoxItemUseCase:
                     caption=command.caption,
                     metadata=command.metadata,
                 )
+            elif command.item_type == BoxItemType.CIRCLE.value:
+                if command.media_file_id is None:
+                    raise BoxItemInvalidError("Circle item requires a video file")
+                media_file = await uow.media_files.get_by_id(command.media_file_id)
+                if media_file is None:
+                    raise MediaFileNotFoundError(command.media_file_id)
+                if media_file.owner_id != command.actor_id:
+                    raise MediaFileAccessDeniedError(
+                        command.media_file_id, command.actor_id
+                    )
+                if media_file.media_kind != MediaKind.VIDEO:
+                    raise BoxItemInvalidError("Circle item requires a video file")
+
+                box.add_item(
+                    media_file_id=media_file.id,
+                    item_type=BoxItemType.CIRCLE,
+                    sort_order=command.sort_order,
+                    caption=command.caption,
+                    metadata=command.metadata,
+                )
             else:
                 if command.media_file_id is None:
                     raise BoxItemInvalidError("Media item requires a media file")

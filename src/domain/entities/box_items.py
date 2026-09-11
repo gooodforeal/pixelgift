@@ -13,6 +13,7 @@ class BoxItemType(StrEnum):
     DRAWING = "drawing"
     GIF = "gif"
     VIDEO = "video"
+    CIRCLE = "circle"
     VOICE = "voice"
     TEXT = "text"
     TOY = "toy"

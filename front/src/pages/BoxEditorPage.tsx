@@ -233,6 +233,23 @@ export function BoxEditorPage() {
     onError: (error: Error) => toast(error.message, "error"),
   });
 
+  const addCircleItem = useMutation({
+    mutationFn: async (blob: Blob) => {
+      const mime = blob.type || "video/webm";
+      const ext = mime.includes("mp4") ? "mp4" : "webm";
+      const file = new File([blob], `circle-${Date.now()}.${ext}`, {
+        type: mime,
+      });
+      const media = await api.uploadMedia(file, "video");
+      return api.addItem(boxId!, media.id, null, "circle");
+    },
+    onSuccess: (updated) => {
+      setBoxData(updated);
+      toast("Кружок добавлен в бокс");
+    },
+    onError: (error: Error) => toast(error.message, "error"),
+  });
+
   const addToyItem = useMutation({
     mutationFn: (input: { toyCode: string; caption: string }) =>
       api.addToyItem(boxId!, input.toyCode, input.caption || null),
@@ -649,6 +666,7 @@ export function BoxEditorPage() {
                   }}
                   onAddText={(text) => addTextItem.mutate(text)}
                   onAddDrawing={(blob) => addDrawingItem.mutate(blob)}
+                  onAddCircle={(blob) => addCircleItem.mutate(blob)}
                   onAddToy={(toyCode, caption) =>
                     addToyItem.mutate({ toyCode, caption })
                   }
@@ -669,6 +687,7 @@ export function BoxEditorPage() {
                     uploadFiles.isPending ||
                     addTextItem.isPending ||
                     addDrawingItem.isPending ||
+                    addCircleItem.isPending ||
                     addToyItem.isPending ||
                     addGeopointItem.isPending
                   }
@@ -693,7 +712,13 @@ export function BoxEditorPage() {
                     exit={{ opacity: 0, scale: 0.97 }}
                     className="glass-soft flex gap-3 p-3"
                   >
-                    <div className="size-20 shrink-0 overflow-hidden rounded-2xl bg-ink-800">
+                    <div
+                      className={`size-20 shrink-0 overflow-hidden bg-ink-800 ${
+                        item.item_type === "circle"
+                          ? "rounded-full"
+                          : "rounded-2xl"
+                      }`}
+                    >
                       {item.item_type === "text" ? (
                         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-glow-violet/25 to-glow-cyan/15 p-2 text-center text-[0.65rem] leading-snug text-slate-200">
                           {(item.caption ?? "Текст").slice(0, 48)}
@@ -729,6 +754,7 @@ export function BoxEditorPage() {
                           src={ownMediaUrl(item.media_file_id)}
                           type={item.item_type}
                           fit="cover"
+                          interactive={false}
                         />
                       ) : null}
                     </div>
@@ -748,7 +774,9 @@ export function BoxEditorPage() {
                                         ? "Подпись к точке"
                                         : item.item_type === "drawing"
                                           ? "Подпись к рисунку"
-                                        : "Подпись к файлу"
+                                          : item.item_type === "circle"
+                                            ? "Подпись к кружку"
+                                            : "Подпись к файлу"
                                 }
                             defaultValue={item.caption ?? ""}
                             onBlur={(event) => {

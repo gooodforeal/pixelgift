@@ -431,13 +431,15 @@ function ItemStep({
 }) {
   const secret = isSecretPhotoItem(item);
   const previewClassName =
-    item.item_type === "voice" ||
-    item.item_type === "text" ||
-    item.item_type === "geopoint"
-      ? "w-full rounded-2xl"
-      : secret
-        ? "!h-auto !w-auto max-h-[min(58dvh,32rem)] max-w-full"
-        : "max-h-[min(58dvh,32rem)] rounded-2xl";
+    item.item_type === "circle"
+      ? "size-[min(70vw,20rem)] sm:size-[min(58dvh,22rem)]"
+      : item.item_type === "voice" ||
+          item.item_type === "text" ||
+          item.item_type === "geopoint"
+        ? "w-full rounded-2xl"
+        : secret
+          ? "!h-auto !w-auto max-h-[min(58dvh,32rem)] max-w-full"
+          : "max-h-[min(58dvh,32rem)] rounded-2xl";
 
   const preview = (
     <MediaPreview

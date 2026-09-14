@@ -29,6 +29,10 @@ from src.domain.aggregates.boxes import MAX_BOX_ITEMS, Box, BoxStatus
 from src.domain.entities.box_designs import BoxDesign
 from src.domain.entities.box_items import BoxItemType
 from src.domain.entities.media_files import MediaFile, MediaKind
+from src.domain.entities.notification_jobs import (
+    NotificationJobStatus,
+    NotificationTemplate,
+)
 from src.domain.exceptions.box_items import BoxItemInvalidError
 from src.domain.exceptions.boxes import (
     BoxAccessDeniedError,
@@ -51,6 +55,7 @@ from src.domain.values.box_design_name import BoxDesignName
 from src.domain.values.box_item_caption import BoxItemCaption
 from src.domain.values.box_message import BoxMessage
 from src.domain.values.box_preview_title import BoxPreviewTitle
+from src.domain.values.box_recipient_email import BoxRecipientEmail
 from src.domain.values.box_recipient_name import BoxRecipientName
 from src.domain.values.box_title import BoxTitle
 from src.domain.values.public_slug import PublicSlug
@@ -79,6 +84,7 @@ def _create_command(
         design_id=design_id,
         title=BoxTitle("Happy birthday"),
         recipient_name=BoxRecipientName("Маша"),
+        recipient_email=BoxRecipientEmail("masha@example.com"),
         activates_at=activates_at,
         public_slug=public_slug,
         message=BoxMessage("For you"),
@@ -753,6 +759,12 @@ class TestPublishAndArchiveBoxUseCases:
         assert published.status == BoxStatus.SCHEDULED
         assert published.published_at is not None
         assert uow.committed is True
+        job = await uow.notification_jobs.get_by_box_and_template(
+            published.id, NotificationTemplate.GIFT_READY
+        )
+        assert job is not None
+        assert job.status == NotificationJobStatus.SCHEDULED
+        assert job.run_at == published.activates_at.value
 
     async def test_rejects_publishing_empty_box(
         self,

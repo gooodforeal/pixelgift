@@ -6,6 +6,7 @@ from src.domain.values.activates_at import ActivatesAt
 from src.domain.values.box_item_caption import BoxItemCaption
 from src.domain.values.box_message import BoxMessage
 from src.domain.values.box_preview_title import BoxPreviewTitle
+from src.domain.values.box_recipient_email import BoxRecipientEmail
 from src.domain.values.box_recipient_name import BoxRecipientName
 from src.domain.values.box_title import BoxTitle
 from src.domain.values.public_slug import PublicSlug
@@ -21,6 +22,7 @@ class CreateBoxCommand:
     recipient_name: BoxRecipientName
     activates_at: ActivatesAt
     timezone: str = "UTC"
+    recipient_email: BoxRecipientEmail | None = None
     public_slug: PublicSlug | None = None
     message: BoxMessage | None = None
     preview_title: BoxPreviewTitle | None = None
@@ -36,6 +38,7 @@ class UpdateBoxCommand:
     recipient_name: BoxRecipientName
     activates_at: ActivatesAt
     timezone: str = "UTC"
+    recipient_email: BoxRecipientEmail | None = None
     message: BoxMessage | None = None
     preview_title: BoxPreviewTitle | None = None
     preview_image_url: Url | None = None

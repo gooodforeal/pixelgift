@@ -5,6 +5,7 @@ from src.infrastructure.models.boxes import BoxModel
 from src.infrastructure.models.design_assets import DesignAssetModel
 from src.infrastructure.models.design_ratings import DesignRatingModel
 from src.infrastructure.models.media_files import MediaFileModel
+from src.infrastructure.models.notification_jobs import NotificationJobModel
 from src.infrastructure.models.telegram_login_challenges import (
     TelegramLoginChallengeModel,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "DesignAssetModel",
     "DesignRatingModel",
     "MediaFileModel",
+    "NotificationJobModel",
     "TelegramLoginChallengeModel",
     "UserModel",
     "UserSessionModel",

@@ -36,6 +36,7 @@ class BoxModel(TimestampMixin, Base):
     public_slug: Mapped[str] = mapped_column(String(32), nullable=False, unique=True)
     title: Mapped[str] = mapped_column(String(30), nullable=False)
     recipient_name: Mapped[str] = mapped_column(String(30), nullable=False)
+    recipient_email: Mapped[str | None] = mapped_column(String(254), nullable=True)
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
     preview_title: Mapped[str | None] = mapped_column(String(30), nullable=True)
     preview_image_url: Mapped[str | None] = mapped_column(Text, nullable=True)

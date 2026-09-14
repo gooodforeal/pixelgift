@@ -49,6 +49,7 @@ from src.domain.values.activates_at import ActivatesAt
 from src.domain.values.box_item_caption import BoxItemCaption
 from src.domain.values.box_message import BoxMessage
 from src.domain.values.box_preview_title import BoxPreviewTitle
+from src.domain.values.box_recipient_email import BoxRecipientEmail
 from src.domain.values.box_recipient_name import BoxRecipientName
 from src.domain.values.box_title import BoxTitle
 from src.domain.values.public_slug import PublicSlug
@@ -119,6 +120,7 @@ async def create_box(
                 design_id=body.design_id,
                 title=BoxTitle(body.title),
                 recipient_name=BoxRecipientName(body.recipient_name),
+                recipient_email=BoxRecipientEmail(body.recipient_email),
                 activates_at=ActivatesAt(body.activates_at),
                 timezone=body.timezone,
                 public_slug=PublicSlug(body.public_slug) if body.public_slug else None,
@@ -173,6 +175,7 @@ async def update_box(
                 design_id=body.design_id,
                 title=BoxTitle(body.title),
                 recipient_name=BoxRecipientName(body.recipient_name),
+                recipient_email=BoxRecipientEmail(body.recipient_email),
                 activates_at=ActivatesAt(body.activates_at),
                 timezone=body.timezone,
                 message=BoxMessage(body.message) if body.message else None,

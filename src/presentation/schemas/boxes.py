@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Literal, Self
 import uuid
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class BoxItemResponse(BaseModel):
@@ -21,6 +21,7 @@ class BoxResponse(BaseModel):
     public_slug: str
     title: str
     recipient_name: str
+    recipient_email: EmailStr | None = None
     activates_at: datetime
     status: str
     timezone: str = "UTC"
@@ -36,6 +37,7 @@ class CreateBoxRequest(BaseModel):
     design_id: uuid.UUID
     title: str = Field(max_length=30)
     recipient_name: str = Field(max_length=30)
+    recipient_email: EmailStr
     activates_at: datetime
     timezone: str = "UTC"
     public_slug: str | None = None
@@ -48,6 +50,7 @@ class UpdateBoxRequest(BaseModel):
     design_id: uuid.UUID
     title: str = Field(max_length=30)
     recipient_name: str = Field(max_length=30)
+    recipient_email: EmailStr
     activates_at: datetime
     timezone: str = "UTC"
     message: str | None = Field(default=None, max_length=300)

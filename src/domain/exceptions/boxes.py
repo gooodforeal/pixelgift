@@ -64,6 +64,22 @@ class BoxRecipientNameTooLongError(BoxRecipientNameError):
         super().__init__("Recipient name is too long")
 
 
+class BoxRecipientEmailError(BaseException):
+    """Базовая ошибка валидации e-mail получателя."""
+
+
+class BoxRecipientEmailSurroundingWhitespaceError(BoxRecipientEmailError):
+    def __init__(self, value: str) -> None:
+        self.value = value
+        super().__init__("Recipient email must not have surrounding whitespace")
+
+
+class BoxRecipientEmailInvalidError(BoxRecipientEmailError):
+    def __init__(self, value: str) -> None:
+        self.value = value
+        super().__init__(f"Recipient email is invalid: {value!r}")
+
+
 class BoxPreviewTitleError(BaseException):
     """Базовая ошибка валидации превью-заголовка."""
 

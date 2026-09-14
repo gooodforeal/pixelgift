@@ -51,6 +51,7 @@ from src.domain.exceptions.users import UserNotFoundError
 from src.domain.entities.users import User
 from src.infrastructure.storage.s3_storage import S3ObjectStorage
 from src.infrastructure.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
+from src.infrastructure.worker.task_queue import TaskiqTaskQueue
 from src.settings import Settings, settings
 
 _bearer = HTTPBearer(auto_error=False)
@@ -209,10 +210,15 @@ def get_user_avatar_uc(
     return GetUserAvatarUseCase(SqlAlchemyUnitOfWork(), storage)
 
 
+def get_task_queue() -> TaskiqTaskQueue:
+    return TaskiqTaskQueue()
+
+
 def get_public_box_uc(
     storage: S3ObjectStorage = Depends(get_storage),
+    task_queue: TaskiqTaskQueue = Depends(get_task_queue),
 ) -> GetPublicBoxUseCase:
-    return GetPublicBoxUseCase(SqlAlchemyUnitOfWork(), storage)
+    return GetPublicBoxUseCase(SqlAlchemyUnitOfWork(), storage, task_queue)
 
 
 def get_upload_media_uc(

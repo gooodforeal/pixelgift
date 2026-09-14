@@ -27,6 +27,7 @@ export interface Box {
   public_slug: string;
   title: string;
   recipient_name: string;
+  recipient_email: string | null;
   activates_at: string;
   status: BoxStatus;
   timezone: string;
@@ -152,6 +153,7 @@ export interface BoxPayload {
   design_id: string;
   title: string;
   recipient_name: string;
+  recipient_email: string;
   activates_at: string;
   timezone: string;
   public_slug?: string | null;

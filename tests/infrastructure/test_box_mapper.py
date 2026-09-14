@@ -5,6 +5,7 @@ from src.domain.aggregates.boxes import Box, BoxStatus
 from src.domain.entities.box_items import BoxItemType
 from src.domain.values.activates_at import ActivatesAt
 from src.domain.values.box_item_caption import BoxItemCaption
+from src.domain.values.box_recipient_email import BoxRecipientEmail
 from src.domain.values.box_recipient_name import BoxRecipientName
 from src.domain.values.box_title import BoxTitle
 from src.domain.values.public_slug import PublicSlug
@@ -22,6 +23,7 @@ class TestBoxMapper:
             public_slug=PublicSlug("gift-mapper"),
             title=BoxTitle("Title"),
             recipient_name=BoxRecipientName("Маша"),
+            recipient_email=BoxRecipientEmail("masha@example.com"),
             activates_at=activates_at,
             status=BoxStatus.ACTIVE,
         )
@@ -40,3 +42,5 @@ class TestBoxMapper:
         assert restored.items[0].caption is not None
         assert restored.items[0].caption.value == "Hi"
         assert restored.items[0].item_type == BoxItemType.IMAGE
+        assert restored.recipient_email is not None
+        assert restored.recipient_email.value == "masha@example.com"

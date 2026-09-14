@@ -8,6 +8,7 @@ from src.domain.repository.boxes import BaseBoxesRepository
 from src.domain.repository.box_designs import BaseBoxDesignsRepository
 from src.domain.repository.design_assets import BaseDesignAssetsRepository
 from src.domain.repository.media_files import BaseMediaFilesRepository
+from src.domain.repository.notification_jobs import BaseNotificationJobsRepository
 from src.domain.repository.telegram_login_challenges import (
     BaseTelegramLoginChallengesRepository,
 )
@@ -62,6 +63,7 @@ class TestSqlAlchemyUnitOfWorkWiring:
             assert isinstance(uow.box_designs, BaseBoxDesignsRepository)
             assert isinstance(uow.design_assets, BaseDesignAssetsRepository)
             assert isinstance(uow.media_files, BaseMediaFilesRepository)
+            assert isinstance(uow.notification_jobs, BaseNotificationJobsRepository)
             assert isinstance(
                 uow.telegram_login_challenges, BaseTelegramLoginChallengesRepository
             )

@@ -66,25 +66,28 @@ interface FormState {
   design_id: string;
   title: string;
   recipient_name: string;
+  recipient_email: string;
   activates_at_local: string;
   message: string;
   preview_title: string;
 }
 
-const emptyForm: FormState = {
+const emptyForm = (): FormState => ({
   design_id: "",
   title: "",
   recipient_name: "",
+  recipient_email: "",
   activates_at_local: defaultActivatesAt(),
   message: "",
   preview_title: "",
-};
+});
 
 function toPayload(form: FormState): BoxPayload {
   return {
     design_id: form.design_id,
     title: form.title.trim(),
     recipient_name: form.recipient_name.trim(),
+    recipient_email: form.recipient_email.trim(),
     activates_at: fromDateTimeLocal(form.activates_at_local),
     timezone: localTimezone,
     message: form.message.trim() || null,
@@ -102,6 +105,7 @@ function formDirty(form: FormState, box: Box | undefined): boolean {
     form.design_id !== box.design_id ||
     form.title !== box.title ||
     form.recipient_name !== box.recipient_name ||
+    form.recipient_email !== (box.recipient_email ?? "") ||
     form.activates_at_local !== toDateTimeLocal(box.activates_at) ||
     form.message !== (box.message ?? "") ||
     form.preview_title !== (box.preview_title ?? "")
@@ -152,6 +156,7 @@ export function BoxEditorPage() {
         design_id: box.design_id,
         title: box.title,
         recipient_name: box.recipient_name,
+        recipient_email: box.recipient_email ?? "",
         activates_at_local: toDateTimeLocal(box.activates_at),
         message: box.message ?? "",
         preview_title: box.preview_title ?? "",
@@ -342,6 +347,7 @@ export function BoxEditorPage() {
     form.design_id.length > 0 &&
     form.title.trim().length > 0 &&
     form.recipient_name.trim().length > 0 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.recipient_email.trim()) &&
     activatesParts.date.length > 0 &&
     activatesParts.time.length > 0;
 
@@ -362,7 +368,7 @@ export function BoxEditorPage() {
 
     if (step === "details") {
       if (!canSubmitDetails) {
-        toast("Заполните название, получателя и дату открытия", "error");
+        toast("Заполните название, получателя, почту и дату открытия", "error");
         return;
       }
 
@@ -522,6 +528,29 @@ export function BoxEditorPage() {
                     }))
                   }
                 />
+              </div>
+              <div>
+                <label className="label" htmlFor="recipient-email">
+                  Почта получателя
+                </label>
+                <input
+                  id="recipient-email"
+                  type="email"
+                  className="field disabled:opacity-60"
+                  placeholder="anya@example.com"
+                  autoComplete="email"
+                  disabled={!editable}
+                  value={form.recipient_email}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      recipient_email: event.target.value,
+                    }))
+                  }
+                />
+                <p className="mt-2 text-xs text-slate-500">
+                  На эту почту уйдёт ссылка, когда наступит время открытия
+                </p>
               </div>
               <div>
                 <label className="label" htmlFor="activates-date">

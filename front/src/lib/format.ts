@@ -40,8 +40,8 @@ export function fromDateTimeLocal(value: string): string {
 
 export function defaultActivatesAt(): string {
   const date = new Date();
-  date.setDate(date.getDate() + 7);
-  date.setMinutes(0, 0, 0);
+  date.setSeconds(0, 0);
+  date.setMinutes(date.getMinutes() + 1);
   return toDateTimeLocal(date.toISOString());
 }
 

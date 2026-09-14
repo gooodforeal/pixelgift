@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import logging
 import uuid
 
 from src.application.dto.media import MediaContent
 from src.application.ports.storage.base import BaseObjectStorage
+from src.application.ports.task_queue import BaseTaskQueue
 from src.application.uow.base import BaseUnitOfWork
 from src.domain.aggregates.boxes import Box
 from src.domain.entities.box_designs import BoxDesign
@@ -21,6 +23,7 @@ from src.domain.exceptions.users import UserNotFoundError
 from src.domain.values.public_slug import PublicSlug
 
 _HIDDEN_STATUSES = frozenset({"draft", "archived"})
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,9 +61,11 @@ class GetPublicBoxUseCase:
         self,
         uow: BaseUnitOfWork,
         storage: BaseObjectStorage | None = None,
+        task_queue: BaseTaskQueue | None = None,
     ) -> None:
         self._uow = uow
         self._storage = storage
+        self._task_queue = task_queue
 
     async def execute(self, *, public_slug: str) -> PublicBoxView:
         slug = PublicSlug(public_slug)
@@ -74,6 +79,7 @@ class GetPublicBoxUseCase:
 
             now = datetime.now(timezone.utc)
             unlocked = box.activates_at.value <= now
+            just_opened = False
 
             if unlocked and box.first_opened_at is None:
                 from src.domain.aggregates.boxes import BoxStatus
@@ -83,9 +89,20 @@ class GetPublicBoxUseCase:
                     box.status = BoxStatus.ACTIVE
                 await uow.boxes.update(box)
                 await uow.commit()
+                just_opened = True
 
             design = await uow.box_designs.get_by_id(box.design_id)
-            return PublicBoxView(box=box, content_unlocked=unlocked, design=design)
+            view = PublicBoxView(box=box, content_unlocked=unlocked, design=design)
+            opened_box_id = box.id if just_opened else None
+
+        if opened_box_id is not None and self._task_queue is not None:
+            try:
+                await self._task_queue.enqueue_box_opened(opened_box_id)
+            except Exception:
+                logger.exception(
+                    "Failed to enqueue box opened notification for %s", opened_box_id
+                )
+        return view
 
 
 class GetPublicBoxItemContentUseCase:

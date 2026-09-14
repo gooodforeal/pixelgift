@@ -13,6 +13,7 @@ from src.application.dto.boxes import (
     UpdateBoxItemCommand,
 )
 from src.application.uow.base import BaseUnitOfWork
+from src.application.use_cases.notifications import sync_gift_ready_job
 from src.domain.aggregates.boxes import Box, BoxStatus
 from src.domain.entities.box_items import BoxItemType
 from src.domain.entities.media_files import MediaKind
@@ -91,6 +92,7 @@ class CreateBoxUseCase:
                 activates_at=command.activates_at,
                 status=BoxStatus.DRAFT,
                 timezone=command.timezone,
+                recipient_email=command.recipient_email,
                 message=command.message,
                 preview_title=command.preview_title,
                 preview_image_url=command.preview_image_url,
@@ -147,11 +149,13 @@ class UpdateBoxUseCase:
                 recipient_name=command.recipient_name,
                 activates_at=command.activates_at,
                 timezone=command.timezone,
+                recipient_email=command.recipient_email,
                 message=command.message,
                 preview_title=command.preview_title,
                 preview_image_url=command.preview_image_url,
             )
             updated = await uow.boxes.update(box)
+            await sync_gift_ready_job(uow, updated)
             await uow.commit()
             return updated
 
@@ -328,6 +332,7 @@ class PublishBoxUseCase:
             )
             box.publish()
             updated = await uow.boxes.update(box)
+            await sync_gift_ready_job(uow, updated)
             await uow.commit()
             return updated
 
@@ -343,6 +348,7 @@ class ArchiveBoxUseCase:
             )
             box.archive()
             updated = await uow.boxes.update(box)
+            await sync_gift_ready_job(uow, updated)
             await uow.commit()
             return updated
 
@@ -358,5 +364,6 @@ class UnarchiveBoxUseCase:
             )
             box.unarchive()
             updated = await uow.boxes.update(box)
+            await sync_gift_ready_job(uow, updated)
             await uow.commit()
             return updated

@@ -4,6 +4,7 @@ from src.domain.values.activates_at import ActivatesAt
 from src.domain.values.box_item_caption import BoxItemCaption
 from src.domain.values.box_message import BoxMessage
 from src.domain.values.box_preview_title import BoxPreviewTitle
+from src.domain.values.box_recipient_email import BoxRecipientEmail
 from src.domain.values.box_recipient_name import BoxRecipientName
 from src.domain.values.box_title import BoxTitle
 from src.domain.values.public_slug import PublicSlug
@@ -59,6 +60,9 @@ def box_to_model(entity: Box) -> BoxModel:
         public_slug=entity.public_slug.value,
         title=entity.title.value,
         recipient_name=entity.recipient_name.value,
+        recipient_email=(
+            entity.recipient_email.value if entity.recipient_email is not None else None
+        ),
         message=entity.message.value if entity.message is not None else None,
         preview_title=(
             entity.preview_title.value if entity.preview_title is not None else None
@@ -92,6 +96,11 @@ def box_to_entity(model: BoxModel) -> Box:
         public_slug=PublicSlug(model.public_slug),
         title=BoxTitle(model.title),
         recipient_name=BoxRecipientName(model.recipient_name),
+        recipient_email=(
+            BoxRecipientEmail(model.recipient_email)
+            if model.recipient_email is not None
+            else None
+        ),
         activates_at=ActivatesAt.reconstitute(model.activates_at),
         status=BoxStatus(model.status),
         timezone=model.timezone,
@@ -120,6 +129,9 @@ def apply_box(entity: Box, model: BoxModel) -> None:
     model.public_slug = entity.public_slug.value
     model.title = entity.title.value
     model.recipient_name = entity.recipient_name.value
+    model.recipient_email = (
+        entity.recipient_email.value if entity.recipient_email is not None else None
+    )
     model.message = entity.message.value if entity.message is not None else None
     model.preview_title = (
         entity.preview_title.value if entity.preview_title is not None else None

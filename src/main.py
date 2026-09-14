@@ -1,10 +1,23 @@
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.presentation.routers import admin_designs, auth, boxes, designs, media, public
 from src.settings import settings
 
-app = FastAPI(title="Pixelgift API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    from src.infrastructure.worker.app import broker
+
+    await broker.startup()
+    yield
+    await broker.shutdown()
+
+
+app = FastAPI(title="Pixelgift API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

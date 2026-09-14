@@ -30,6 +30,16 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:5173,http://localhost:8080"
 
+    public_web_url: str = "http://localhost:8080"
+    redis_url: str = "redis://localhost:6379/0"
+
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = "PixelGift <noreply@pixelgift.local>"
+    smtp_use_tls: bool = False
+
     access_cookie_name: str = "access_token"
     refresh_cookie_name: str = "refresh_token"
 

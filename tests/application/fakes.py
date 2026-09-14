@@ -1,7 +1,6 @@
-from __future__ import annotations
-
-import uuid
+from datetime import datetime
 from typing import Optional
+import uuid
 
 from src.application.uow.base import BaseUnitOfWork
 from src.domain.aggregates.boxes import Box
@@ -9,6 +8,11 @@ from src.domain.entities.box_designs import BoxDesign
 from src.domain.entities.design_assets import DesignAsset
 from src.domain.entities.design_ratings import DesignRating
 from src.domain.entities.media_files import MediaFile
+from src.domain.entities.notification_jobs import (
+    NotificationJob,
+    NotificationJobStatus,
+    NotificationTemplate,
+)
 from src.domain.entities.telegram_login_challenges import TelegramLoginChallenge
 from src.domain.entities.user_sessions import UserSession
 from src.domain.entities.users import User
@@ -20,6 +24,7 @@ from src.domain.repository.design_ratings import (
     DesignRatingAggregate,
 )
 from src.domain.repository.media_files import BaseMediaFilesRepository
+from src.domain.repository.notification_jobs import BaseNotificationJobsRepository
 from src.domain.repository.telegram_login_challenges import (
     BaseTelegramLoginChallengesRepository,
 )
@@ -278,6 +283,52 @@ class InMemoryUserSessionsRepository(BaseUserSessionsRepository):
         ]
 
 
+class InMemoryNotificationJobsRepository(BaseNotificationJobsRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, NotificationJob] = {}
+
+    async def add(self, entity: NotificationJob) -> None:
+        self.items[entity.id] = entity
+
+    async def get_by_id(self, id_: uuid.UUID) -> Optional[NotificationJob]:
+        return self.items.get(id_)
+
+    async def update(self, entity: NotificationJob) -> NotificationJob:
+        self.items[entity.id] = entity
+        return entity
+
+    async def delete(self, id_: uuid.UUID) -> None:
+        self.items.pop(id_, None)
+
+    async def get_by_box_and_template(
+        self,
+        box_id: uuid.UUID,
+        template: NotificationTemplate,
+    ) -> NotificationJob | None:
+        for job in self.items.values():
+            if job.box_id == box_id and job.template == template:
+                return job
+        return None
+
+    async def claim_due(
+        self,
+        now: datetime,
+        *,
+        limit: int = 20,
+    ) -> list[NotificationJob]:
+        due = [
+            job
+            for job in self.items.values()
+            if job.status == NotificationJobStatus.SCHEDULED and job.run_at <= now
+        ]
+        due.sort(key=lambda job: job.run_at)
+        claimed: list[NotificationJob] = []
+        for job in due[:limit]:
+            job.mark_processing()
+            claimed.append(job)
+        return claimed
+
+
 class InMemoryUnitOfWork(BaseUnitOfWork):
     def __init__(self) -> None:
         self.boxes = InMemoryBoxesRepository()
@@ -285,6 +336,7 @@ class InMemoryUnitOfWork(BaseUnitOfWork):
         self.design_assets = InMemoryDesignAssetsRepository()
         self.design_ratings = InMemoryDesignRatingsRepository()
         self.media_files = InMemoryMediaFilesRepository()
+        self.notification_jobs = InMemoryNotificationJobsRepository()
         self.users = InMemoryUsersRepository()
         self.telegram_login_challenges = InMemoryTelegramLoginChallengesRepository()
         self.user_sessions = InMemoryUserSessionsRepository()

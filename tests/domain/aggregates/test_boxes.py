@@ -19,6 +19,7 @@ from src.domain.values.activates_at import ActivatesAt
 from src.domain.values.box_item_caption import BoxItemCaption
 from src.domain.values.box_message import BoxMessage
 from src.domain.values.box_preview_title import BoxPreviewTitle
+from src.domain.values.box_recipient_email import BoxRecipientEmail
 from src.domain.values.box_recipient_name import BoxRecipientName
 from src.domain.values.box_title import BoxTitle
 from src.domain.values.public_slug import PublicSlug
@@ -337,11 +338,14 @@ class TestBoxAggregateItems:
             message=BoxMessage("Updated"),
             preview_title=BoxPreviewTitle("Preview"),
             preview_image_url=Url("https://example.com/p.png"),
+            recipient_email=BoxRecipientEmail("lena@example.com"),
         )
 
         assert box.design_id == new_design_id
         assert box.title.value == "New title"
         assert box.recipient_name.value == "Лена"
+        assert box.recipient_email is not None
+        assert box.recipient_email.value == "lena@example.com"
         assert box.timezone == "Europe/Moscow"
         assert box.message is not None
         assert box.message.value == "Updated"

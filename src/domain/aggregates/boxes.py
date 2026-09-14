@@ -25,6 +25,7 @@ from src.domain.values.activates_at import ActivatesAt
 from src.domain.values.box_item_caption import BoxItemCaption
 from src.domain.values.box_message import BoxMessage
 from src.domain.values.box_preview_title import BoxPreviewTitle
+from src.domain.values.box_recipient_email import BoxRecipientEmail
 from src.domain.values.box_recipient_name import BoxRecipientName
 from src.domain.values.box_title import BoxTitle
 from src.domain.values.public_slug import PublicSlug
@@ -52,6 +53,7 @@ class Box(BaseEntity):
     activates_at: ActivatesAt
     status: BoxStatus
     timezone: str = "UTC"
+    recipient_email: BoxRecipientEmail | None = None
     message: BoxMessage | None = None
     preview_title: BoxPreviewTitle | None = None
     preview_image_url: Url | None = None
@@ -166,6 +168,7 @@ class Box(BaseEntity):
         recipient_name: BoxRecipientName,
         activates_at: ActivatesAt,
         timezone: str = "UTC",
+        recipient_email: BoxRecipientEmail | None = None,
         message: BoxMessage | None = None,
         preview_title: BoxPreviewTitle | None = None,
         preview_image_url: Url | None = None,
@@ -175,6 +178,7 @@ class Box(BaseEntity):
         self.recipient_name = recipient_name
         self.activates_at = activates_at
         self.timezone = timezone
+        self.recipient_email = recipient_email
         self.message = message
         self.preview_title = preview_title
         self.preview_image_url = preview_image_url

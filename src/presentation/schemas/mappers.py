@@ -31,6 +31,9 @@ def box_to_response(box: Box) -> BoxResponse:
         public_slug=box.public_slug.value,
         title=box.title.value,
         recipient_name=box.recipient_name.value,
+        recipient_email=(
+            box.recipient_email.value if box.recipient_email is not None else None
+        ),
         activates_at=box.activates_at.value,
         status=box.status.value,
         timezone=box.timezone,

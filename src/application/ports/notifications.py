@@ -9,3 +9,13 @@ class BaseEmailSender(ABC):
 class BaseTelegramNotifier(ABC):
     @abstractmethod
     async def send_message(self, *, telegram_id: int, text: str) -> None: ...
+
+    @abstractmethod
+    async def send_photo(
+        self,
+        *,
+        telegram_id: int,
+        photo: bytes,
+        filename: str,
+        caption: str,
+    ) -> None: ...

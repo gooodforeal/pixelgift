@@ -1,4 +1,4 @@
-export type BoxStatus = "draft" | "scheduled" | "active" | "archived";
+export type BoxStatus = "draft" | "scheduled" | "active" | "opened" | "archived";
 
 export type BoxItemType =
   | "image"

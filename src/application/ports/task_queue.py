@@ -4,4 +4,6 @@ import uuid
 
 class BaseTaskQueue(ABC):
     @abstractmethod
-    async def enqueue_box_opened(self, box_id: uuid.UUID) -> None: ...
+    async def enqueue_owner_telegram(
+        self, box_id: uuid.UUID, event: str
+    ) -> None: ...

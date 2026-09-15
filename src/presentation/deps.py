@@ -140,15 +140,15 @@ def get_reorder_box_items_uc() -> ReorderBoxItemsUseCase:
 
 
 def get_publish_box_uc() -> PublishBoxUseCase:
-    return PublishBoxUseCase(SqlAlchemyUnitOfWork())
+    return PublishBoxUseCase(SqlAlchemyUnitOfWork(), TaskiqTaskQueue())
 
 
 def get_archive_box_uc() -> ArchiveBoxUseCase:
-    return ArchiveBoxUseCase(SqlAlchemyUnitOfWork())
+    return ArchiveBoxUseCase(SqlAlchemyUnitOfWork(), TaskiqTaskQueue())
 
 
 def get_unarchive_box_uc() -> UnarchiveBoxUseCase:
-    return UnarchiveBoxUseCase(SqlAlchemyUnitOfWork())
+    return UnarchiveBoxUseCase(SqlAlchemyUnitOfWork(), TaskiqTaskQueue())
 
 
 def get_list_designs_uc() -> ListBoxDesignsUseCase:

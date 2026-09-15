@@ -3,7 +3,7 @@ from typing import Optional
 import uuid
 
 from src.application.uow.base import BaseUnitOfWork
-from src.domain.aggregates.boxes import Box
+from src.domain.aggregates.boxes import Box, BoxStatus
 from src.domain.entities.box_designs import BoxDesign
 from src.domain.entities.design_assets import DesignAsset
 from src.domain.entities.design_ratings import DesignRating
@@ -58,6 +58,20 @@ class InMemoryBoxesRepository(BaseBoxesRepository):
 
     async def list_by_owner_id(self, owner_id: uuid.UUID) -> list[Box]:
         return [box for box in self.items.values() if box.owner_id == owner_id]
+
+    async def claim_due_to_activate(
+        self,
+        now: datetime,
+        *,
+        limit: int = 50,
+    ) -> list[Box]:
+        due = [
+            box
+            for box in self.items.values()
+            if box.status == BoxStatus.SCHEDULED and box.activates_at.value <= now
+        ]
+        due.sort(key=lambda box: box.activates_at.value)
+        return due[:limit]
 
 
 class InMemoryBoxDesignsRepository(BaseBoxDesignsRepository):

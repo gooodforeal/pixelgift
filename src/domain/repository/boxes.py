@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 import uuid
 
 from src.domain.aggregates.boxes import Box
@@ -14,3 +15,11 @@ class BaseBoxesRepository(BaseRepository[Box], ABC):
 
     @abstractmethod
     async def list_by_owner_id(self, owner_id: uuid.UUID) -> list[Box]: ...
+
+    @abstractmethod
+    async def claim_due_to_activate(
+        self,
+        now: datetime,
+        *,
+        limit: int = 50,
+    ) -> list[Box]: ...

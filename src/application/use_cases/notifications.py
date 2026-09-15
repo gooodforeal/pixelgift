@@ -2,7 +2,10 @@ from datetime import datetime, timezone
 import logging
 import uuid
 
-from src.application.services.notifications import NotificationService
+from src.application.services.notifications import (
+    NotificationService,
+    OwnerTelegramEvent,
+)
 from src.application.uow.base import BaseUnitOfWork
 from src.domain.aggregates.boxes import Box, BoxStatus
 from src.domain.entities.notification_jobs import (
@@ -30,7 +33,9 @@ async def sync_gift_ready_job(uow: BaseUnitOfWork, box: Box) -> None:
             await uow.notification_jobs.update(existing)
         return
 
-    if box.status != BoxStatus.SCHEDULED or box.recipient_email is None:
+    if box.status not in {BoxStatus.SCHEDULED, BoxStatus.ACTIVE}:
+        return
+    if box.recipient_email is None:
         return
 
     run_at = box.activates_at.value
@@ -102,7 +107,7 @@ class DispatchDueNotificationsUseCase:
         return True
 
 
-class NotifyBoxOpenedUseCase:
+class NotifyOwnerTelegramUseCase:
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -111,7 +116,30 @@ class NotifyBoxOpenedUseCase:
         self._uow = uow
         self._notifications = notifications
 
-    async def execute(self, *, box_id: uuid.UUID) -> bool:
+    async def execute(self, *, box_id: uuid.UUID, event: str) -> bool:
+        try:
+            parsed = OwnerTelegramEvent(event)
+        except ValueError:
+            logger.warning("Unknown owner telegram event: %s", event)
+            return False
+
+        if parsed is OwnerTelegramEvent.OPENED:
+            return await self._execute_opened(box_id)
+
+        async with self._uow as uow:
+            box = await uow.boxes.get_by_id(box_id)
+            if box is None:
+                return False
+            owner = await uow.users.get_by_id(box.owner_id)
+            if owner is None:
+                return False
+
+        await self._notifications.notify_owner_telegram(
+            box=box, owner=owner, event=parsed
+        )
+        return True
+
+    async def _execute_opened(self, box_id: uuid.UUID) -> bool:
         async with self._uow as uow:
             box = await uow.boxes.get_by_id(box_id)
             if box is None or box.first_opened_at is None:
@@ -143,7 +171,11 @@ class NotifyBoxOpenedUseCase:
                 return False
 
             try:
-                await self._notifications.notify_box_opened(box=box, owner=owner)
+                await self._notifications.notify_owner_telegram(
+                    box=box,
+                    owner=owner,
+                    event=OwnerTelegramEvent.OPENED,
+                )
                 job.mark_sent()
             except Exception as exc:
                 logger.exception("Failed to notify owner about opened box %s", box.id)

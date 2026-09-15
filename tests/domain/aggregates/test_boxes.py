@@ -390,6 +390,47 @@ class TestBoxArchiveUnarchive:
         assert box.status == BoxStatus.SCHEDULED
         assert box.published_at is not None
 
+    def test_unarchive_published_past_date_restores_active(
+        self, activates_at: ActivatesAt
+    ):
+        past = ActivatesAt.reconstitute(datetime(2020, 1, 1, tzinfo=timezone.utc))
+        box = _make_box(past, status=BoxStatus.DRAFT)
+        box.add_item(media_file_id=uuid.uuid4(), item_type=BoxItemType.IMAGE)
+        box.publish()
+        box.archive()
+
+        box.unarchive()
+
+        assert box.status == BoxStatus.ACTIVE
+
+    def test_activate_if_due_promotes_scheduled(self):
+        past = ActivatesAt.reconstitute(datetime(2020, 1, 1, tzinfo=timezone.utc))
+        box = _make_box(past, status=BoxStatus.SCHEDULED)
+
+        assert box.activate_if_due() is True
+        assert box.status == BoxStatus.ACTIVE
+
+    def test_activate_if_due_skips_future(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at, status=BoxStatus.SCHEDULED)
+
+        assert box.activate_if_due() is False
+        assert box.status == BoxStatus.SCHEDULED
+
+    def test_mark_opened_from_scheduled(self):
+        past = ActivatesAt.reconstitute(datetime(2020, 1, 1, tzinfo=timezone.utc))
+        box = _make_box(past, status=BoxStatus.SCHEDULED)
+
+        assert box.mark_opened() is True
+        assert box.status == BoxStatus.OPENED
+        assert box.first_opened_at is not None
+
+    def test_mark_opened_from_active(self):
+        past = ActivatesAt.reconstitute(datetime(2020, 1, 1, tzinfo=timezone.utc))
+        box = _make_box(past, status=BoxStatus.ACTIVE)
+
+        assert box.mark_opened() is True
+        assert box.status == BoxStatus.OPENED
+
     def test_unarchive_rejects_opened_box(self, activates_at: ActivatesAt):
         box = _make_box(
             activates_at,

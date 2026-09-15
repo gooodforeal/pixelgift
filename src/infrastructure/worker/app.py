@@ -13,5 +13,5 @@ scheduler = TaskiqScheduler(broker, sources=[LabelScheduleSource(broker)])
 
 from src.infrastructure.worker.tasks import (  # noqa: E402, F401
     dispatch_due_notifications,
-    notify_box_opened,
+    notify_owner_telegram,
 )

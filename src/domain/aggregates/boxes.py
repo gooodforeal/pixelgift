@@ -40,6 +40,7 @@ class BoxStatus(StrEnum):
     DRAFT = "draft"
     SCHEDULED = "scheduled"
     ACTIVE = "active"
+    OPENED = "opened"
     ARCHIVED = "archived"
 
 
@@ -194,6 +195,29 @@ class Box(BaseEntity):
         self.published_at = now or datetime.now(dt_timezone.utc)
         self._touch()
 
+    def activate_if_due(self, *, now: datetime | None = None) -> bool:
+        moment = now or datetime.now(dt_timezone.utc)
+        if self.status != BoxStatus.SCHEDULED:
+            return False
+        if self.activates_at.value > moment:
+            return False
+        self.status = BoxStatus.ACTIVE
+        self._touch()
+        return True
+
+    def mark_opened(self, *, now: datetime | None = None) -> bool:
+        moment = now or datetime.now(dt_timezone.utc)
+        if self.first_opened_at is not None:
+            return False
+        if self.status not in {BoxStatus.SCHEDULED, BoxStatus.ACTIVE}:
+            return False
+        if self.activates_at.value > moment:
+            return False
+        self.first_opened_at = moment
+        self.status = BoxStatus.OPENED
+        self._touch()
+        return True
+
     def archive(self) -> None:
         if self.status == BoxStatus.ARCHIVED:
             raise BoxAlreadyArchivedError(self.id)
@@ -201,17 +225,19 @@ class Box(BaseEntity):
         self.status = BoxStatus.ARCHIVED
         self._touch()
 
-    def unarchive(self) -> None:
+    def unarchive(self, *, now: datetime | None = None) -> None:
         if self.status != BoxStatus.ARCHIVED:
             raise BoxNotArchivedError(self.id)
         if self.first_opened_at is not None:
             raise BoxAlreadyOpenedError(self.id)
 
-        # ACTIVE ставится только при первом открытии — без first_opened_at
-        # бокс был draft или scheduled.
-        self.status = (
-            BoxStatus.SCHEDULED if self.published_at is not None else BoxStatus.DRAFT
-        )
+        moment = now or datetime.now(dt_timezone.utc)
+        if self.published_at is None:
+            self.status = BoxStatus.DRAFT
+        elif self.activates_at.value <= moment:
+            self.status = BoxStatus.ACTIVE
+        else:
+            self.status = BoxStatus.SCHEDULED
         self._touch()
 
     def _reindex_sort_orders(self) -> None:

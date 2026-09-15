@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -15,6 +15,7 @@ from src.application.dto.boxes import (
     UpdateBoxItemCommand,
 )
 from src.application.use_cases.boxes import (
+    ActivateDueBoxesUseCase,
     AddBoxItemUseCase,
     ArchiveBoxUseCase,
     CreateBoxUseCase,
@@ -61,6 +62,7 @@ from src.domain.values.box_title import BoxTitle
 from src.domain.values.public_slug import PublicSlug
 from src.domain.values.url import Url
 from tests.application.fakes import InMemoryUnitOfWork
+from tests.application.test_notifications import RecordingTaskQueue
 
 
 def _design(*, is_active: bool = True) -> BoxDesign:
@@ -343,6 +345,31 @@ class TestUpdateBoxUseCase:
             owner_id=user_id,
             activates_at=activates_at,
             status=BoxStatus.ACTIVE,
+        )
+
+        with pytest.raises(BoxNotEditableError):
+            await UpdateBoxUseCase(uow).execute(
+                UpdateBoxCommand(
+                    box_id=box.id,
+                    actor_id=user_id,
+                    design_id=design.id,
+                    title=BoxTitle("Too late"),
+                    recipient_name=BoxRecipientName("X"),
+                    activates_at=activates_at,
+                )
+            )
+
+    async def test_rejects_opened_box(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box, design = await self._seed_box(
+            uow,
+            owner_id=user_id,
+            activates_at=activates_at,
+            status=BoxStatus.OPENED,
         )
 
         with pytest.raises(BoxNotEditableError):
@@ -752,13 +779,15 @@ class TestPublishAndArchiveBoxUseCases:
             )
         )
 
-        published = await PublishBoxUseCase(uow).execute(
+        queue = RecordingTaskQueue()
+        published = await PublishBoxUseCase(uow, queue).execute(
             PublishBoxCommand(box_id=box.id, actor_id=user_id)
         )
 
         assert published.status == BoxStatus.SCHEDULED
         assert published.published_at is not None
         assert uow.committed is True
+        assert queue.events == [(published.id, "published")]
         job = await uow.notification_jobs.get_by_box_and_template(
             published.id, NotificationTemplate.GIFT_READY
         )
@@ -831,10 +860,12 @@ class TestPublishAndArchiveBoxUseCases:
             uow, owner_id=user_id, activates_at=activates_at
         )
 
-        archived = await ArchiveBoxUseCase(uow).execute(
+        queue = RecordingTaskQueue()
+        archived = await ArchiveBoxUseCase(uow, queue).execute(
             ArchiveBoxCommand(box_id=box.id, actor_id=user_id)
         )
         assert archived.status == BoxStatus.ARCHIVED
+        assert queue.events == [(archived.id, "archived")]
 
         with pytest.raises(BoxAlreadyArchivedError):
             await ArchiveBoxUseCase(uow).execute(
@@ -854,7 +885,7 @@ class TestPublishAndArchiveBoxUseCases:
             ArchiveBoxCommand(box_id=box.id, actor_id=user_id)
         )
 
-        restored = await UnarchiveBoxUseCase(uow).execute(
+        restored = await UnarchiveBoxUseCase(uow, RecordingTaskQueue()).execute(
             UnarchiveBoxCommand(box_id=box.id, actor_id=user_id)
         )
 
@@ -907,3 +938,21 @@ class TestPublishAndArchiveBoxUseCases:
             await UnarchiveBoxUseCase(uow).execute(
                 UnarchiveBoxCommand(box_id=box.id, actor_id=user_id)
             )
+
+    async def test_activates_due_scheduled_boxes(self, user_id: uuid.UUID):
+        uow = InMemoryUnitOfWork()
+        past = ActivatesAt.reconstitute(
+            datetime.now(timezone.utc) - timedelta(minutes=1)
+        )
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=past
+        )
+        box.status = BoxStatus.SCHEDULED
+        await uow.boxes.update(box)
+
+        count = await ActivateDueBoxesUseCase(uow).execute()
+        stored = await uow.boxes.get_by_id(box.id)
+
+        assert count == 1
+        assert stored is not None
+        assert stored.status == BoxStatus.ACTIVE

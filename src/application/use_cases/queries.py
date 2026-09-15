@@ -6,6 +6,7 @@ import uuid
 from src.application.dto.media import MediaContent
 from src.application.ports.storage.base import BaseObjectStorage
 from src.application.ports.task_queue import BaseTaskQueue
+from src.application.services.notifications import OwnerTelegramEvent
 from src.application.uow.base import BaseUnitOfWork
 from src.domain.aggregates.boxes import Box
 from src.domain.entities.box_designs import BoxDesign
@@ -44,6 +45,9 @@ class GetBoxUseCase:
                 raise BoxNotFoundError(box_id)
             if box.owner_id != actor_id:
                 raise BoxAccessDeniedError(box_id, actor_id)
+            if box.activate_if_due():
+                box = await uow.boxes.update(box)
+                await uow.commit()
             return box
 
 
@@ -53,7 +57,15 @@ class ListBoxesUseCase:
 
     async def execute(self, *, owner_id: uuid.UUID) -> list[Box]:
         async with self._uow as uow:
-            return await uow.boxes.list_by_owner_id(owner_id)
+            boxes = await uow.boxes.list_by_owner_id(owner_id)
+            changed = False
+            for box in boxes:
+                if box.activate_if_due():
+                    await uow.boxes.update(box)
+                    changed = True
+            if changed:
+                await uow.commit()
+            return boxes
 
 
 class GetPublicBoxUseCase:
@@ -82,14 +94,13 @@ class GetPublicBoxUseCase:
             just_opened = False
 
             if unlocked and box.first_opened_at is None:
-                from src.domain.aggregates.boxes import BoxStatus
-
-                box.first_opened_at = now
-                if box.status == BoxStatus.SCHEDULED:
-                    box.status = BoxStatus.ACTIVE
+                just_opened = box.mark_opened(now=now)
+                if just_opened:
+                    await uow.boxes.update(box)
+                    await uow.commit()
+            elif box.activate_if_due(now=now):
                 await uow.boxes.update(box)
                 await uow.commit()
-                just_opened = True
 
             design = await uow.box_designs.get_by_id(box.design_id)
             view = PublicBoxView(box=box, content_unlocked=unlocked, design=design)
@@ -97,7 +108,9 @@ class GetPublicBoxUseCase:
 
         if opened_box_id is not None and self._task_queue is not None:
             try:
-                await self._task_queue.enqueue_box_opened(opened_box_id)
+                await self._task_queue.enqueue_owner_telegram(
+                    opened_box_id, OwnerTelegramEvent.OPENED.value
+                )
             except Exception:
                 logger.exception(
                     "Failed to enqueue box opened notification for %s", opened_box_id

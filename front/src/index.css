@@ -488,6 +488,10 @@ html[data-theme="light"] .status-badge--scheduled {
 }
 
 html[data-theme="light"] .status-badge--active {
+  @apply border-cyan-500/55 bg-white/95 text-cyan-800;
+}
+
+html[data-theme="light"] .status-badge--opened {
   @apply border-emerald-500/55 bg-white/95 text-emerald-800;
 }
 

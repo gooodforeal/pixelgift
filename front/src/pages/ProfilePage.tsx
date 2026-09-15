@@ -56,6 +56,7 @@ export function ProfilePage() {
   const drafts = countByStatus(boxes, "draft");
   const scheduled = countByStatus(boxes, "scheduled");
   const active = countByStatus(boxes, "active");
+  const opened = countByStatus(boxes, "opened");
   const archived = countByStatus(boxes, "archived");
   const photoSrc = user ? avatarUrl(user) : null;
   if (meQuery.isPending) {
@@ -194,8 +195,9 @@ export function ProfilePage() {
               {boxesQuery.isPending ? "…" : scheduled + active}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              {scheduled} запланировано · {active} открыто
+              {scheduled} запланировано · {active} ждут открытия
             </p>
+            <p className="mt-1 text-xs text-slate-500">{opened} уже открыли</p>
           </div>
 
           <div className="glass-soft p-5">

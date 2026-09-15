@@ -1,10 +1,11 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.domain.aggregates.boxes import Box
+from src.domain.aggregates.boxes import Box, BoxStatus
 from src.domain.repository.boxes import BaseBoxesRepository
 from src.domain.values.public_slug import PublicSlug
 from src.infrastructure.mappers.boxes import (
@@ -68,6 +69,25 @@ class SqlAlchemyBoxesRepository(BaseBoxesRepository):
             .where(BoxModel.owner_id == owner_id)
             .options(selectinload(BoxModel.items))
             .order_by(BoxModel.created_at.desc())
+        )
+        return [box_to_entity(model) for model in result.scalars().all()]
+
+    async def claim_due_to_activate(
+        self,
+        now: datetime,
+        *,
+        limit: int = 50,
+    ) -> list[Box]:
+        result = await self._session.execute(
+            select(BoxModel)
+            .where(
+                BoxModel.status == BoxStatus.SCHEDULED.value,
+                BoxModel.activates_at <= now,
+            )
+            .order_by(BoxModel.activates_at.asc())
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+            .options(selectinload(BoxModel.items))
         )
         return [box_to_entity(model) for model in result.scalars().all()]
 

@@ -85,7 +85,9 @@ function BoxCardMenu({
           role="menu"
           className="box-card-menu absolute right-0 bottom-full z-20 mb-2 min-w-[11.5rem] overflow-hidden rounded-2xl border border-white/12 bg-ink-950/95 p-1 shadow-2xl shadow-black/40 backdrop-blur-xl"
         >
-          {box.status === "active" || box.status === "archived" ? (
+          {box.status === "active" ||
+          box.status === "opened" ||
+          box.status === "archived" ? (
             <Link
               role="menuitem"
               to={`/app/boxes/${box.id}`}

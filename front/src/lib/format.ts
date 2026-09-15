@@ -68,7 +68,8 @@ export function countdownTo(iso: string, now: number = Date.now()): Countdown {
 export const statusLabels: Record<BoxStatus, string> = {
   draft: "Черновик",
   scheduled: "Запланирован",
-  active: "Открыт",
+  active: "Можно открыть",
+  opened: "Открыт",
   archived: "В архиве",
 };
 

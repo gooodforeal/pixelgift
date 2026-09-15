@@ -1,5 +1,7 @@
+import logging
 import secrets
 import uuid
+from datetime import datetime, timezone as dt_timezone
 
 from src.application.dto.boxes import (
     AddBoxItemCommand,
@@ -12,6 +14,8 @@ from src.application.dto.boxes import (
     UpdateBoxCommand,
     UpdateBoxItemCommand,
 )
+from src.application.ports.task_queue import BaseTaskQueue
+from src.application.services.notifications import OwnerTelegramEvent
 from src.application.uow.base import BaseUnitOfWork
 from src.application.use_cases.notifications import sync_gift_ready_job
 from src.domain.aggregates.boxes import Box, BoxStatus
@@ -34,6 +38,23 @@ from src.domain.values.public_slug import PublicSlug
 
 _EDITABLE_STATUSES = frozenset({BoxStatus.DRAFT, BoxStatus.SCHEDULED})
 _SLUG_GENERATE_ATTEMPTS = 5
+
+logger = logging.getLogger(__name__)
+
+
+async def _enqueue_owner_telegram(
+    task_queue: BaseTaskQueue | None,
+    box_id: uuid.UUID,
+    event: OwnerTelegramEvent,
+) -> None:
+    if task_queue is None:
+        return
+    try:
+        await task_queue.enqueue_owner_telegram(box_id, event.value)
+    except Exception:
+        logger.exception(
+            "Failed to enqueue owner telegram %s for box %s", event.value, box_id
+        )
 
 
 def generate_public_slug() -> PublicSlug:
@@ -322,8 +343,13 @@ class ReorderBoxItemsUseCase:
 
 
 class PublishBoxUseCase:
-    def __init__(self, uow: BaseUnitOfWork) -> None:
+    def __init__(
+        self,
+        uow: BaseUnitOfWork,
+        task_queue: BaseTaskQueue | None = None,
+    ) -> None:
         self._uow = uow
+        self._task_queue = task_queue
 
     async def execute(self, command: PublishBoxCommand) -> Box:
         async with self._uow as uow:
@@ -334,12 +360,20 @@ class PublishBoxUseCase:
             updated = await uow.boxes.update(box)
             await sync_gift_ready_job(uow, updated)
             await uow.commit()
-            return updated
+        await _enqueue_owner_telegram(
+            self._task_queue, updated.id, OwnerTelegramEvent.PUBLISHED
+        )
+        return updated
 
 
 class ArchiveBoxUseCase:
-    def __init__(self, uow: BaseUnitOfWork) -> None:
+    def __init__(
+        self,
+        uow: BaseUnitOfWork,
+        task_queue: BaseTaskQueue | None = None,
+    ) -> None:
         self._uow = uow
+        self._task_queue = task_queue
 
     async def execute(self, command: ArchiveBoxCommand) -> Box:
         async with self._uow as uow:
@@ -350,12 +384,20 @@ class ArchiveBoxUseCase:
             updated = await uow.boxes.update(box)
             await sync_gift_ready_job(uow, updated)
             await uow.commit()
-            return updated
+        await _enqueue_owner_telegram(
+            self._task_queue, updated.id, OwnerTelegramEvent.ARCHIVED
+        )
+        return updated
 
 
 class UnarchiveBoxUseCase:
-    def __init__(self, uow: BaseUnitOfWork) -> None:
+    def __init__(
+        self,
+        uow: BaseUnitOfWork,
+        task_queue: BaseTaskQueue | None = None,
+    ) -> None:
         self._uow = uow
+        self._task_queue = task_queue
 
     async def execute(self, command: UnarchiveBoxCommand) -> Box:
         async with self._uow as uow:
@@ -366,4 +408,26 @@ class UnarchiveBoxUseCase:
             updated = await uow.boxes.update(box)
             await sync_gift_ready_job(uow, updated)
             await uow.commit()
-            return updated
+        await _enqueue_owner_telegram(
+            self._task_queue, updated.id, OwnerTelegramEvent.UNARCHIVED
+        )
+        return updated
+
+
+class ActivateDueBoxesUseCase:
+    def __init__(self, uow: BaseUnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(self, *, now: datetime | None = None) -> int:
+        moment = now or datetime.now(dt_timezone.utc)
+        activated = 0
+        while True:
+            async with self._uow as uow:
+                boxes = await uow.boxes.claim_due_to_activate(moment, limit=50)
+                if not boxes:
+                    return activated
+                for box in boxes:
+                    if box.activate_if_due(now=moment):
+                        await uow.boxes.update(box)
+                        activated += 1
+                await uow.commit()

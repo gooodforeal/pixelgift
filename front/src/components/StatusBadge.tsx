@@ -1,4 +1,4 @@
-import { Archive, CalendarClock, PencilLine, Sparkles } from "lucide-react";
+import { Archive, CalendarClock, Gift, PencilLine, Sparkles } from "lucide-react";
 
 import { statusLabels } from "../lib/format";
 import type { BoxStatus } from "../lib/types";
@@ -9,7 +9,9 @@ const styles: Record<BoxStatus, string> = {
   scheduled:
     "status-badge status-badge--scheduled border-violet-300/45 bg-violet-950/85 text-violet-100",
   active:
-    "status-badge status-badge--active border-emerald-300/45 bg-emerald-950/85 text-emerald-100",
+    "status-badge status-badge--active border-cyan-300/45 bg-cyan-950/85 text-cyan-100",
+  opened:
+    "status-badge status-badge--opened border-emerald-300/45 bg-emerald-950/85 text-emerald-100",
   archived:
     "status-badge status-badge--archived border-white/25 bg-ink-950/85 text-slate-100",
 };
@@ -17,7 +19,8 @@ const styles: Record<BoxStatus, string> = {
 const icons: Record<BoxStatus, typeof PencilLine> = {
   draft: PencilLine,
   scheduled: CalendarClock,
-  active: Sparkles,
+  active: Gift,
+  opened: Sparkles,
   archived: Archive,
 };
 

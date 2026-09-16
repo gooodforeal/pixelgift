@@ -225,10 +225,37 @@ class TestOwnerTelegramCaptions:
             box=box,
             public_web_url="https://pixelgift.test",
         )
-        assert "<b>Pixelgift</b>" in html
+        assert "🎁 <b>Pixelgift</b>" in html
         assert "Бокс опубликован" in html
-        assert "https://pixelgift.test/b/gift-ready" in html
+        assert 'href="https://pixelgift.test/b/gift-ready"' in html
+        assert ">https://pixelgift.test/b/gift-ready</a>" in html
+        assert "Открыть ссылку" not in html
         assert "masha@example.com" in html
+        assert "✨" not in html
+        assert "📦" not in html
+
+    def test_gift_ready_and_opened_include_visible_url(self):
+        owner_id = uuid.uuid4()
+        box = _box(owner_id=owner_id, status=BoxStatus.OPENED)
+        box.first_opened_at = datetime(2026, 9, 14, 12, 30, tzinfo=timezone.utc)
+
+        ready = render_owner_telegram_html(
+            OwnerTelegramEvent.GIFT_READY,
+            box=box,
+            public_web_url="https://pixelgift.test",
+        )
+        opened = render_owner_telegram_html(
+            OwnerTelegramEvent.OPENED,
+            box=box,
+            public_web_url="https://pixelgift.test",
+        )
+
+        assert ">https://pixelgift.test/b/gift-ready</a>" in ready
+        assert ">https://pixelgift.test/b/gift-ready</a>" in opened
+        assert ready.count("🎁") == 1
+        assert opened.count("🎁") == 1
+        assert "📨" not in ready
+        assert "🥳" not in opened
 
     def test_escapes_user_content(self):
         box = _box(owner_id=uuid.uuid4())
@@ -242,6 +269,8 @@ class TestOwnerTelegramCaptions:
         assert "День &amp; ночь" in html
         assert "Маша &lt;script&gt;" in html
         assert "<script>" not in html
+        assert "🎁 <b>Pixelgift</b>" in html
+        assert "🗄" not in html
 
 
 class TestNotifyOwnerTelegramUseCase:

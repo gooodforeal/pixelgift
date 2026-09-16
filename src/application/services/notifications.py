@@ -74,6 +74,11 @@ def render_gift_ready_html(
     )
 
 
+def _telegram_open_link(url: str) -> str:
+    safe_url = escape(url, quote=True)
+    return f'<a href="{safe_url}">{escape(url)}</a>'
+
+
 def render_owner_telegram_html(
     event: OwnerTelegramEvent,
     *,
@@ -83,7 +88,6 @@ def render_owner_telegram_html(
     title = escape(box.title.value)
     name = escape(box.recipient_name.value)
     url = _gift_url(public_web_url, box.public_slug.value)
-    safe_url = escape(url, quote=True)
     activates = escape(_format_local(box.activates_at.value, box.timezone))
     email = (
         escape(box.recipient_email.value) if box.recipient_email is not None else None
@@ -96,24 +100,24 @@ def render_owner_telegram_html(
             else "Письмо не запланировано — у бокса нет почты получателя."
         )
         return (
-            "<b>Pixelgift</b>\n"
-            "Бокс опубликован\n\n"
+            "🎁 <b>Pixelgift</b>\n"
+            "<b>Бокс опубликован</b>\n\n"
             f"<b>{title}</b>\n"
             f"для {name}\n\n"
             f"Откроется {activates}\n"
             f"{extra}\n\n"
-            f'<a href="{safe_url}">Открыть ссылку</a>'
+            f"{_telegram_open_link(url)}"
         )
 
     if event is OwnerTelegramEvent.GIFT_READY:
         destination = f"на {email}" if email else "получателю"
         return (
-            "<b>Pixelgift</b>\n"
-            "Письмо отправлено\n\n"
+            "🎁 <b>Pixelgift</b>\n"
+            "<b>Письмо отправлено</b>\n\n"
             f"<b>{title}</b>\n"
             f"для {name} · {destination}\n\n"
-            "Подарок уже можно открыть.\n"
-            f'<a href="{safe_url}">Открыть ссылку</a>'
+            "Подарок уже можно открыть.\n\n"
+            f"{_telegram_open_link(url)}"
         )
 
     if event is OwnerTelegramEvent.OPENED:
@@ -121,16 +125,17 @@ def render_owner_telegram_html(
             raise ValueError("Box has not been opened yet")
         opened = escape(_format_local(box.first_opened_at, box.timezone))
         return (
-            "<b>Pixelgift</b>\n"
-            "Подарок открыт\n\n"
+            "🎁 <b>Pixelgift</b>\n"
+            "<b>Подарок открыт</b>\n\n"
             f"{name} открыл(а) «{title}»\n"
-            f"{opened}"
+            f"{opened}\n\n"
+            f"{_telegram_open_link(url)}"
         )
 
     if event is OwnerTelegramEvent.ARCHIVED:
         return (
-            "<b>Pixelgift</b>\n"
-            "Бокс в архиве\n\n"
+            "🎁 <b>Pixelgift</b>\n"
+            "<b>Бокс в архиве</b>\n\n"
             f"<b>{title}</b>\n"
             f"для {name}\n\n"
             "Ссылка больше не откроет подарок."
@@ -142,11 +147,12 @@ def render_owner_telegram_html(
         else "снова черновик"
     )
     return (
-        "<b>Pixelgift</b>\n"
-        "Бокс восстановлен\n\n"
+        "🎁 <b>Pixelgift</b>\n"
+        "<b>Бокс восстановлен</b>\n\n"
         f"<b>{title}</b>\n"
         f"для {name}\n\n"
-        f"Статус: {restored}."
+        f"Статус: {restored}.\n\n"
+        f"{_telegram_open_link(url)}"
     )
 
 

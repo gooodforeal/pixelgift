@@ -56,8 +56,35 @@ class InMemoryBoxesRepository(BaseBoxesRepository):
                 return box
         return None
 
-    async def list_by_owner_id(self, owner_id: uuid.UUID) -> list[Box]:
-        return [box for box in self.items.values() if box.owner_id == owner_id]
+    async def list_by_owner_id(
+        self,
+        owner_id: uuid.UUID,
+        *,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> list[Box]:
+        boxes = [box for box in self.items.values() if box.owner_id == owner_id]
+        boxes.sort(key=lambda box: box.created_at, reverse=True)
+        if offset:
+            boxes = boxes[offset:]
+        if limit is not None:
+            boxes = boxes[:limit]
+        return boxes
+
+    async def count_by_owner_id(self, owner_id: uuid.UUID) -> int:
+        return sum(1 for box in self.items.values() if box.owner_id == owner_id)
+
+    async def count_statuses_by_owner_id(
+        self,
+        owner_id: uuid.UUID,
+    ) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for box in self.items.values():
+            if box.owner_id != owner_id:
+                continue
+            key = box.status.value
+            counts[key] = counts.get(key, 0) + 1
+        return counts
 
     async def claim_due_to_activate(
         self,

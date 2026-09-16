@@ -13,7 +13,7 @@ from src.domain.exceptions.boxes import (
     PublicSlugFormatError,
 )
 from src.domain.exceptions.media_files import MediaFileNotFoundError
-from src.presentation.deps import get_public_box_item_content_uc, get_public_box_uc
+from src.presentation.deps.boxes import get_public_box_item_content_uc, get_public_box_uc
 from src.presentation.schemas.boxes import PublicBoxResponse
 from src.presentation.schemas.mappers import public_box_to_response
 

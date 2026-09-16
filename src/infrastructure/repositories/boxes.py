@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -63,14 +63,43 @@ class SqlAlchemyBoxesRepository(BaseBoxesRepository):
         model = result.scalar_one_or_none()
         return box_to_entity(model) if model is not None else None
 
-    async def list_by_owner_id(self, owner_id: uuid.UUID) -> list[Box]:
-        result = await self._session.execute(
+    async def list_by_owner_id(
+        self,
+        owner_id: uuid.UUID,
+        *,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> list[Box]:
+        stmt = (
             select(BoxModel)
             .where(BoxModel.owner_id == owner_id)
             .options(selectinload(BoxModel.items))
             .order_by(BoxModel.created_at.desc())
+            .offset(offset)
         )
+        if limit is not None:
+            stmt = stmt.limit(limit)
+        result = await self._session.execute(stmt)
         return [box_to_entity(model) for model in result.scalars().all()]
+
+    async def count_by_owner_id(self, owner_id: uuid.UUID) -> int:
+        result = await self._session.execute(
+            select(func.count())
+            .select_from(BoxModel)
+            .where(BoxModel.owner_id == owner_id)
+        )
+        return int(result.scalar_one())
+
+    async def count_statuses_by_owner_id(
+        self,
+        owner_id: uuid.UUID,
+    ) -> dict[str, int]:
+        result = await self._session.execute(
+            select(BoxModel.status, func.count())
+            .where(BoxModel.owner_id == owner_id)
+            .group_by(BoxModel.status)
+        )
+        return {str(status): int(count) for status, count in result.all()}
 
     async def claim_due_to_activate(
         self,

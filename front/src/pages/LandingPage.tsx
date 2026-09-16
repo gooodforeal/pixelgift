@@ -20,6 +20,7 @@ import { DesignRatingStars } from "../components/DesignRatingStars";
 import { PageTransition } from "../components/PageTransition";
 import { api } from "../lib/api";
 import { gradientCss, resolveTheme } from "../lib/theme";
+import { useUiTheme } from "../hooks/useUiTheme";
 
 const steps = [
   {
@@ -63,6 +64,7 @@ const features = [
 ];
 
 export function LandingPage() {
+  const { theme: uiTheme } = useUiTheme();
   const { data: designs = [] } = useQuery({
     queryKey: ["designs"],
     queryFn: api.designs,
@@ -231,7 +233,7 @@ export function LandingPage() {
                   style={{ background: gradientCss(theme.gradient) }}
                 >
                   <img
-                    src={designCoverUrl(design)}
+                    src={designCoverUrl(design, uiTheme)}
                     alt=""
                     loading="lazy"
                     className="design-banner__image"
@@ -241,7 +243,7 @@ export function LandingPage() {
                   />
                   <div className="design-banner__blur" aria-hidden>
                     <img
-                      src={designCoverUrl(design)}
+                      src={designCoverUrl(design, uiTheme)}
                       alt=""
                       loading="lazy"
                       className="design-banner__blur-image"

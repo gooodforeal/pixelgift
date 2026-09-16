@@ -19,14 +19,14 @@ ASSETS_ROOT = ROOT / "assets"
 # Stable namespace so re-runs keep the same design asset ids.
 _SEED_NAMESPACE = uuid.UUID("6f1a1d5e-0000-4000-8000-000000000000")
 
-# Predefined box design codes → local preview file under assets/designs/.
-DESIGN_PREVIEWS: dict[str, str] = {
-    "romantic": "romantic.jpg",
-    "birthday": "birthday.jpg",
-    "winter": "winter.jpg",
-    "golden": "golden.jpg",
-    "spring": "spring.jpg",
-    "retro": "retro.jpg",
+# Predefined box design codes → dark/light preview files under assets/designs/.
+DESIGN_COVERS: dict[str, dict[str, str]] = {
+    "romantic": {"dark": "romantic.png", "light": "romantic-light.png"},
+    "birthday": {"dark": "birthday.png", "light": "birthday-light.png"},
+    "winter": {"dark": "winter.png", "light": "winter-light.png"},
+    "golden": {"dark": "golden.png", "light": "golden-light.png"},
+    "spring": {"dark": "spring.png", "light": "spring-light.png"},
+    "retro": {"dark": "retro.png", "light": "retro-light.png"},
 }
 
 
@@ -71,8 +71,8 @@ def _api_base_url() -> str:
     return _env("API_BASE_URL", "http://localhost:8000").rstrip("/")
 
 
-def _design_asset_id(code: str) -> uuid.UUID:
-    return uuid.uuid5(_SEED_NAMESPACE, f"design-preview:{code}")
+def _design_asset_id(code: str, variant: str = "dark") -> uuid.UUID:
+    return uuid.uuid5(_SEED_NAMESPACE, f"design-preview-v2:{variant}:{code}")
 
 
 def _object_matches(client: BaseClient, bucket: str, key: str, path: Path) -> bool:
@@ -154,6 +154,45 @@ def _ensure_object(
     return "put"
 
 
+def _upsert_design_asset(
+    conn: psycopg.Connection,
+    client: BaseClient,
+    *,
+    bucket: str,
+    path: Path,
+    asset_id: uuid.UUID,
+) -> str:
+    extension = path.suffix.lower()
+    storage_key = f"designs/{asset_id}{extension}"
+    mime = _content_type(path)
+    size_bytes = path.stat().st_size
+    result = _ensure_object(client, bucket=bucket, key=storage_key, path=path)
+    conn.execute(
+        """
+        INSERT INTO design_assets (
+            id, storage_key, mime_type, size_bytes, original_filename, created_at
+        )
+        VALUES (
+            %(id)s, %(storage_key)s, %(mime_type)s, %(size_bytes)s,
+            %(original_filename)s, now()
+        )
+        ON CONFLICT (id) DO UPDATE SET
+            storage_key = EXCLUDED.storage_key,
+            mime_type = EXCLUDED.mime_type,
+            size_bytes = EXCLUDED.size_bytes,
+            original_filename = EXCLUDED.original_filename
+        """,
+        {
+            "id": asset_id,
+            "storage_key": storage_key,
+            "mime_type": mime,
+            "size_bytes": size_bytes,
+            "original_filename": path.name,
+        },
+    )
+    return result
+
+
 def _seed_designs(client: BaseClient, bucket: str) -> tuple[int, int]:
     designs_dir = ASSETS_ROOT / "designs"
     if not designs_dir.is_dir():
@@ -163,56 +202,50 @@ def _seed_designs(client: BaseClient, bucket: str) -> tuple[int, int]:
     uploaded = skipped = 0
 
     with psycopg.connect(_database_url()) as conn:
-        for code, filename in DESIGN_PREVIEWS.items():
-            path = designs_dir / filename
-            if not path.is_file():
-                raise SystemExit(f"Missing design preview file: {path}")
+        for code, files in DESIGN_COVERS.items():
+            dark_path = designs_dir / files["dark"]
+            light_path = designs_dir / files["light"]
+            if not dark_path.is_file():
+                raise SystemExit(f"Missing design preview file: {dark_path}")
+            if not light_path.is_file():
+                raise SystemExit(f"Missing design preview file: {light_path}")
 
-            asset_id = _design_asset_id(code)
-            extension = path.suffix.lower()
-            storage_key = f"designs/{asset_id}{extension}"
-            mime = _content_type(path)
-            size_bytes = path.stat().st_size
-            preview_url = f"{api_base}/designs/assets/{asset_id}"
+            dark_id = _design_asset_id(code, "dark")
+            light_id = _design_asset_id(code, "light")
+            dark_url = f"{api_base}/designs/assets/{dark_id}"
+            light_url = f"{api_base}/designs/assets/{light_id}"
 
-            result = _ensure_object(
-                client, bucket=bucket, key=storage_key, path=path
-            )
-            if result == "put":
-                uploaded += 1
-            else:
-                skipped += 1
-
-            conn.execute(
-                """
-                INSERT INTO design_assets (
-                    id, storage_key, mime_type, size_bytes, original_filename, created_at
+            for asset_id, path in ((dark_id, dark_path), (light_id, light_path)):
+                result = _upsert_design_asset(
+                    conn, client, bucket=bucket, path=path, asset_id=asset_id
                 )
-                VALUES (
-                    %(id)s, %(storage_key)s, %(mime_type)s, %(size_bytes)s,
-                    %(original_filename)s, now()
-                )
-                ON CONFLICT (id) DO UPDATE SET
-                    storage_key = EXCLUDED.storage_key,
-                    mime_type = EXCLUDED.mime_type,
-                    size_bytes = EXCLUDED.size_bytes,
-                    original_filename = EXCLUDED.original_filename
-                """,
-                {
-                    "id": asset_id,
-                    "storage_key": storage_key,
-                    "mime_type": mime,
-                    "size_bytes": size_bytes,
-                    "original_filename": filename,
-                },
-            )
+                if result == "put":
+                    uploaded += 1
+                else:
+                    skipped += 1
+
             updated = conn.execute(
                 """
                 UPDATE box_designs
-                SET preview_image_url = %(preview_url)s
+                SET
+                    preview_image_url = %(preview_url)s,
+                    theme_config = jsonb_set(
+                        jsonb_set(
+                            COALESCE(theme_config, '{}'::jsonb),
+                            '{preview_image_url_light}',
+                            to_jsonb(%(light_url)s::text)
+                        ),
+                        '{cover_object_position}',
+                        to_jsonb(%(cover_position)s::text)
+                    )
                 WHERE code = %(code)s
                 """,
-                {"preview_url": preview_url, "code": code},
+                {
+                    "preview_url": dark_url,
+                    "light_url": light_url,
+                    "cover_position": "50% 50%",
+                    "code": code,
+                },
             )
             if updated.rowcount == 0:
                 print(
@@ -220,7 +253,8 @@ def _seed_designs(client: BaseClient, bucket: str) -> tuple[int, int]:
                     flush=True,
                 )
             else:
-                print(f"  link  {code} -> {preview_url}", flush=True)
+                print(f"  link  {code} dark={dark_url}", flush=True)
+                print(f"  link  {code} light={light_url}", flush=True)
 
         conn.commit()
 

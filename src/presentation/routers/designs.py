@@ -14,11 +14,13 @@ from src.domain.exceptions.design_ratings import (
     DesignRatingStarsNotIntegerError,
     DesignRatingStarsOutOfRangeError,
 )
-from src.presentation.deps import (
+from src.presentation.deps.auth import (
     get_current_user_id,
+    get_optional_current_user_id,
+)
+from src.presentation.deps.designs import (
     get_design_asset_content_uc,
     get_list_designs_uc,
-    get_optional_current_user_id,
     get_rate_design_uc,
 )
 from src.presentation.schemas.designs import (

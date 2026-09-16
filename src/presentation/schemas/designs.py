@@ -20,6 +20,7 @@ class ThemeConfigSchema(BaseModel):
     particle: str | None = None
     cover_object_position: str | None = None
     background_image_url: str | None = None
+    preview_image_url_light: str | None = None
     gift_box: GiftBoxPaletteConfig | None = None
 
 

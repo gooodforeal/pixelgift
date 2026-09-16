@@ -8,6 +8,7 @@ import type {
   DesignAssetUpload,
   DesignRating,
   MediaFile,
+  PaginatedBoxes,
   PublicBox,
   TelegramLoginStart,
   TelegramLoginStatus,
@@ -172,7 +173,13 @@ export const api = {
     return { ...asset, url: toProxiedAssetUrl(asset.url) };
   },
 
-  boxes: () => request<Box[]>("/boxes"),
+  boxes: (params?: { page?: number; pageSize?: number }) => {
+    const search = new URLSearchParams();
+    if (params?.page != null) search.set("page", String(params.page));
+    if (params?.pageSize != null) search.set("page_size", String(params.pageSize));
+    const query = search.toString();
+    return request<PaginatedBoxes>(`/boxes${query ? `?${query}` : ""}`);
+  },
 
   box: (boxId: string) => request<Box>(`/boxes/${boxId}`),
 

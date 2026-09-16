@@ -21,14 +21,14 @@ from src.domain.exceptions.box_designs import (
 from src.domain.exceptions.media_files import UnsupportedMediaTypeError
 from src.domain.exceptions.sort_order import SortOrderError
 from src.domain.exceptions.url import UrlError
-from src.presentation.deps import (
+from src.presentation.deps.designs import (
     get_create_design_uc,
     get_get_design_uc,
     get_list_all_designs_uc,
     get_update_design_uc,
     get_upload_design_asset_uc,
-    require_admin,
 )
+from src.presentation.deps.users import require_admin
 from src.presentation.schemas.designs import (
     AdminBoxDesignResponse,
     CreateBoxDesignRequest,

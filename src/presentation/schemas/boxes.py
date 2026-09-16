@@ -33,6 +33,14 @@ class BoxResponse(BaseModel):
     items: list[BoxItemResponse] = Field(default_factory=list)
 
 
+class PaginatedBoxesResponse(BaseModel):
+    items: list[BoxResponse]
+    total: int
+    page: int
+    page_size: int
+    status_counts: dict[str, int] = Field(default_factory=dict)
+
+
 class CreateBoxRequest(BaseModel):
     design_id: uuid.UUID
     title: str = Field(max_length=30)

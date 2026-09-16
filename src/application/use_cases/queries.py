@@ -34,6 +34,15 @@ class PublicBoxView:
     design: BoxDesign | None = None
 
 
+@dataclass(frozen=True, kw_only=True)
+class BoxesPage:
+    items: list[Box]
+    total: int
+    page: int
+    page_size: int
+    status_counts: dict[str, int]
+
+
 class GetBoxUseCase:
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
@@ -55,17 +64,37 @@ class ListBoxesUseCase:
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
-    async def execute(self, *, owner_id: uuid.UUID) -> list[Box]:
+    async def execute(
+        self,
+        *,
+        owner_id: uuid.UUID,
+        page: int = 1,
+        page_size: int = 10,
+    ) -> BoxesPage:
+        offset = (page - 1) * page_size
         async with self._uow as uow:
-            boxes = await uow.boxes.list_by_owner_id(owner_id)
+            boxes = await uow.boxes.list_by_owner_id(
+                owner_id,
+                limit=page_size,
+                offset=offset,
+            )
             changed = False
             for box in boxes:
                 if box.activate_if_due():
                     await uow.boxes.update(box)
                     changed = True
+
+            total = await uow.boxes.count_by_owner_id(owner_id)
+            status_counts = await uow.boxes.count_statuses_by_owner_id(owner_id)
             if changed:
                 await uow.commit()
-            return boxes
+            return BoxesPage(
+                items=boxes,
+                total=total,
+                page=page,
+                page_size=page_size,
+                status_counts=status_counts,
+            )
 
 
 class GetPublicBoxUseCase:

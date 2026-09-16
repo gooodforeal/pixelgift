@@ -39,6 +39,14 @@ export interface Box {
   items: BoxItem[];
 }
 
+export interface PaginatedBoxes {
+  items: Box[];
+  total: number;
+  page: number;
+  page_size: number;
+  status_counts: Partial<Record<BoxStatus, number>>;
+}
+
 export interface PublicBox {
   public_slug: string;
   title: string;
@@ -73,6 +81,7 @@ export interface ThemeConfig {
     | "flame";
   cover_object_position?: string;
   background_image_url?: string | null;
+  preview_image_url_light?: string | null;
   gift_box?: {
     body?: string;
     bodyDark?: string;

@@ -519,6 +519,27 @@ html[data-theme="light"] .theme-canvas .media-dropzone.is-dragging {
   @apply border-glow-violet/55 bg-glow-violet/10;
 }
 
+.design-cover__scrim {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgb(6 4 15 / 0.5),
+    rgb(6 4 15 / 0.08),
+    transparent 58%
+  );
+}
+
+html[data-theme="light"] .design-cover__scrim {
+  background: linear-gradient(
+    to top,
+    rgb(255 255 255 / 0.62),
+    rgb(255 255 255 / 0.1),
+    transparent 58%
+  );
+}
+
 .design-theme-card__body {
   @apply bg-ink-900/80;
 }
@@ -615,6 +636,20 @@ html[data-theme="light"] .theme-canvas .media-dropzone.is-dragging {
 
 html[data-theme="light"] .design-banner {
   @apply border-slate-900/10 shadow-slate-900/20;
+}
+
+html[data-theme="light"] .design-banner__scrim {
+  background: linear-gradient(
+    180deg,
+    rgb(246 243 255 / 0.08) 0%,
+    rgb(246 243 255 / 0.42) 48%,
+    rgb(246 243 255 / 0.88) 100%
+  );
+}
+
+html[data-theme="light"] .design-banner__title {
+  @apply text-slate-900;
+  text-shadow: none;
 }
 
 html[data-theme="light"] .design-picker-card {
@@ -1027,6 +1062,52 @@ html[data-theme="light"] .landing-step:hover {
     transform: scale(0.88);
     transform-origin: right top;
   }
+}
+
+.boxes-view-toggle {
+  @apply inline-flex items-center gap-0.5 rounded-2xl border border-white/12
+    bg-white/[0.04] p-1;
+}
+
+.boxes-view-toggle__btn {
+  @apply grid size-9 place-items-center rounded-xl text-slate-400 transition
+    hover:bg-white/10 hover:text-slate-100;
+}
+
+.boxes-view-toggle__btn.is-active {
+  @apply bg-white/14 text-white shadow-sm shadow-black/20;
+}
+
+.boxes-list__cover {
+  @apply ring-1 ring-white/10 transition hover:ring-white/25;
+}
+
+.boxes-list__title {
+  @apply text-inherit;
+}
+
+html[data-theme="light"] .boxes-view-toggle {
+  @apply border-slate-900/10 bg-slate-900/[0.04];
+}
+
+html[data-theme="light"] .boxes-view-toggle__btn {
+  @apply text-slate-500 hover:bg-slate-900/[0.06] hover:text-slate-900;
+}
+
+html[data-theme="light"] .boxes-view-toggle__btn.is-active {
+  @apply bg-white text-slate-900 shadow-slate-900/10;
+}
+
+html[data-theme="light"] .boxes-list__cover {
+  @apply ring-slate-900/10 hover:ring-slate-900/22;
+}
+
+html[data-theme="light"] .boxes-list__title:hover {
+  @apply !text-slate-900;
+}
+
+html[data-theme="light"] .boxes-pagination__page {
+  @apply text-slate-700;
 }
 
 .box-card-menu__item {

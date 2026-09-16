@@ -26,18 +26,17 @@ from src.domain.exceptions.auth import (
     UserInactiveError,
 )
 from src.domain.exceptions.users import UserNotFoundError
-from src.presentation.deps import (
+from src.presentation.deps.auth import (
     get_complete_telegram_login_uc,
     get_current_user_id,
-    get_current_user_uc,
     get_logout_uc,
     get_poll_telegram_login_uc,
     get_refresh_access_token_uc,
-    get_settings,
     get_start_telegram_login_uc,
-    get_user_avatar_uc,
     verify_bot_api_secret,
 )
+from src.presentation.deps.common import get_settings
+from src.presentation.deps.users import get_current_user_uc, get_user_avatar_uc
 from src.presentation.helpers.auth import (
     clear_auth_cookies,
     set_access_cookie,

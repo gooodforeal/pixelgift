@@ -18,7 +18,7 @@ import { TelegramIcon } from "../components/TelegramIcon";
 import { useAuth } from "../hooks/useAuth";
 import { api, API_URL } from "../lib/api";
 import { formatDateTime, pluralize } from "../lib/format";
-import type { BoxStatus, CurrentUser } from "../lib/types";
+import type { CurrentUser } from "../lib/types";
 
 function displayName(user: CurrentUser): string {
   const parts = [user.first_name, user.last_name].filter(Boolean);
@@ -39,25 +39,24 @@ function avatarUrl(user: CurrentUser): string | null {
   return `${API_URL}${user.photo_url.startsWith("/") ? "" : "/"}${user.photo_url}`;
 }
 
-function countByStatus(boxes: { status: BoxStatus }[], status: BoxStatus): number {
-  return boxes.filter((box) => box.status === status).length;
-}
-
 export function ProfilePage() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
   const meQuery = useQuery({ queryKey: ["me"], queryFn: api.me });
-  const boxesQuery = useQuery({ queryKey: ["boxes"], queryFn: api.boxes });
+  const boxesQuery = useQuery({
+    queryKey: ["boxes", "summary"],
+    queryFn: () => api.boxes({ page: 1, pageSize: 1 }),
+  });
 
   const user = meQuery.data;
-  const boxes = boxesQuery.data ?? [];
-  const total = boxes.length;
-  const drafts = countByStatus(boxes, "draft");
-  const scheduled = countByStatus(boxes, "scheduled");
-  const active = countByStatus(boxes, "active");
-  const opened = countByStatus(boxes, "opened");
-  const archived = countByStatus(boxes, "archived");
+  const total = boxesQuery.data?.total ?? 0;
+  const counts = boxesQuery.data?.status_counts ?? {};
+  const drafts = counts.draft ?? 0;
+  const scheduled = counts.scheduled ?? 0;
+  const active = counts.active ?? 0;
+  const opened = counts.opened ?? 0;
+  const archived = counts.archived ?? 0;
   const photoSrc = user ? avatarUrl(user) : null;
   if (meQuery.isPending) {
     return <Spinner label="Загружаем профиль…" className="py-32" />;

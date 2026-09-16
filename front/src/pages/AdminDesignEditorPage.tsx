@@ -18,6 +18,7 @@ import {
 } from "../lib/designLimits";
 import { gradientCss, resolveTheme } from "../lib/theme";
 import type { AdminBoxDesign, ThemeConfig } from "../lib/types";
+import { useUiTheme } from "../hooks/useUiTheme";
 
 const DEFAULT_COVER_POSITION = "50% 50%";
 
@@ -47,6 +48,7 @@ function blankForm(): AdminDesignPayload {
       particle: "sparkle",
       cover_object_position: DEFAULT_COVER_POSITION,
       background_image_url: null,
+      preview_image_url_light: null,
       gift_box: { ...EMPTY_GIFT_BOX },
     },
   };
@@ -70,6 +72,7 @@ function fromDesign(design: AdminBoxDesign): AdminDesignPayload {
       particle: theme.particle ?? "sparkle",
       cover_object_position: DEFAULT_COVER_POSITION,
       background_image_url: theme.background_image_url ?? null,
+      preview_image_url_light: theme.preview_image_url_light ?? null,
       gift_box: { ...EMPTY_GIFT_BOX, ...theme.gift_box },
     },
   };
@@ -87,9 +90,12 @@ export function AdminDesignEditorPage() {
     enabled: !isNew,
   });
 
+  const { theme: uiTheme } = useUiTheme();
   const [form, setForm] = useState<AdminDesignPayload>(blankForm);
   const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState<"preview" | "background" | null>(null);
+  const [uploading, setUploading] = useState<
+    "preview" | "preview_light" | "background" | null
+  >(null);
 
   useEffect(() => {
     if (designQuery.data) {
@@ -117,6 +123,7 @@ export function AdminDesignEditorPage() {
   const hasPreviewImage =
     Boolean(form.preview_image_url) &&
     form.preview_image_url !== PLACEHOLDER_PREVIEW_URL;
+  const hasLightPreview = Boolean(form.theme_config.preview_image_url_light);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -146,7 +153,7 @@ export function AdminDesignEditorPage() {
   });
 
   async function uploadImage(
-    kind: "preview" | "background",
+    kind: "preview" | "preview_light" | "background",
     event: ChangeEvent<HTMLInputElement>,
   ) {
     const file = event.target.files?.[0];
@@ -158,6 +165,8 @@ export function AdminDesignEditorPage() {
       const asset = await api.uploadDesignAsset(file);
       if (kind === "preview") {
         setForm((current) => ({ ...current, preview_image_url: asset.url }));
+      } else if (kind === "preview_light") {
+        setTheme({ preview_image_url_light: asset.url });
       } else {
         setTheme({ background_image_url: asset.url });
       }
@@ -207,7 +216,7 @@ export function AdminDesignEditorPage() {
 
   const gift = { ...EMPTY_GIFT_BOX, ...form.theme_config.gift_box };
   const bannerTheme = resolveTheme(previewDesign);
-  const bannerCover = designCoverUrl(previewDesign);
+  const bannerCover = designCoverUrl(previewDesign, uiTheme);
 
   return (
     <PageTransition>
@@ -310,7 +319,7 @@ export function AdminDesignEditorPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <label className="btn-ghost inline-flex cursor-pointer items-center gap-2 px-3 py-2 text-sm">
                   <ImagePlus className="size-4" />
-                  {uploading === "preview" ? "Загрузка…" : "Обложка"}
+                  {uploading === "preview" ? "Загрузка…" : "Обложка (тёмная)"}
                   <input
                     type="file"
                     accept="image/*"
@@ -319,6 +328,27 @@ export function AdminDesignEditorPage() {
                     onChange={(e) => void uploadImage("preview", e)}
                   />
                 </label>
+                <label className="btn-ghost inline-flex cursor-pointer items-center gap-2 px-3 py-2 text-sm">
+                  <ImagePlus className="size-4" />
+                  {uploading === "preview_light" ? "Загрузка…" : "Обложка (светлая)"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploading !== null}
+                    onChange={(e) => void uploadImage("preview_light", e)}
+                  />
+                </label>
+                {hasLightPreview ? (
+                  <button
+                    type="button"
+                    className="btn-ghost inline-flex items-center gap-2 px-3 py-2 text-sm text-rose-200"
+                    onClick={() => setTheme({ preview_image_url_light: null })}
+                  >
+                    <Trash2 className="size-4" />
+                    Убрать светлую
+                  </button>
+                ) : null}
                 <label className="btn-ghost inline-flex cursor-pointer items-center gap-2 px-3 py-2 text-sm">
                   <ImagePlus className="size-4" />
                   {uploading === "background" ? "Загрузка…" : "Фон страницы"}
@@ -343,8 +373,11 @@ export function AdminDesignEditorPage() {
               </div>
               <p className="text-xs text-slate-500">
                 {hasPreviewImage
-                  ? "Обложка задана — ссылка подставится сама."
-                  : "Загрузите обложку — без неё дизайн не сохранится."}
+                  ? "Тёмная обложка задана — ссылка подставится сама."
+                  : "Загрузите тёмную обложку — без неё дизайн не сохранится."}{" "}
+                {hasLightPreview
+                  ? "Светлая обложка задана."
+                  : "Светлая обложка необязательна: без неё будет тёмная."}
                 {form.theme_config.background_image_url
                   ? " Фон страницы задан."
                   : " Фон необязателен."}

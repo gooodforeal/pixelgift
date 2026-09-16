@@ -12,8 +12,8 @@ from src.domain.exceptions.media_files import (
     MediaFileNotFoundError,
     UnsupportedMediaTypeError,
 )
-from src.presentation.deps import (
-    get_current_user_id,
+from src.presentation.deps.auth import get_current_user_id
+from src.presentation.deps.media import (
     get_own_media_content_uc,
     get_upload_media_uc,
 )

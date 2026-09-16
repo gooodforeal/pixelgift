@@ -55,11 +55,11 @@ from src.domain.values.box_title import BoxTitle
 from src.domain.values.public_slug import PublicSlug
 from src.domain.values.sort_order import SortOrder
 from src.domain.values.url import Url
-from src.presentation.deps import (
+from src.presentation.deps.auth import get_current_user_id
+from src.presentation.deps.boxes import (
     get_add_box_item_uc,
     get_archive_box_uc,
     get_create_box_uc,
-    get_current_user_id,
     get_get_box_uc,
     get_list_boxes_uc,
     get_publish_box_uc,
@@ -69,10 +69,12 @@ from src.presentation.deps import (
     get_update_box_item_uc,
     get_update_box_uc,
 )
+from src.presentation.deps.common import PaginationParams, pagination_dep
 from src.presentation.schemas.boxes import (
     AddBoxItemRequest,
     BoxResponse,
     CreateBoxRequest,
+    PaginatedBoxesResponse,
     ReorderBoxItemsRequest,
     UpdateBoxItemRequest,
     UpdateBoxRequest,
@@ -138,13 +140,24 @@ async def create_box(
     return box_to_response(box)
 
 
-@router.get("", response_model=list[BoxResponse])
+@router.get("", response_model=PaginatedBoxesResponse)
 async def list_boxes(
     user_id: uuid.UUID = Depends(get_current_user_id),
+    pagination: PaginationParams = Depends(pagination_dep),
     uc: ListBoxesUseCase = Depends(get_list_boxes_uc),
-) -> list[BoxResponse]:
-    boxes = await uc.execute(owner_id=user_id)
-    return [box_to_response(box) for box in boxes]
+) -> PaginatedBoxesResponse:
+    page = await uc.execute(
+        owner_id=user_id,
+        page=pagination.page,
+        page_size=pagination.page_size,
+    )
+    return PaginatedBoxesResponse(
+        items=[box_to_response(box) for box in page.items],
+        total=page.total,
+        page=page.page,
+        page_size=page.page_size,
+        status_counts=page.status_counts,
+    )
 
 
 @router.get("/{box_id}", response_model=BoxResponse)

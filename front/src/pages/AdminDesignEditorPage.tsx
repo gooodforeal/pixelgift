@@ -490,12 +490,7 @@ export function AdminDesignEditorPage() {
                       Описание появится здесь
                     </p>
                   )}
-                  <span
-                    className="design-banner__cta"
-                    style={{ backgroundColor: bannerTheme.accent }}
-                  >
-                    Собрать в этой теме
-                  </span>
+                  <span className="design-banner__cta">Собрать в этой теме</span>
                 </div>
               </article>
             </div>

@@ -3,16 +3,24 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   CalendarClock,
+  CalendarHeart,
+  Camera,
+  Film,
   Gift,
   Heart,
   Images,
   Link2,
   Lock,
+  MessageCircleHeart,
   Mic2,
+  Music2,
+  PartyPopper,
   Send,
   ShieldCheck,
   Sparkles,
+  Star,
   Wand2,
+  type LucideIcon,
 } from "lucide-react";
 
 import { designCoverUrl } from "../components/DesignCover";
@@ -21,6 +29,29 @@ import { PageTransition } from "../components/PageTransition";
 import { api } from "../lib/api";
 import { gradientCss, resolveTheme } from "../lib/theme";
 import { useUiTheme } from "../hooks/useUiTheme";
+
+const ctaIcons: { Icon: LucideIcon; color: string }[] = [
+  { Icon: Gift, color: "#e11d48" },
+  { Icon: Heart, color: "#f43f5e" },
+  { Icon: Camera, color: "#06b6d4" },
+  { Icon: Sparkles, color: "#a855f7" },
+  { Icon: Images, color: "#8b5cf6" },
+  { Icon: Mic2, color: "#ec4899" },
+  { Icon: Film, color: "#6366f1" },
+  { Icon: CalendarHeart, color: "#f59e0b" },
+  { Icon: PartyPopper, color: "#f97316" },
+  { Icon: Music2, color: "#14b8a6" },
+  { Icon: MessageCircleHeart, color: "#fb7185" },
+  { Icon: Star, color: "#eab308" },
+  { Icon: Lock, color: "#7c3aed" },
+  { Icon: Link2, color: "#0ea5e9" },
+  { Icon: Send, color: "#22d3ee" },
+  { Icon: Wand2, color: "#d946ef" },
+  { Icon: Gift, color: "#db2777" },
+  { Icon: Heart, color: "#be185d" },
+  { Icon: Camera, color: "#0891b2" },
+  { Icon: Sparkles, color: "#c026d3" },
+];
 
 const steps = [
   {
@@ -265,11 +296,7 @@ export function LandingPage() {
                       myRating={design.my_rating ?? null}
                       className="mt-2"
                     />
-                    <Link
-                      to="/login"
-                      className="design-banner__cta"
-                      style={{ backgroundColor: theme.accent }}
-                    >
+                    <Link to="/login" className="design-banner__cta">
                       Собрать в этой теме
                     </Link>
                   </div>
@@ -295,22 +322,34 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="landing-cta glass relative overflow-hidden px-6 py-14 text-center sm:px-12">
-        <div
-          className="pointer-events-none absolute inset-x-0 -top-32 h-64 opacity-40 blur-3xl"
-          style={{ background: gradientCss(["#f472b6", "#a855f7", "#22d3ee"], 90) }}
-        />
-        <Gift className="relative mx-auto mb-5 size-9 text-glow-gold" />
-        <h2 className="font-display relative text-3xl tracking-tight sm:text-4xl">
-          Подарите не файл, а момент
-        </h2>
-        <p className="relative mx-auto mt-4 max-w-lg text-sm text-slate-600">
-          Вход через Telegram занимает пару секунд. Первый бокс можно собрать за пять
-          минут.
-        </p>
-        <Link to="/login" className="btn-primary relative mt-8 px-7 py-3.5 text-base">
-          Начать бесплатно
-        </Link>
+      <section className="landing-cta relative overflow-hidden">
+        <div className="landing-cta__inner relative z-[1] grid items-center lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+          <div className="landing-cta__copy px-6 py-7 text-left sm:px-10 sm:py-8 lg:px-12 lg:py-9">
+            <h2 className="font-display text-2xl tracking-tight text-white sm:text-3xl">
+              Подарите не файл, а момент
+            </h2>
+            <p className="mt-2.5 max-w-md text-sm leading-relaxed text-white/80">
+              Вход через Telegram занимает пару секунд. Первый бокс можно собрать за
+              пять минут.
+            </p>
+            <Link
+              to="/login"
+              className="landing-cta__btn mt-5 inline-flex px-6 py-3 text-sm sm:text-base"
+            >
+              Начать бесплатно
+            </Link>
+          </div>
+
+          <div className="landing-cta__visual" aria-hidden>
+            <div className="landing-cta__mosaic">
+              {ctaIcons.map(({ Icon, color }, index) => (
+                <div key={`${color}-${index}`} className="landing-cta__tile">
+                  <Icon style={{ color }} strokeWidth={2.1} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
     </PageTransition>
   );

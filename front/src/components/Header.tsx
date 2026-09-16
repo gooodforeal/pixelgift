@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { LayoutGrid, Menu, Shield, UserRound, X } from "lucide-react";
@@ -63,14 +64,12 @@ export function Header() {
     };
   }, [menuOpen]);
 
-  return (
-    <header className="app-header sticky top-0 z-40 border-b backdrop-blur-xl">
+  return createPortal(
+    <header className="app-header">
       <div className="relative mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:h-16 sm:gap-3 sm:px-6">
         <Logo to="/" />
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
-          <UiThemeToggle />
-
           <nav className="header-desktop-nav">
             {isAuthenticated ? (
               <>
@@ -127,6 +126,8 @@ export function Header() {
               <Menu className="size-5" strokeWidth={2.25} />
             )}
           </button>
+
+          <UiThemeToggle />
         </div>
 
         {menuOpen ? (
@@ -170,6 +171,7 @@ export function Header() {
           </div>
         ) : null}
       </div>
-    </header>
+    </header>,
+    document.body,
   );
 }

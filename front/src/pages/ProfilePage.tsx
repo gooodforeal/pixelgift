@@ -1,11 +1,10 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   Archive,
   CalendarDays,
   Gift,
-  LayoutGrid,
   LogOut,
   PencilLine,
   Sparkles,
@@ -140,10 +139,6 @@ export function ProfilePage() {
               </div>
 
               <div className="flex flex-wrap gap-2 sm:justify-end">
-                <Link to="/app" className="btn-ghost px-4 py-2.5 text-xs sm:text-sm">
-                  <LayoutGrid className="size-4" />
-                  Мои боксы
-                </Link>
                 <button
                   type="button"
                   className="btn-ghost px-4 py-2.5 text-xs sm:text-sm"
@@ -248,22 +243,6 @@ export function ProfilePage() {
             </div>
           </dl>
         </section>
-
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link to="/app/boxes/new" className="btn-primary">
-            <Gift className="size-4" />
-            Собрать новый бокс
-          </Link>
-          <Link to="/app" className="btn-ghost">
-            Перейти к коллекции
-          </Link>
-          {user.is_admin ? (
-            <Link to="/admin" className="btn-ghost">
-              <Sparkles className="size-4" />
-              Панель
-            </Link>
-          ) : null}
-        </div>
       </div>
     </PageTransition>
   );

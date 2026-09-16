@@ -48,8 +48,7 @@ function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative flex min-h-dvh flex-col">
       <AuroraBackground />
-      <Header />
-      <main className="theme-canvas mx-auto w-full max-w-6xl flex-1 px-3 pb-10 sm:px-6 sm:pb-12">
+      <main className="theme-canvas mx-auto w-full max-w-6xl flex-1 px-3 pt-14 pb-10 sm:px-6 sm:pt-16 sm:pb-12">
         {children}
       </main>
       <SiteFooter />
@@ -60,6 +59,7 @@ function AppShell({ children }: { children: ReactNode }) {
 export function App() {
   const location = useLocation();
   const [authReady, setAuthReady] = useState(false);
+  const showHeader = !location.pathname.startsWith("/b/");
 
   useEffect(() => {
     let cancelled = false;
@@ -76,123 +76,126 @@ export function App() {
   }
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/b/:slug" element={<PublicBoxPage />} />
+    <>
+      {showHeader ? <Header /> : null}
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/b/:slug" element={<PublicBoxPage />} />
 
-        <Route
-          path="/"
-          element={
-            <AppShell>
-              <LandingPage />
-            </AppShell>
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            <AppShell>
-              <LoginPage />
-            </AppShell>
-          }
-        />
-        <Route
-          path="/app"
-          element={
-            <RequireAuth>
+          <Route
+            path="/"
+            element={
               <AppShell>
-                <DashboardPage />
+                <LandingPage />
               </AppShell>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/app/profile"
-          element={
-            <RequireAuth>
+            }
+          />
+          <Route
+            path="/login"
+            element={
               <AppShell>
-                <ProfilePage />
+                <LoginPage />
               </AppShell>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/app/boxes/new"
-          element={
-            <RequireAuth>
+            }
+          />
+          <Route
+            path="/app"
+            element={
+              <RequireAuth>
+                <AppShell>
+                  <DashboardPage />
+                </AppShell>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/app/profile"
+            element={
+              <RequireAuth>
+                <AppShell>
+                  <ProfilePage />
+                </AppShell>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/app/boxes/new"
+            element={
+              <RequireAuth>
+                <AppShell>
+                  <BoxEditorPage />
+                </AppShell>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/app/boxes/:boxId"
+            element={
+              <RequireAuth>
+                <AppShell>
+                  <BoxEditorPage />
+                </AppShell>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <RequireAuth>
+                <RequireAdmin>
+                  <AppShell>
+                    <AdminPanelPage />
+                  </AppShell>
+                </RequireAdmin>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/designs"
+            element={
+              <RequireAuth>
+                <RequireAdmin>
+                  <AppShell>
+                    <AdminDesignsPage />
+                  </AppShell>
+                </RequireAdmin>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/designs/new"
+            element={
+              <RequireAuth>
+                <RequireAdmin>
+                  <AppShell>
+                    <AdminDesignEditorPage />
+                  </AppShell>
+                </RequireAdmin>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/designs/:designId"
+            element={
+              <RequireAuth>
+                <RequireAdmin>
+                  <AppShell>
+                    <AdminDesignEditorPage />
+                  </AppShell>
+                </RequireAdmin>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="*"
+            element={
               <AppShell>
-                <BoxEditorPage />
+                <NotFoundPage />
               </AppShell>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/app/boxes/:boxId"
-          element={
-            <RequireAuth>
-              <AppShell>
-                <BoxEditorPage />
-              </AppShell>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AppShell>
-                  <AdminPanelPage />
-                </AppShell>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/designs"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AppShell>
-                  <AdminDesignsPage />
-                </AppShell>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/designs/new"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AppShell>
-                  <AdminDesignEditorPage />
-                </AppShell>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/designs/:designId"
-          element={
-            <RequireAuth>
-              <RequireAdmin>
-                <AppShell>
-                  <AdminDesignEditorPage />
-                </AppShell>
-              </RequireAdmin>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="*"
-          element={
-            <AppShell>
-              <NotFoundPage />
-            </AppShell>
-          }
-        />
-      </Routes>
-    </AnimatePresence>
+            }
+          />
+        </Routes>
+      </AnimatePresence>
+    </>
   );
 }

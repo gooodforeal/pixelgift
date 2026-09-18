@@ -22,6 +22,7 @@ import {
   Wand2,
   type LucideIcon,
 } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { designCoverUrl } from "../components/DesignCover";
 import { DesignRatingStars } from "../components/DesignRatingStars";
@@ -29,6 +30,33 @@ import { PageTransition } from "../components/PageTransition";
 import { api } from "../lib/api";
 import { gradientCss, resolveTheme } from "../lib/theme";
 import { useUiTheme } from "../hooks/useUiTheme";
+
+type LandingTone = "hero" | "how" | "themes" | "features" | "cta";
+
+function LandingBand({
+  tone,
+  id,
+  className = "",
+  innerClassName = "",
+  children,
+}: {
+  tone: LandingTone;
+  id?: string;
+  className?: string;
+  innerClassName?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      id={id}
+      className={`landing-band landing-band--${tone} ${className}`.trim()}
+    >
+      <div className={`landing-band__inner ${innerClassName}`.trim()}>
+        {children}
+      </div>
+    </section>
+  );
+}
 
 const ctaIcons: { Icon: LucideIcon; color: string }[] = [
   { Icon: Gift, color: "#e11d48" },
@@ -103,7 +131,11 @@ export function LandingPage() {
 
   return (
     <PageTransition>
-      <section className="landing-hero relative grid min-h-[calc(100dvh-4rem)] items-center gap-8 py-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:py-20">
+      <LandingBand
+        tone="hero"
+        className="landing-hero"
+        innerClassName="relative grid min-h-[calc(100dvh-4rem)] items-center gap-8 py-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:py-20"
+      >
         <div className="relative z-10 text-center lg:text-left">
           <motion.span
             initial={{ opacity: 0, y: 10 }}
@@ -206,9 +238,9 @@ export function LandingPage() {
             </span>
           </motion.div>
         </motion.div>
-      </section>
+      </LandingBand>
 
-      <section id="how" className="scroll-mt-24 py-16">
+      <LandingBand tone="how" id="how" className="scroll-mt-24" innerClassName="py-16">
         <div className="section-kicker">Просто и по-настоящему лично</div>
         <h2 className="font-display text-center text-3xl tracking-tight sm:text-4xl">
           Четыре шага до сюрприза
@@ -237,10 +269,10 @@ export function LandingPage() {
             </motion.div>
           ))}
         </div>
-      </section>
+      </LandingBand>
 
       {designs.length > 0 && (
-        <section className="py-16">
+        <LandingBand tone="themes" innerClassName="py-16">
           <div className="section-kicker">Каждому моменту — своё настроение</div>
           <h2 className="font-display text-center text-3xl tracking-tight sm:text-4xl">
             Темы оформления
@@ -304,10 +336,10 @@ export function LandingPage() {
               );
             })}
           </div>
-        </section>
+        </LandingBand>
       )}
 
-      <section className="py-16">
+      <LandingBand tone="features" innerClassName="py-16">
         <div className="section-kicker">Магия с продуманными деталями</div>
         <div className="grid gap-4 sm:grid-cols-3">
           {features.map((feature) => (
@@ -320,9 +352,9 @@ export function LandingPage() {
             </div>
           ))}
         </div>
-      </section>
+      </LandingBand>
 
-      <section className="landing-cta relative overflow-hidden">
+      <LandingBand tone="cta" className="landing-cta relative overflow-hidden">
         <div className="landing-cta__inner relative z-[1] grid items-center lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
           <div className="landing-cta__copy px-6 py-7 text-left sm:px-10 sm:py-8 lg:px-12 lg:py-9">
             <h2 className="font-display text-2xl tracking-tight text-white sm:text-3xl">
@@ -350,7 +382,7 @@ export function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
+      </LandingBand>
     </PageTransition>
   );
 }

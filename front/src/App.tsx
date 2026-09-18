@@ -44,11 +44,23 @@ function RequireAdmin({ children }: { children: ReactNode }) {
   return children;
 }
 
-function AppShell({ children }: { children: ReactNode }) {
+function AppShell({
+  children,
+  fullBleed = false,
+}: {
+  children: ReactNode;
+  fullBleed?: boolean;
+}) {
   return (
     <div className="relative flex min-h-dvh flex-col">
-      <AuroraBackground />
-      <main className="theme-canvas mx-auto w-full max-w-6xl flex-1 px-3 pt-14 pb-10 sm:px-6 sm:pt-16 sm:pb-12">
+      {!fullBleed ? <AuroraBackground /> : null}
+      <main
+        className={
+          fullBleed
+            ? "theme-canvas w-full flex-1 pt-14 sm:pt-16"
+            : "theme-canvas mx-auto w-full max-w-6xl flex-1 px-3 pt-14 pb-10 sm:px-6 sm:pt-16 sm:pb-12"
+        }
+      >
         {children}
       </main>
       <SiteFooter />
@@ -85,7 +97,7 @@ export function App() {
           <Route
             path="/"
             element={
-              <AppShell>
+              <AppShell fullBleed>
                 <LandingPage />
               </AppShell>
             }

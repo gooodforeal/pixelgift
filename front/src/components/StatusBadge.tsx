@@ -29,9 +29,9 @@ export function StatusBadge({ status }: { status: BoxStatus }) {
 
   return (
     <span
-      className={`status-badge inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold shadow-lg shadow-black/35 backdrop-blur-md ${styles[status]}`}
+      className={`status-badge inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold leading-none shadow-md shadow-black/25 backdrop-blur-md ${styles[status]}`}
     >
-      <Icon className="size-3.5" />
+      <Icon className="size-3" />
       {statusLabels[status]}
     </span>
   );

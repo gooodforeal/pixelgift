@@ -3,7 +3,6 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 
-import { AuroraBackground } from "./components/AuroraBackground";
 import { Header } from "./components/Header";
 import { SiteFooter } from "./components/SiteFooter";
 import { Spinner } from "./components/Spinner";
@@ -53,7 +52,6 @@ function AppShell({
 }) {
   return (
     <div className="relative flex min-h-dvh flex-col">
-      {!fullBleed ? <AuroraBackground /> : null}
       <main
         className={
           fullBleed

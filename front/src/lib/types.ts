@@ -178,3 +178,30 @@ export interface UnlockPublicBoxResult {
   unlock_token: string | null;
   box: PublicBox;
 }
+
+export type SupportTicketStatus = "new" | "in_progress" | "resolved" | "closed";
+
+export interface SupportTicketAttachment {
+  id: string;
+  mime_type: string;
+  size_bytes: number;
+  original_filename: string | null;
+}
+
+export interface SupportTicket {
+  id: string;
+  contact: string;
+  subject: string;
+  description: string;
+  status: SupportTicketStatus;
+  created_at: string;
+  updated_at: string;
+  attachments: SupportTicketAttachment[];
+}
+
+export interface PaginatedSupportTickets {
+  items: SupportTicket[];
+  total: number;
+  page: number;
+  page_size: number;
+}

@@ -11,6 +11,7 @@ import { api, bootstrapAuth } from "./lib/api";
 import { AdminDesignEditorPage } from "./pages/AdminDesignEditorPage";
 import { AdminDesignsPage } from "./pages/AdminDesignsPage";
 import { AdminPanelPage } from "./pages/AdminPanelPage";
+import { AdminSupportPage } from "./pages/AdminSupportPage";
 import { BoxEditorPage } from "./pages/BoxEditorPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LandingPage } from "./pages/LandingPage";
@@ -18,6 +19,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { PublicBoxPage } from "./pages/PublicBoxPage";
+import { SupportPage } from "./pages/SupportPage";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -149,12 +151,32 @@ export function App() {
             }
           />
           <Route
+            path="/support"
+            element={
+              <AppShell>
+                <SupportPage />
+              </AppShell>
+            }
+          />
+          <Route
             path="/admin"
             element={
               <RequireAuth>
                 <RequireAdmin>
                   <AppShell>
                     <AdminPanelPage />
+                  </AppShell>
+                </RequireAdmin>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/support"
+            element={
+              <RequireAuth>
+                <RequireAdmin>
+                  <AppShell>
+                    <AdminSupportPage />
                   </AppShell>
                 </RequireAdmin>
               </RequireAuth>

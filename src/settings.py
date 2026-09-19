@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     telegram_bot_token: str = ""
     telegram_bot_username: str = ""
+    support_telegram_url: str = "https://t.me/pixelgift_auth_bot"
     bot_api_secret: str = "dev-bot-api-secret"
     api_base_url: str = "http://localhost:8000"
 

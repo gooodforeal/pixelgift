@@ -13,6 +13,7 @@ from src.domain.entities.notification_jobs import (
     NotificationJobStatus,
     NotificationTemplate,
 )
+from src.domain.entities.support_tickets import SupportTicket, SupportTicketStatus
 from src.domain.entities.telegram_login_challenges import TelegramLoginChallenge
 from src.domain.entities.user_sessions import UserSession
 from src.domain.entities.users import User
@@ -25,6 +26,7 @@ from src.domain.repository.design_ratings import (
 )
 from src.domain.repository.media_files import BaseMediaFilesRepository
 from src.domain.repository.notification_jobs import BaseNotificationJobsRepository
+from src.domain.repository.support_tickets import BaseSupportTicketsRepository
 from src.domain.repository.telegram_login_challenges import (
     BaseTelegramLoginChallengesRepository,
 )
@@ -370,6 +372,49 @@ class InMemoryNotificationJobsRepository(BaseNotificationJobsRepository):
         return claimed
 
 
+class InMemorySupportTicketsRepository(BaseSupportTicketsRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, SupportTicket] = {}
+
+    async def add(self, entity: SupportTicket) -> None:
+        self.items[entity.id] = entity
+
+    async def get_by_id(self, id_: uuid.UUID) -> SupportTicket | None:
+        return self.items.get(id_)
+
+    async def update(self, entity: SupportTicket) -> SupportTicket:
+        self.items[entity.id] = entity
+        return entity
+
+    async def list_all(
+        self,
+        *,
+        status: SupportTicketStatus | None = None,
+        sort_asc: bool = False,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> list[SupportTicket]:
+        tickets = list(self.items.values())
+        if status is not None:
+            tickets = [ticket for ticket in tickets if ticket.status == status]
+        tickets.sort(key=lambda ticket: ticket.created_at, reverse=not sort_asc)
+        if offset:
+            tickets = tickets[offset:]
+        if limit is not None:
+            tickets = tickets[:limit]
+        return tickets
+
+    async def count_all(
+        self,
+        *,
+        status: SupportTicketStatus | None = None,
+    ) -> int:
+        tickets = list(self.items.values())
+        if status is not None:
+            tickets = [ticket for ticket in tickets if ticket.status == status]
+        return len(tickets)
+
+
 class InMemoryUnitOfWork(BaseUnitOfWork):
     def __init__(self) -> None:
         self.boxes = InMemoryBoxesRepository()
@@ -378,6 +423,7 @@ class InMemoryUnitOfWork(BaseUnitOfWork):
         self.design_ratings = InMemoryDesignRatingsRepository()
         self.media_files = InMemoryMediaFilesRepository()
         self.notification_jobs = InMemoryNotificationJobsRepository()
+        self.support_tickets = InMemorySupportTicketsRepository()
         self.users = InMemoryUsersRepository()
         self.telegram_login_challenges = InMemoryTelegramLoginChallengesRepository()
         self.user_sessions = InMemoryUserSessionsRepository()

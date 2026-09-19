@@ -6,6 +6,10 @@ from src.infrastructure.models.design_assets import DesignAssetModel
 from src.infrastructure.models.design_ratings import DesignRatingModel
 from src.infrastructure.models.media_files import MediaFileModel
 from src.infrastructure.models.notification_jobs import NotificationJobModel
+from src.infrastructure.models.support_tickets import (
+    SupportTicketAttachmentModel,
+    SupportTicketModel,
+)
 from src.infrastructure.models.telegram_login_challenges import (
     TelegramLoginChallengeModel,
 )
@@ -21,6 +25,8 @@ __all__ = [
     "DesignRatingModel",
     "MediaFileModel",
     "NotificationJobModel",
+    "SupportTicketAttachmentModel",
+    "SupportTicketModel",
     "TelegramLoginChallengeModel",
     "UserModel",
     "UserSessionModel",

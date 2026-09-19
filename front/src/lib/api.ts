@@ -9,7 +9,10 @@ import type {
   DesignRating,
   MediaFile,
   PaginatedBoxes,
+  PaginatedSupportTickets,
   PublicBox,
+  SupportTicket,
+  SupportTicketStatus,
   TelegramLoginStart,
   TelegramLoginStatus,
   ThemeConfig,
@@ -295,11 +298,57 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ password }),
     }),
+
+  createSupportTicket: (payload: {
+    contact: string;
+    subject: string;
+    description: string;
+    files: File[];
+  }) => {
+    const body = new FormData();
+    body.append("contact", payload.contact);
+    body.append("subject", payload.subject);
+    body.append("description", payload.description);
+    for (const file of payload.files) {
+      body.append("files", file);
+    }
+    return request<SupportTicket>("/support", { method: "POST", body });
+  },
+
+  supportConfig: () =>
+    request<{ telegram_url: string }>("/support/config"),
+
+  adminSupportTickets: (params?: {
+    status?: SupportTicketStatus | null;
+    sort?: "asc" | "desc";
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const search = new URLSearchParams();
+    if (params?.status) search.set("status", params.status);
+    if (params?.sort) search.set("sort", params.sort);
+    if (params?.page != null) search.set("page", String(params.page));
+    if (params?.pageSize != null) search.set("page_size", String(params.pageSize));
+    const query = search.toString();
+    return request<PaginatedSupportTickets>(
+      `/admin/support${query ? `?${query}` : ""}`,
+    );
+  },
+
+  patchSupportTicketStatus: (ticketId: string, status: SupportTicketStatus) =>
+    request<SupportTicket>(`/admin/support/${ticketId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
 };
 
 /** Owner-side media URL — auth via HttpOnly access cookie (same-origin). */
 export function ownMediaUrl(mediaFileId: string): string {
   return `${API_URL}/media/${mediaFileId}/content`;
+}
+
+export function supportAttachmentUrl(ticketId: string, attachmentId: string): string {
+  return `${API_URL}/admin/support/${ticketId}/attachments/${attachmentId}/content`;
 }
 
 /** Public media URL for an unlocked box — no authentication needed. */

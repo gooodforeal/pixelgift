@@ -12,6 +12,7 @@ from src.infrastructure.repositories import (
     SqlAlchemyDesignRatingsRepository,
     SqlAlchemyMediaFilesRepository,
     SqlAlchemyNotificationJobsRepository,
+    SqlAlchemySupportTicketsRepository,
     SqlAlchemyTelegramLoginChallengesRepository,
     SqlAlchemyUserSessionsRepository,
     SqlAlchemyUsersRepository,
@@ -35,6 +36,7 @@ class SqlAlchemyUnitOfWork(BaseUnitOfWork):
         self.design_ratings = SqlAlchemyDesignRatingsRepository(self._session)
         self.media_files = SqlAlchemyMediaFilesRepository(self._session)
         self.notification_jobs = SqlAlchemyNotificationJobsRepository(self._session)
+        self.support_tickets = SqlAlchemySupportTicketsRepository(self._session)
         self.telegram_login_challenges = SqlAlchemyTelegramLoginChallengesRepository(
             self._session
         )

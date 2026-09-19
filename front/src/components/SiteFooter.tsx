@@ -16,11 +16,13 @@ export function SiteFooter() {
         { to: "/app", label: "Мои боксы" },
         { to: "/app/profile", label: "Профиль" },
         { to: "/app/boxes/new", label: "Новый бокс" },
+        { to: "/support", label: "Поддержка" },
       ]
     : [
         { to: "/#how", label: "Как это работает" },
         { to: "/login", label: "Создать бокс" },
         { to: "/login", label: "Войти", icon: true },
+        { to: "/support", label: "Поддержка" },
       ];
 
   return (

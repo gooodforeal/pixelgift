@@ -11,6 +11,7 @@ from src.domain.repository.telegram_login_challenges import (
     BaseTelegramLoginChallengesRepository,
 )
 from src.domain.repository.notification_jobs import BaseNotificationJobsRepository
+from src.domain.repository.support_tickets import BaseSupportTicketsRepository
 from src.domain.repository.user_sessions import BaseUserSessionsRepository
 from src.domain.repository.users import BaseUsersRepository
 
@@ -23,6 +24,7 @@ class BaseUnitOfWork(ABC):
     design_ratings: BaseDesignRatingsRepository
     media_files: BaseMediaFilesRepository
     notification_jobs: BaseNotificationJobsRepository
+    support_tickets: BaseSupportTicketsRepository
     telegram_login_challenges: BaseTelegramLoginChallengesRepository
     user_sessions: BaseUserSessionsRepository
 

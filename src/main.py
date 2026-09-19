@@ -4,7 +4,16 @@ from collections.abc import AsyncIterator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.presentation.routers import admin_designs, auth, boxes, designs, media, public
+from src.presentation.routers import (
+    admin_designs,
+    admin_support,
+    auth,
+    boxes,
+    designs,
+    media,
+    public,
+    support,
+)
 from src.settings import settings
 
 
@@ -30,9 +39,11 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(designs.router)
 app.include_router(admin_designs.router)
+app.include_router(admin_support.router)
 app.include_router(boxes.router)
 app.include_router(media.router)
 app.include_router(public.router)
+app.include_router(support.router)
 
 
 @app.get("/health")

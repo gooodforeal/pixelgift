@@ -6,6 +6,9 @@ from src.infrastructure.repositories.media_files import SqlAlchemyMediaFilesRepo
 from src.infrastructure.repositories.notification_jobs import (
     SqlAlchemyNotificationJobsRepository,
 )
+from src.infrastructure.repositories.support_tickets import (
+    SqlAlchemySupportTicketsRepository,
+)
 from src.infrastructure.repositories.telegram_login_challenges import (
     SqlAlchemyTelegramLoginChallengesRepository,
 )
@@ -19,6 +22,7 @@ __all__ = [
     "SqlAlchemyDesignRatingsRepository",
     "SqlAlchemyMediaFilesRepository",
     "SqlAlchemyNotificationJobsRepository",
+    "SqlAlchemySupportTicketsRepository",
     "SqlAlchemyTelegramLoginChallengesRepository",
     "SqlAlchemyUserSessionsRepository",
     "SqlAlchemyUsersRepository",

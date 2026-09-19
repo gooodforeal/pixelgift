@@ -462,28 +462,83 @@ html[data-theme="light"] .site-footer__meta {
   @apply border-slate-900/10 text-slate-500;
 }
 
+.status-badge {
+  @apply inline-flex shrink-0 items-center gap-1 rounded-lg px-1.5 py-0.5
+    text-[10px] font-semibold leading-none tracking-wide;
+  border: 1px solid transparent;
+  background: rgb(255 255 255 / 0.04);
+  color: rgb(203 213 225);
+}
+
+.status-badge__icon {
+  width: 0.7rem;
+  height: 0.7rem;
+  opacity: 0.9;
+}
+
+.status-badge--draft {
+  color: rgb(203 213 225);
+  background: rgb(148 163 184 / 0.1);
+  border-color: rgb(148 163 184 / 0.16);
+}
+
+.status-badge--scheduled {
+  color: rgb(233 213 255);
+  background: rgb(168 85 247 / 0.12);
+  border-color: rgb(168 85 247 / 0.22);
+}
+
+.status-badge--active {
+  color: rgb(207 250 254);
+  background: rgb(34 211 238 / 0.12);
+  border-color: rgb(34 211 238 / 0.22);
+}
+
+.status-badge--opened {
+  color: rgb(254 243 199);
+  background: rgb(251 191 36 / 0.12);
+  border-color: rgb(251 191 36 / 0.22);
+}
+
+.status-badge--archived {
+  color: rgb(148 163 184);
+  background: rgb(255 255 255 / 0.03);
+  border-color: rgb(255 255 255 / 0.08);
+}
+
 html[data-theme="light"] .status-badge {
-  @apply shadow-md shadow-slate-900/15 backdrop-blur-md;
+  background: rgb(15 23 42 / 0.04);
+  color: rgb(71 85 105);
 }
 
 html[data-theme="light"] .status-badge--draft {
-  @apply border-slate-400/50 bg-white/95 text-slate-800;
+  color: rgb(71 85 105);
+  background: rgb(100 116 139 / 0.1);
+  border-color: rgb(100 116 139 / 0.18);
 }
 
 html[data-theme="light"] .status-badge--scheduled {
-  @apply border-violet-400/50 bg-white/95 text-violet-800;
+  color: rgb(109 40 217);
+  background: rgb(168 85 247 / 0.1);
+  border-color: rgb(168 85 247 / 0.2);
 }
 
 html[data-theme="light"] .status-badge--active {
-  @apply border-cyan-500/55 bg-white/95 text-cyan-800;
+  color: rgb(14 116 144);
+  background: rgb(34 211 238 / 0.12);
+  border-color: rgb(34 211 238 / 0.22);
 }
 
 html[data-theme="light"] .status-badge--opened {
-  @apply border-emerald-500/55 bg-white/95 text-emerald-800;
+  color: rgb(161 98 7);
+  background: rgb(251 191 36 / 0.14);
+  border-color: rgb(251 191 36 / 0.28);
 }
 
 html[data-theme="light"] .status-badge--archived {
-  @apply border-slate-400/45 bg-white/95 text-slate-700;
+  color: rgb(100 116 139);
+  background: rgb(15 23 42 / 0.04);
+  border-color: rgb(15 23 42 / 0.08);
 }
 
 html[data-theme="light"] .theme-canvas .spinner-ring {

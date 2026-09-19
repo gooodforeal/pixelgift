@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Palette, Shield } from "lucide-react";
+import { Headphones, Palette, Shield } from "lucide-react";
 
 import { PageTransition } from "../components/PageTransition";
 
@@ -10,6 +10,12 @@ const SECTIONS = [
     title: "Дизайны",
     description: "Темы коробок, палитры, обложки и активность.",
     icon: Palette,
+  },
+  {
+    to: "/admin/support",
+    title: "Поддержка",
+    description: "Обращения пользователей и смена статусов.",
+    icon: Headphones,
   },
 ] as const;
 

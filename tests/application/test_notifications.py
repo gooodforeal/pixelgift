@@ -186,6 +186,33 @@ class TestGetPublicBoxUseCaseOpenedNotification:
         assert view.box.status == BoxStatus.OPENED
         assert queue.opened == [box.id]
 
+    async def test_password_keeps_content_locked_until_unlock(self):
+        from src.application.services.jwt import JwtService
+        from src.domain.values.box_unlock_password import BoxUnlockPassword
+        from src.settings import Settings
+
+        uow = InMemoryUnitOfWork()
+        box = _box(owner_id=uuid.uuid4(), status=BoxStatus.SCHEDULED)
+        box.unlock_password = BoxUnlockPassword("gift2026")
+        await uow.boxes.add(box)
+        queue = RecordingTaskQueue()
+        jwt_service = JwtService(Settings())
+
+        locked = await GetPublicBoxUseCase(
+            uow, task_queue=queue, jwt_service=jwt_service
+        ).execute(public_slug=box.public_slug.value)
+        assert locked.content_unlocked is False
+        assert queue.opened == []
+
+        from src.application.use_cases.queries import UnlockPublicBoxUseCase
+
+        unlocked = await UnlockPublicBoxUseCase(
+            uow, jwt_service, task_queue=queue
+        ).execute(public_slug=box.public_slug.value, password="gift2026")
+        assert unlocked.content_unlocked is True
+        assert unlocked.unlock_token
+        assert queue.opened == [box.id]
+
     async def test_does_not_enqueue_on_second_open(self):
         uow = InMemoryUnitOfWork()
         box = _box(owner_id=uuid.uuid4(), status=BoxStatus.OPENED)
@@ -209,11 +236,24 @@ class TestGiftReadyEmailTemplate:
         )
 
         assert "{{recipient_name}}" not in html
+        assert "{{password_block}}" not in html
         assert "Маша &lt;script&gt;" in html
         assert "День &amp; ночь" in html
         assert "https://pixelgift.test/b/gift-ready" in html
         assert "Открыть подарок" in html
         assert "from-glow-pink" not in html
+
+    def test_includes_unlock_password(self):
+        html = render_gift_ready_html(
+            recipient_name="Маша",
+            title="Подарок",
+            gift_url="https://pixelgift.test/b/gift-ready",
+            unlock_password="gift2026",
+        )
+
+        assert "gift2026" in html
+        assert "Пароль для открытия" in html
+        assert "{{password_block}}" not in html
 
 
 class TestOwnerTelegramCaptions:

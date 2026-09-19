@@ -22,6 +22,7 @@ class BoxResponse(BaseModel):
     title: str
     recipient_name: str
     recipient_email: EmailStr | None = None
+    unlock_password: str | None = None
     activates_at: datetime
     status: str
     timezone: str = "UTC"
@@ -46,6 +47,7 @@ class CreateBoxRequest(BaseModel):
     title: str = Field(max_length=30)
     recipient_name: str = Field(max_length=30)
     recipient_email: EmailStr
+    unlock_password: str = Field(min_length=4, max_length=12, pattern=r"^[A-Za-z0-9]+$")
     activates_at: datetime
     timezone: str = "UTC"
     public_slug: str | None = None
@@ -59,6 +61,7 @@ class UpdateBoxRequest(BaseModel):
     title: str = Field(max_length=30)
     recipient_name: str = Field(max_length=30)
     recipient_email: EmailStr
+    unlock_password: str = Field(min_length=4, max_length=12, pattern=r"^[A-Za-z0-9]+$")
     activates_at: datetime
     timezone: str = "UTC"
     message: str | None = Field(default=None, max_length=300)
@@ -139,7 +142,17 @@ class PublicBoxResponse(BaseModel):
     preview_title: str | None = None
     preview_image_url: str | None = None
     content_unlocked: bool
+    password_required: bool = False
     message: str | None = None
     design_code: str | None = None
     theme_config: dict[str, Any] = Field(default_factory=dict)
     items: list[BoxItemResponse] = Field(default_factory=list)
+
+
+class UnlockPublicBoxRequest(BaseModel):
+    password: str = Field(min_length=1, max_length=12)
+
+
+class UnlockPublicBoxResponse(BaseModel):
+    unlock_token: str | None = None
+    box: PublicBoxResponse

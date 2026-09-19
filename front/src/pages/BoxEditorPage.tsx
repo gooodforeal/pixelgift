@@ -67,16 +67,20 @@ interface FormState {
   title: string;
   recipient_name: string;
   recipient_email: string;
+  unlock_password: string;
   activates_at_local: string;
   message: string;
   preview_title: string;
 }
+
+const UNLOCK_PASSWORD_PATTERN = /^[A-Za-z0-9]{4,12}$/;
 
 const emptyForm = (): FormState => ({
   design_id: "",
   title: "",
   recipient_name: "",
   recipient_email: "",
+  unlock_password: "",
   activates_at_local: defaultActivatesAt(),
   message: "",
   preview_title: "",
@@ -88,6 +92,7 @@ function toPayload(form: FormState): BoxPayload {
     title: form.title.trim(),
     recipient_name: form.recipient_name.trim(),
     recipient_email: form.recipient_email.trim(),
+    unlock_password: form.unlock_password.trim(),
     activates_at: fromDateTimeLocal(form.activates_at_local),
     timezone: localTimezone,
     message: form.message.trim() || null,
@@ -106,6 +111,7 @@ function formDirty(form: FormState, box: Box | undefined): boolean {
     form.title !== box.title ||
     form.recipient_name !== box.recipient_name ||
     form.recipient_email !== (box.recipient_email ?? "") ||
+    form.unlock_password !== (box.unlock_password ?? "") ||
     form.activates_at_local !== toDateTimeLocal(box.activates_at) ||
     form.message !== (box.message ?? "") ||
     form.preview_title !== (box.preview_title ?? "")
@@ -157,6 +163,7 @@ export function BoxEditorPage() {
         title: box.title,
         recipient_name: box.recipient_name,
         recipient_email: box.recipient_email ?? "",
+        unlock_password: box.unlock_password ?? "",
         activates_at_local: toDateTimeLocal(box.activates_at),
         message: box.message ?? "",
         preview_title: box.preview_title ?? "",
@@ -348,6 +355,7 @@ export function BoxEditorPage() {
     form.title.trim().length > 0 &&
     form.recipient_name.trim().length > 0 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.recipient_email.trim()) &&
+    UNLOCK_PASSWORD_PATTERN.test(form.unlock_password.trim()) &&
     activatesParts.date.length > 0 &&
     activatesParts.time.length > 0;
 
@@ -368,7 +376,7 @@ export function BoxEditorPage() {
 
     if (step === "details") {
       if (!canSubmitDetails) {
-        toast("Заполните название, получателя, почту и дату открытия", "error");
+        toast("Заполните название, получателя, почту, пароль и дату открытия", "error");
         return;
       }
 
@@ -551,7 +559,34 @@ export function BoxEditorPage() {
                   }
                 />
                 <p className="mt-2 text-xs text-slate-500">
-                  На эту почту уйдёт ссылка, когда наступит время открытия
+                  На эту почту уйдёт ссылка и пароль, когда наступит время открытия
+                </p>
+              </div>
+              <div>
+                <label className="label" htmlFor="unlock-password">
+                  Пароль открытия
+                </label>
+                <input
+                  id="unlock-password"
+                  className="field font-mono disabled:opacity-60"
+                  minLength={4}
+                  maxLength={12}
+                  pattern="[A-Za-z0-9]{4,12}"
+                  placeholder="gift2026"
+                  autoComplete="off"
+                  spellCheck={false}
+                  disabled={!editable}
+                  value={form.unlock_password}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      unlock_password: event.target.value.replace(/[^A-Za-z0-9]/g, ""),
+                    }))
+                  }
+                />
+                <p className="mt-2 text-xs text-slate-500">
+                  4–12 символов: английские буквы и цифры. Получатель введёт его после
+                  таймера; пароль уйдёт в письме вместе со ссылкой.
                 </p>
               </div>
               <div>

@@ -65,12 +65,34 @@ def render_gift_ready_html(
     recipient_name: str,
     title: str,
     gift_url: str,
+    unlock_password: str | None = None,
 ) -> str:
+    password_block = ""
+    if unlock_password:
+        password_block = (
+            '<tr><td align="center" style="padding: 20px 28px 0;">'
+            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+            'bgcolor="#140d29" style="border-radius: 16px; border: 1px solid #2a2348; '
+            'background-color: #140d29;">'
+            '<tr><td align="center" style="padding: 18px 20px;">'
+            '<p style="margin: 0 0 8px; font-family: Manrope, Arial, sans-serif; '
+            'font-size: 11px; font-weight: 600; letter-spacing: 0.14em; '
+            'text-transform: uppercase; color: #64748b;">Пароль для открытия</p>'
+            f'<p style="margin: 0; font-family: Unbounded, Manrope, Arial, sans-serif; '
+            f'font-size: 22px; font-weight: 700; letter-spacing: 0.12em; color: #f5f3ff;">'
+            f"{escape(unlock_password)}</p>"
+            '<p style="margin: 10px 0 0; font-family: Manrope, Arial, sans-serif; '
+            'font-size: 12px; line-height: 1.5; color: #94a3b8;">'
+            "Введите его на странице подарка после окончания таймера</p>"
+            "</td></tr></table></td></tr>"
+        )
+
     return (
         _gift_ready_template()
         .replace("{{recipient_name}}", escape(recipient_name))
         .replace("{{title}}", escape(title))
         .replace("{{gift_url}}", escape(gift_url, quote=True))
+        .replace("{{password_block}}", password_block)
     )
 
 
@@ -179,6 +201,9 @@ class NotificationService:
             recipient_name=box.recipient_name.value,
             title=box.title.value,
             gift_url=gift_url,
+            unlock_password=(
+                box.unlock_password.value if box.unlock_password is not None else None
+            ),
         )
         subject = f"🎁 {box.recipient_name.value}, тебе подарок: {box.title.value}"
         await self._email.send_html(

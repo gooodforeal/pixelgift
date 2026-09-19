@@ -1,6 +1,7 @@
 from email.message import EmailMessage
 import asyncio
 import smtplib
+import ssl
 
 from src.application.ports.notifications import BaseEmailSender
 from src.settings import Settings
@@ -29,9 +30,23 @@ class SmtpEmailSender(BaseEmailSender):
         )
         message.add_alternative(html, subtype="html")
 
-        with smtplib.SMTP(self._host, self._port, timeout=20) as smtp:
+        context = ssl.create_default_context()
+        # Gmail: 465 = implicit SSL, 587 = STARTTLS
+        if self._use_tls and self._port == 465:
+            with smtplib.SMTP_SSL(
+                self._host, self._port, timeout=30, context=context
+            ) as smtp:
+                self._authenticate_and_send(smtp, message)
+            return
+
+        with smtplib.SMTP(self._host, self._port, timeout=30) as smtp:
             if self._use_tls:
-                smtp.starttls()
-            if self._username:
-                smtp.login(self._username, self._password)
-            smtp.send_message(message)
+                smtp.starttls(context=context)
+            self._authenticate_and_send(smtp, message)
+
+    def _authenticate_and_send(
+        self, smtp: smtplib.SMTP, message: EmailMessage
+    ) -> None:
+        if self._username:
+            smtp.login(self._username, self._password)
+        smtp.send_message(message)

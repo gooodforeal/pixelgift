@@ -34,6 +34,9 @@ def box_to_response(box: Box) -> BoxResponse:
         recipient_email=(
             box.recipient_email.value if box.recipient_email is not None else None
         ),
+        unlock_password=(
+            box.unlock_password.value if box.unlock_password is not None else None
+        ),
         activates_at=box.activates_at.value,
         status=box.status.value,
         timezone=box.timezone,
@@ -66,6 +69,7 @@ def public_box_to_response(
             box.preview_image_url.value if box.preview_image_url is not None else None
         ),
         content_unlocked=content_unlocked,
+        password_required=box.unlock_password is not None,
         message=(
             box.message.value
             if content_unlocked and box.message is not None

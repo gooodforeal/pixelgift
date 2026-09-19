@@ -52,6 +52,7 @@ from src.domain.values.box_preview_title import BoxPreviewTitle
 from src.domain.values.box_recipient_email import BoxRecipientEmail
 from src.domain.values.box_recipient_name import BoxRecipientName
 from src.domain.values.box_title import BoxTitle
+from src.domain.values.box_unlock_password import BoxUnlockPassword
 from src.domain.values.public_slug import PublicSlug
 from src.domain.values.sort_order import SortOrder
 from src.domain.values.url import Url
@@ -123,6 +124,7 @@ async def create_box(
                 title=BoxTitle(body.title),
                 recipient_name=BoxRecipientName(body.recipient_name),
                 recipient_email=BoxRecipientEmail(body.recipient_email),
+                unlock_password=BoxUnlockPassword(body.unlock_password),
                 activates_at=ActivatesAt(body.activates_at),
                 timezone=body.timezone,
                 public_slug=PublicSlug(body.public_slug) if body.public_slug else None,
@@ -189,6 +191,7 @@ async def update_box(
                 title=BoxTitle(body.title),
                 recipient_name=BoxRecipientName(body.recipient_name),
                 recipient_email=BoxRecipientEmail(body.recipient_email),
+                unlock_password=BoxUnlockPassword(body.unlock_password),
                 activates_at=ActivatesAt(body.activates_at),
                 timezone=body.timezone,
                 message=BoxMessage(body.message) if body.message else None,

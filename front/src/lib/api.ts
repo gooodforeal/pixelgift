@@ -13,6 +13,7 @@ import type {
   TelegramLoginStart,
   TelegramLoginStatus,
   ThemeConfig,
+  UnlockPublicBoxResult,
 } from "./types";
 import { isAuthed, setAuthed } from "./auth";
 
@@ -280,7 +281,20 @@ export const api = {
       body: JSON.stringify({ item_ids: itemIds }),
     }),
 
-  publicBox: (slug: string) => request<PublicBox>(`/b/${encodeURIComponent(slug)}`),
+  publicBox: (slug: string, unlockToken?: string | null) => {
+    const search = new URLSearchParams();
+    if (unlockToken) search.set("unlock_token", unlockToken);
+    const query = search.toString();
+    return request<PublicBox>(
+      `/b/${encodeURIComponent(slug)}${query ? `?${query}` : ""}`,
+    );
+  },
+
+  unlockPublicBox: (slug: string, password: string) =>
+    request<UnlockPublicBoxResult>(`/b/${encodeURIComponent(slug)}/unlock`, {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
 };
 
 /** Owner-side media URL — auth via HttpOnly access cookie (same-origin). */
@@ -289,8 +303,17 @@ export function ownMediaUrl(mediaFileId: string): string {
 }
 
 /** Public media URL for an unlocked box — no authentication needed. */
-export function publicMediaUrl(slug: string, itemId: string): string {
-  return `${API_URL}/b/${encodeURIComponent(slug)}/items/${itemId}/content`;
+export function publicMediaUrl(
+  slug: string,
+  itemId: string,
+  unlockToken?: string | null,
+): string {
+  const search = new URLSearchParams();
+  if (unlockToken) search.set("unlock_token", unlockToken);
+  const query = search.toString();
+  return `${API_URL}/b/${encodeURIComponent(slug)}/items/${itemId}/content${
+    query ? `?${query}` : ""
+  }`;
 }
 
 /** Prefer same-origin /api proxy for design assets returned with absolute api_base_url. */

@@ -234,6 +234,50 @@ class BoxContentLockedError(BaseException):
         super().__init__(f"Box content is still locked: {public_slug!r}")
 
 
+class BoxUnlockPasswordError(BaseException):
+    """Базовая ошибка валидации пароля открытия бокса."""
+
+
+class BoxUnlockPasswordEmptyError(BoxUnlockPasswordError):
+    def __init__(self, value: str) -> None:
+        self.value = value
+        super().__init__("Unlock password must not be empty")
+
+
+class BoxUnlockPasswordTooShortError(BoxUnlockPasswordError):
+    def __init__(self, value: str) -> None:
+        self.value = value
+        super().__init__("Unlock password is too short")
+
+
+class BoxUnlockPasswordTooLongError(BoxUnlockPasswordError):
+    def __init__(self, value: str) -> None:
+        self.value = value
+        super().__init__("Unlock password is too long")
+
+
+class BoxUnlockPasswordFormatError(BoxUnlockPasswordError):
+    def __init__(self, value: str) -> None:
+        self.value = value
+        super().__init__(
+            "Unlock password must contain only English letters and digits"
+        )
+
+
+class BoxUnlockPasswordIncorrectError(BaseException):
+    def __init__(self, public_slug: str) -> None:
+        self.public_slug = public_slug
+        super().__init__(f"Incorrect unlock password for box: {public_slug!r}")
+
+
+class BoxUnlockNotYetAvailableError(BaseException):
+    def __init__(self, public_slug: str) -> None:
+        self.public_slug = public_slug
+        super().__init__(
+            f"Box unlock password cannot be used before activation: {public_slug!r}"
+        )
+
+
 class BoxDesignNotAvailableError(BaseException):
     def __init__(self, design_id: uuid.UUID) -> None:
         self.design_id = design_id

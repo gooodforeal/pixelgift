@@ -7,6 +7,7 @@ from src.domain.values.box_preview_title import BoxPreviewTitle
 from src.domain.values.box_recipient_email import BoxRecipientEmail
 from src.domain.values.box_recipient_name import BoxRecipientName
 from src.domain.values.box_title import BoxTitle
+from src.domain.values.box_unlock_password import BoxUnlockPassword
 from src.domain.values.public_slug import PublicSlug
 from src.domain.values.sort_order import SortOrder
 from src.domain.values.url import Url
@@ -63,6 +64,9 @@ def box_to_model(entity: Box) -> BoxModel:
         recipient_email=(
             entity.recipient_email.value if entity.recipient_email is not None else None
         ),
+        unlock_password=(
+            entity.unlock_password.value if entity.unlock_password is not None else None
+        ),
         message=entity.message.value if entity.message is not None else None,
         preview_title=(
             entity.preview_title.value if entity.preview_title is not None else None
@@ -101,6 +105,11 @@ def box_to_entity(model: BoxModel) -> Box:
             if model.recipient_email is not None
             else None
         ),
+        unlock_password=(
+            BoxUnlockPassword(model.unlock_password)
+            if model.unlock_password is not None
+            else None
+        ),
         activates_at=ActivatesAt.reconstitute(model.activates_at),
         status=BoxStatus(model.status),
         timezone=model.timezone,
@@ -131,6 +140,9 @@ def apply_box(entity: Box, model: BoxModel) -> None:
     model.recipient_name = entity.recipient_name.value
     model.recipient_email = (
         entity.recipient_email.value if entity.recipient_email is not None else None
+    )
+    model.unlock_password = (
+        entity.unlock_password.value if entity.unlock_password is not None else None
     )
     model.message = entity.message.value if entity.message is not None else None
     model.preview_title = (

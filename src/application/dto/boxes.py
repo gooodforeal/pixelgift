@@ -9,6 +9,7 @@ from src.domain.values.box_preview_title import BoxPreviewTitle
 from src.domain.values.box_recipient_email import BoxRecipientEmail
 from src.domain.values.box_recipient_name import BoxRecipientName
 from src.domain.values.box_title import BoxTitle
+from src.domain.values.box_unlock_password import BoxUnlockPassword
 from src.domain.values.public_slug import PublicSlug
 from src.domain.values.sort_order import SortOrder
 from src.domain.values.url import Url
@@ -21,6 +22,7 @@ class CreateBoxCommand:
     title: BoxTitle
     recipient_name: BoxRecipientName
     activates_at: ActivatesAt
+    unlock_password: BoxUnlockPassword
     timezone: str = "UTC"
     recipient_email: BoxRecipientEmail | None = None
     public_slug: PublicSlug | None = None
@@ -37,6 +39,7 @@ class UpdateBoxCommand:
     title: BoxTitle
     recipient_name: BoxRecipientName
     activates_at: ActivatesAt
+    unlock_password: BoxUnlockPassword
     timezone: str = "UTC"
     recipient_email: BoxRecipientEmail | None = None
     message: BoxMessage | None = None

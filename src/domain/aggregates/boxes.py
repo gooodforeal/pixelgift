@@ -28,6 +28,7 @@ from src.domain.values.box_preview_title import BoxPreviewTitle
 from src.domain.values.box_recipient_email import BoxRecipientEmail
 from src.domain.values.box_recipient_name import BoxRecipientName
 from src.domain.values.box_title import BoxTitle
+from src.domain.values.box_unlock_password import BoxUnlockPassword
 from src.domain.values.public_slug import PublicSlug
 from src.domain.values.sort_order import SortOrder
 from src.domain.values.url import Url
@@ -55,6 +56,7 @@ class Box(BaseEntity):
     status: BoxStatus
     timezone: str = "UTC"
     recipient_email: BoxRecipientEmail | None = None
+    unlock_password: BoxUnlockPassword | None = None
     message: BoxMessage | None = None
     preview_title: BoxPreviewTitle | None = None
     preview_image_url: Url | None = None
@@ -170,6 +172,7 @@ class Box(BaseEntity):
         activates_at: ActivatesAt,
         timezone: str = "UTC",
         recipient_email: BoxRecipientEmail | None = None,
+        unlock_password: BoxUnlockPassword | None = None,
         message: BoxMessage | None = None,
         preview_title: BoxPreviewTitle | None = None,
         preview_image_url: Url | None = None,
@@ -180,6 +183,7 @@ class Box(BaseEntity):
         self.activates_at = activates_at
         self.timezone = timezone
         self.recipient_email = recipient_email
+        self.unlock_password = unlock_password
         self.message = message
         self.preview_title = preview_title
         self.preview_image_url = preview_image_url

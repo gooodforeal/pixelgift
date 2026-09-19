@@ -18,11 +18,13 @@ from src.application.use_cases.queries import (
     GetPublicBoxItemContentUseCase,
     GetPublicBoxUseCase,
     ListBoxesUseCase,
+    UnlockPublicBoxUseCase,
 )
 from src.infrastructure.storage.s3_storage import S3ObjectStorage
 from src.infrastructure.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from src.infrastructure.worker.task_queue import TaskiqTaskQueue
-from src.presentation.deps.common import get_storage, get_task_queue
+from src.presentation.deps.common import get_jwt_service, get_storage, get_task_queue
+from src.application.services.jwt import JwtService
 
 
 def get_create_box_uc() -> CreateBoxUseCase:
@@ -72,11 +74,24 @@ def get_get_box_uc() -> GetBoxUseCase:
 def get_public_box_uc(
     storage: S3ObjectStorage = Depends(get_storage),
     task_queue: TaskiqTaskQueue = Depends(get_task_queue),
+    jwt_service: JwtService = Depends(get_jwt_service),
 ) -> GetPublicBoxUseCase:
-    return GetPublicBoxUseCase(SqlAlchemyUnitOfWork(), storage, task_queue)
+    return GetPublicBoxUseCase(
+        SqlAlchemyUnitOfWork(), storage, task_queue, jwt_service
+    )
+
+
+def get_unlock_public_box_uc(
+    task_queue: TaskiqTaskQueue = Depends(get_task_queue),
+    jwt_service: JwtService = Depends(get_jwt_service),
+) -> UnlockPublicBoxUseCase:
+    return UnlockPublicBoxUseCase(SqlAlchemyUnitOfWork(), jwt_service, task_queue)
 
 
 def get_public_box_item_content_uc(
     storage: S3ObjectStorage = Depends(get_storage),
+    jwt_service: JwtService = Depends(get_jwt_service),
 ) -> GetPublicBoxItemContentUseCase:
-    return GetPublicBoxItemContentUseCase(SqlAlchemyUnitOfWork(), storage)
+    return GetPublicBoxItemContentUseCase(
+        SqlAlchemyUnitOfWork(), storage, jwt_service
+    )

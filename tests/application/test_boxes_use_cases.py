@@ -59,6 +59,7 @@ from src.domain.values.box_preview_title import BoxPreviewTitle
 from src.domain.values.box_recipient_email import BoxRecipientEmail
 from src.domain.values.box_recipient_name import BoxRecipientName
 from src.domain.values.box_title import BoxTitle
+from src.domain.values.box_unlock_password import BoxUnlockPassword
 from src.domain.values.public_slug import PublicSlug
 from src.domain.values.url import Url
 from tests.application.fakes import InMemoryUnitOfWork
@@ -87,6 +88,7 @@ def _create_command(
         title=BoxTitle("Happy birthday"),
         recipient_name=BoxRecipientName("Маша"),
         recipient_email=BoxRecipientEmail("masha@example.com"),
+        unlock_password=BoxUnlockPassword("gift2026"),
         activates_at=activates_at,
         public_slug=public_slug,
         message=BoxMessage("For you"),
@@ -247,6 +249,7 @@ class TestUpdateBoxUseCase:
                 design_id=new_design.id,
                 title=BoxTitle("Updated title"),
                 recipient_name=BoxRecipientName("Катя"),
+                unlock_password=BoxUnlockPassword("gift2026"),
                 activates_at=activates_at,
                 timezone="Europe/Moscow",
                 message=BoxMessage("Updated message"),
@@ -285,6 +288,7 @@ class TestUpdateBoxUseCase:
                 design_id=design.id,
                 title=BoxTitle("Still editable"),
                 recipient_name=BoxRecipientName("Маша"),
+                unlock_password=BoxUnlockPassword("gift2026"),
                 activates_at=activates_at,
             )
         )
@@ -309,6 +313,7 @@ class TestUpdateBoxUseCase:
                     design_id=design.id,
                     title=BoxTitle("Hack"),
                     recipient_name=BoxRecipientName("X"),
+                    unlock_password=BoxUnlockPassword("gift2026"),
                     activates_at=activates_at,
                 )
             )
@@ -330,6 +335,7 @@ class TestUpdateBoxUseCase:
                     design_id=design.id,
                     title=BoxTitle("Missing"),
                     recipient_name=BoxRecipientName("X"),
+                    unlock_password=BoxUnlockPassword("gift2026"),
                     activates_at=activates_at,
                 )
             )
@@ -355,6 +361,7 @@ class TestUpdateBoxUseCase:
                     design_id=design.id,
                     title=BoxTitle("Too late"),
                     recipient_name=BoxRecipientName("X"),
+                    unlock_password=BoxUnlockPassword("gift2026"),
                     activates_at=activates_at,
                 )
             )
@@ -380,6 +387,7 @@ class TestUpdateBoxUseCase:
                     design_id=design.id,
                     title=BoxTitle("Too late"),
                     recipient_name=BoxRecipientName("X"),
+                    unlock_password=BoxUnlockPassword("gift2026"),
                     activates_at=activates_at,
                 )
             )
@@ -404,6 +412,7 @@ class TestUpdateBoxUseCase:
                     design_id=inactive.id,
                     title=BoxTitle("Bad design"),
                     recipient_name=BoxRecipientName("X"),
+                    unlock_password=BoxUnlockPassword("gift2026"),
                     activates_at=activates_at,
                 )
             )

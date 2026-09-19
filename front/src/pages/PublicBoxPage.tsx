@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Gift, Heart, Lock, Sparkles } from "lucide-react";
+import { ArrowRight, Gift, Heart, KeyRound, Lock, Sparkles } from "lucide-react";
 
 import { ConfettiBurst } from "../components/ConfettiBurst";
 import { CountdownTimer } from "../components/CountdownTimer";
@@ -11,7 +11,7 @@ import { MediaPreview } from "../components/MediaPreview";
 import { Particles } from "../components/Particles";
 import { ScratchReveal } from "../components/ScratchReveal";
 import { Spinner } from "../components/Spinner";
-import { api, publicMediaUrl } from "../lib/api";
+import { ApiError, api, publicMediaUrl } from "../lib/api";
 import { formatDateTime } from "../lib/format";
 import { getMediaKindOption } from "../lib/mediaKinds";
 import { isSecretPhotoItem } from "../lib/secret";
@@ -19,6 +19,27 @@ import { radialGlowCss, resolveTheme, themeBackgroundLayers } from "../lib/theme
 import type { BoxItem, PublicBox } from "../lib/types";
 import { geopointFromMetadata } from "../lib/geopoint";
 import { toyCodeFromMetadata, toyImageUrl } from "../lib/toys";
+
+function unlockStorageKey(slug: string) {
+  return `pixelgift-unlock:${slug}`;
+}
+
+function readUnlockToken(slug: string): string | null {
+  try {
+    return sessionStorage.getItem(unlockStorageKey(slug));
+  } catch {
+    return null;
+  }
+}
+
+function writeUnlockToken(slug: string, token: string | null) {
+  try {
+    if (token) sessionStorage.setItem(unlockStorageKey(slug), token);
+    else sessionStorage.removeItem(unlockStorageKey(slug));
+  } catch {
+    /* ignore */
+  }
+}
 
 type RevealStep =
   | { kind: "intro" }
@@ -66,10 +87,43 @@ export function PublicBoxPage() {
   const [direction, setDirection] = useState(1);
   const [confetti, setConfetti] = useState(false);
   const [secretRevealed, setSecretRevealed] = useState(true);
+  const [unlockToken, setUnlockToken] = useState<string | null>(() =>
+    slug ? readUnlockToken(slug) : null,
+  );
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setUnlockToken(slug ? readUnlockToken(slug) : null);
+    setPasswordInput("");
+    setPasswordError(null);
+    setStepIndex(0);
+  }, [slug]);
 
   const boxQuery = useQuery({
-    queryKey: ["public-box", slug],
-    queryFn: () => api.publicBox(slug),
+    queryKey: ["public-box", slug, unlockToken],
+    queryFn: () => api.publicBox(slug, unlockToken),
+    enabled: Boolean(slug),
+  });
+
+  const unlockMutation = useMutation({
+    mutationFn: (password: string) => api.unlockPublicBox(slug, password),
+    onSuccess: (result) => {
+      if (result.unlock_token) {
+        writeUnlockToken(slug, result.unlock_token);
+        setUnlockToken(result.unlock_token);
+      }
+      queryClient.setQueryData(["public-box", slug, result.unlock_token], result.box);
+      setPasswordError(null);
+      setPasswordInput("");
+    },
+    onError: (error) => {
+      const message =
+        error instanceof ApiError && error.status === 403
+          ? "Неверный пароль"
+          : "Не удалось открыть бокс";
+      setPasswordError(message);
+    },
   });
 
   const box = boxQuery.data;
@@ -135,6 +189,9 @@ export function PublicBoxPage() {
   }
 
   const locked = !box.content_unlocked;
+  const waitingForTimer = locked && new Date(box.activates_at).getTime() > Date.now();
+  const needsPassword =
+    locked && !waitingForTimer && box.password_required;
   const progress = steps.length > 1 ? stepIndex / (steps.length - 1) : 0;
   const bgLayers = themeBackgroundLayers(theme);
 
@@ -161,7 +218,7 @@ export function PublicBoxPage() {
       )}
 
       <div className="relative mx-auto flex min-h-[calc(100dvh-5rem)] max-w-3xl flex-col">
-        {locked && (
+        {waitingForTimer && (
           <motion.section
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -196,8 +253,71 @@ export function PublicBoxPage() {
             </div>
 
             <p className="mx-auto mt-10 max-w-sm text-xs opacity-60">
-              Возвращайтесь в назначенный момент — содержимое появится автоматически.
+              {box.password_required
+                ? "После таймера понадобится пароль из письма."
+                : "Возвращайтесь в назначенный момент — содержимое появится автоматически."}
             </p>
+          </motion.section>
+        )}
+
+        {needsPassword && (
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass my-auto w-full min-w-0 overflow-hidden px-6 py-14 text-center sm:px-12"
+          >
+            <span className="chip mx-auto" style={{ borderColor: `${theme.accent}55` }}>
+              <KeyRound className="size-3.5" />
+              Нужен пароль
+            </span>
+
+            <div className="mt-8 flex justify-center">
+              <GiftBox3D palette={giftPalette} size="lg" />
+            </div>
+
+            <h1 className="font-display mt-6 max-w-full break-words text-3xl leading-tight [overflow-wrap:anywhere] sm:text-4xl">
+              {box.preview_title ?? `${box.recipient_name}, для тебя есть подарок`}
+            </h1>
+
+            <p className="mx-auto mt-4 max-w-sm text-sm opacity-75">
+              Введите пароль из письма, чтобы открыть бокс
+            </p>
+
+            <form
+              className="mx-auto mt-8 flex w-full max-w-xs flex-col gap-3"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const value = passwordInput.trim();
+                if (!value) {
+                  setPasswordError("Введите пароль");
+                  return;
+                }
+                unlockMutation.mutate(value);
+              }}
+            >
+              <input
+                className="field text-center font-mono tracking-[0.18em]"
+                value={passwordInput}
+                maxLength={12}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Пароль"
+                onChange={(event) => {
+                  setPasswordInput(event.target.value.replace(/[^A-Za-z0-9]/g, ""));
+                  setPasswordError(null);
+                }}
+              />
+              {passwordError ? (
+                <p className="text-xs text-rose-300">{passwordError}</p>
+              ) : null}
+              <button
+                type="submit"
+                className="btn-primary justify-center"
+                disabled={unlockMutation.isPending || passwordInput.trim().length < 4}
+              >
+                {unlockMutation.isPending ? "Проверяем…" : "Открыть"}
+              </button>
+            </form>
           </motion.section>
         )}
 
@@ -252,6 +372,7 @@ export function PublicBoxPage() {
                       index={step.index}
                       total={step.total}
                       accent={theme.accent}
+                      unlockToken={unlockToken}
                       onSecretRevealed={() => setSecretRevealed(true)}
                     />
                   )}
@@ -420,6 +541,7 @@ function ItemStep({
   index,
   total,
   accent,
+  unlockToken,
   onSecretRevealed,
 }: {
   box: PublicBox;
@@ -427,6 +549,7 @@ function ItemStep({
   index: number;
   total: number;
   accent: string;
+  unlockToken?: string | null;
   onSecretRevealed?: () => void;
 }) {
   const secret = isSecretPhotoItem(item);
@@ -447,7 +570,7 @@ function ItemStep({
         item.item_type === "toy"
           ? toyImageUrl(toyCodeFromMetadata(item.metadata) ?? "bear")
           : item.media_file_id
-            ? publicMediaUrl(box.public_slug, item.id)
+            ? publicMediaUrl(box.public_slug, item.id, unlockToken)
             : ""
       }
       type={item.item_type}

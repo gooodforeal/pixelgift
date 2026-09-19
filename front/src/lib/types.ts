@@ -28,6 +28,7 @@ export interface Box {
   title: string;
   recipient_name: string;
   recipient_email: string | null;
+  unlock_password: string | null;
   activates_at: string;
   status: BoxStatus;
   timezone: string;
@@ -57,6 +58,7 @@ export interface PublicBox {
   preview_title: string | null;
   preview_image_url: string | null;
   content_unlocked: boolean;
+  password_required: boolean;
   message: string | null;
   design_code: string | null;
   theme_config: ThemeConfig;
@@ -163,10 +165,16 @@ export interface BoxPayload {
   title: string;
   recipient_name: string;
   recipient_email: string;
+  unlock_password: string;
   activates_at: string;
   timezone: string;
   public_slug?: string | null;
   message?: string | null;
   preview_title?: string | null;
   preview_image_url?: string | null;
+}
+
+export interface UnlockPublicBoxResult {
+  unlock_token: string | null;
+  box: PublicBox;
 }

@@ -3,9 +3,12 @@ from datetime import datetime, timezone
 import logging
 import uuid
 
+import jwt
+
 from src.application.dto.media import MediaContent
 from src.application.ports.storage.base import BaseObjectStorage
 from src.application.ports.task_queue import BaseTaskQueue
+from src.application.services.jwt import JwtService
 from src.application.services.notifications import OwnerTelegramEvent
 from src.application.uow.base import BaseUnitOfWork
 from src.domain.aggregates.boxes import Box
@@ -18,6 +21,8 @@ from src.domain.exceptions.boxes import (
     BoxItemNotFoundError,
     BoxNotFoundBySlugError,
     BoxNotFoundError,
+    BoxUnlockNotYetAvailableError,
+    BoxUnlockPasswordIncorrectError,
 )
 from src.domain.exceptions.media_files import MediaFileNotFoundError
 from src.domain.exceptions.users import UserNotFoundError
@@ -32,6 +37,24 @@ class PublicBoxView:
     box: Box
     content_unlocked: bool
     design: BoxDesign | None = None
+    unlock_token: str | None = None
+
+
+def _token_unlocks_box(
+    jwt_service: JwtService | None,
+    *,
+    box: Box,
+    unlock_token: str | None,
+) -> bool:
+    if box.unlock_password is None:
+        return True
+    if not unlock_token or jwt_service is None:
+        return False
+    try:
+        payload = jwt_service.decode_box_unlock_token(unlock_token)
+    except (jwt.PyJWTError, KeyError, ValueError, TypeError):
+        return False
+    return payload.box_id == box.id and payload.public_slug == box.public_slug.value
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -103,12 +126,19 @@ class GetPublicBoxUseCase:
         uow: BaseUnitOfWork,
         storage: BaseObjectStorage | None = None,
         task_queue: BaseTaskQueue | None = None,
+        jwt_service: JwtService | None = None,
     ) -> None:
         self._uow = uow
         self._storage = storage
         self._task_queue = task_queue
+        self._jwt = jwt_service
 
-    async def execute(self, *, public_slug: str) -> PublicBoxView:
+    async def execute(
+        self,
+        *,
+        public_slug: str,
+        unlock_token: str | None = None,
+    ) -> PublicBoxView:
         slug = PublicSlug(public_slug)
         async with self._uow as uow:
             box = await uow.boxes.get_by_public_slug(slug)
@@ -119,7 +149,11 @@ class GetPublicBoxUseCase:
                 raise BoxNotFoundBySlugError(public_slug)
 
             now = datetime.now(timezone.utc)
-            unlocked = box.activates_at.value <= now
+            timer_ready = box.activates_at.value <= now
+            password_ok = _token_unlocks_box(
+                self._jwt, box=box, unlock_token=unlock_token
+            )
+            unlocked = timer_ready and password_ok
             just_opened = False
 
             if unlocked and box.first_opened_at is None:
@@ -147,18 +181,90 @@ class GetPublicBoxUseCase:
         return view
 
 
+class UnlockPublicBoxUseCase:
+    def __init__(
+        self,
+        uow: BaseUnitOfWork,
+        jwt_service: JwtService,
+        task_queue: BaseTaskQueue | None = None,
+    ) -> None:
+        self._uow = uow
+        self._jwt = jwt_service
+        self._task_queue = task_queue
+
+    async def execute(self, *, public_slug: str, password: str) -> PublicBoxView:
+        slug = PublicSlug(public_slug)
+        async with self._uow as uow:
+            box = await uow.boxes.get_by_public_slug(slug)
+            if box is None or box.status.value in _HIDDEN_STATUSES:
+                raise BoxNotFoundBySlugError(public_slug)
+
+            now = datetime.now(timezone.utc)
+            if box.activates_at.value > now:
+                raise BoxUnlockNotYetAvailableError(public_slug)
+
+            if box.unlock_password is None:
+                token = None
+                unlocked = True
+            elif box.unlock_password.value != password:
+                raise BoxUnlockPasswordIncorrectError(public_slug)
+            else:
+                token = self._jwt.create_box_unlock_token(
+                    box_id=box.id,
+                    public_slug=box.public_slug.value,
+                )
+                unlocked = True
+
+            just_opened = False
+            if unlocked and box.first_opened_at is None:
+                just_opened = box.mark_opened(now=now)
+                if just_opened:
+                    await uow.boxes.update(box)
+                    await uow.commit()
+            elif box.activate_if_due(now=now):
+                await uow.boxes.update(box)
+                await uow.commit()
+
+            design = await uow.box_designs.get_by_id(box.design_id)
+            view = PublicBoxView(
+                box=box,
+                content_unlocked=unlocked,
+                design=design,
+                unlock_token=token,
+            )
+            opened_box_id = box.id if just_opened else None
+
+        if opened_box_id is not None and self._task_queue is not None:
+            try:
+                await self._task_queue.enqueue_owner_telegram(
+                    opened_box_id, OwnerTelegramEvent.OPENED.value
+                )
+            except Exception:
+                logger.exception(
+                    "Failed to enqueue box opened notification for %s", opened_box_id
+                )
+        return view
+
+
 class GetPublicBoxItemContentUseCase:
     """Streams media of an unlocked public box — no authentication required."""
 
-    def __init__(self, uow: BaseUnitOfWork, storage: BaseObjectStorage) -> None:
+    def __init__(
+        self,
+        uow: BaseUnitOfWork,
+        storage: BaseObjectStorage,
+        jwt_service: JwtService | None = None,
+    ) -> None:
         self._uow = uow
         self._storage = storage
+        self._jwt = jwt_service
 
     async def execute(
         self,
         *,
         public_slug: str,
         item_id: uuid.UUID,
+        unlock_token: str | None = None,
     ) -> MediaContent:
         slug = PublicSlug(public_slug)
         async with self._uow as uow:
@@ -167,6 +273,9 @@ class GetPublicBoxItemContentUseCase:
                 raise BoxNotFoundBySlugError(public_slug)
 
             if box.activates_at.value > datetime.now(timezone.utc):
+                raise BoxContentLockedError(public_slug)
+
+            if not _token_unlocks_box(self._jwt, box=box, unlock_token=unlock_token):
                 raise BoxContentLockedError(public_slug)
 
             item = next((i for i in box.items if i.id == item_id), None)

@@ -15,6 +15,8 @@ def box_design_to_model(entity: BoxDesign) -> BoxDesignModel:
             entity.description.value if entity.description is not None else None
         ),
         preview_image_url=entity.preview_image_url.value,
+        preview_asset_id=entity.preview_asset_id,
+        preview_asset_id_light=entity.preview_asset_id_light,
         theme_config=dict(entity.theme_config),
         is_active=entity.is_active,
         sort_order=entity.sort_order.value,
@@ -34,6 +36,8 @@ def box_design_to_entity(model: BoxDesignModel) -> BoxDesign:
             else None
         ),
         preview_image_url=Url(model.preview_image_url),
+        preview_asset_id=model.preview_asset_id,
+        preview_asset_id_light=model.preview_asset_id_light,
         theme_config=dict(model.theme_config or {}),
         is_active=model.is_active,
         sort_order=SortOrder(model.sort_order),
@@ -49,6 +53,8 @@ def apply_box_design(entity: BoxDesign, model: BoxDesignModel) -> None:
         entity.description.value if entity.description is not None else None
     )
     model.preview_image_url = entity.preview_image_url.value
+    model.preview_asset_id = entity.preview_asset_id
+    model.preview_asset_id_light = entity.preview_asset_id_light
     model.theme_config = dict(entity.theme_config)
     model.is_active = entity.is_active
     model.sort_order = entity.sort_order.value

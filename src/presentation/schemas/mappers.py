@@ -129,6 +129,8 @@ def admin_box_design_to_response(design: BoxDesign) -> AdminBoxDesignResponse:
         ),
         theme_config=dict(design.theme_config),
         is_active=design.is_active,
+        preview_asset_id=design.preview_asset_id,
+        preview_asset_id_light=design.preview_asset_id_light,
         rating_avg=0.0,
         rating_count=0,
         my_rating=None,

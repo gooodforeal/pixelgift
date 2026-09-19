@@ -39,6 +39,8 @@ class BoxDesignResponse(BaseModel):
 
 class AdminBoxDesignResponse(BoxDesignResponse):
     is_active: bool
+    preview_asset_id: uuid.UUID | None = None
+    preview_asset_id_light: uuid.UUID | None = None
 
 
 class RateDesignRequest(BaseModel):

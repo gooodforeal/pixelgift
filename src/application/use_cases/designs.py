@@ -32,6 +32,33 @@ _IMAGE_MIMES = {
 }
 
 _CODE_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+_ASSET_URL_RE = re.compile(
+    r"/designs/assets/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"
+)
+
+
+def design_asset_id_from_url(url: str | None) -> uuid.UUID | None:
+    if not url:
+        return None
+    match = _ASSET_URL_RE.search(url)
+    if match is None:
+        return None
+    try:
+        return uuid.UUID(match.group(1))
+    except ValueError:
+        return None
+
+
+async def _resolve_existing_asset_id(
+    uow: BaseUnitOfWork,
+    url: str | None,
+) -> uuid.UUID | None:
+    asset_id = design_asset_id_from_url(url)
+    if asset_id is None:
+        return None
+    asset = await uow.design_assets.get_by_id(asset_id)
+    return asset_id if asset is not None else None
 
 
 class ListBoxDesignsUseCase:
@@ -169,16 +196,25 @@ class CreateBoxDesignUseCase:
                 raise BoxDesignCodeConflictError(normalized_code)
 
             now = datetime.now(timezone.utc)
+            theme = dict(theme_config or {})
+            light_url = theme.get("preview_image_url_light")
             design = BoxDesign(
                 code=normalized_code,
                 name=BoxDesignName(name),
                 preview_image_url=Url(preview_image_url),
+                preview_asset_id=await _resolve_existing_asset_id(
+                    uow, preview_image_url
+                ),
+                preview_asset_id_light=await _resolve_existing_asset_id(
+                    uow,
+                    light_url if isinstance(light_url, str) else None,
+                ),
                 description=(
                     BoxDesignDescription(description)
                     if description is not None
                     else None
                 ),
-                theme_config=dict(theme_config or {}),
+                theme_config=theme,
                 is_active=is_active,
                 sort_order=SortOrder(sort_order),
                 created_at=now,
@@ -222,6 +258,9 @@ class UpdateBoxDesignUseCase:
                 design.name = BoxDesignName(name)
             if preview_image_url is not None:
                 design.preview_image_url = Url(preview_image_url)
+                design.preview_asset_id = await _resolve_existing_asset_id(
+                    uow, preview_image_url
+                )
             if description is not ...:
                 design.description = (
                     BoxDesignDescription(description)
@@ -230,6 +269,11 @@ class UpdateBoxDesignUseCase:
                 )
             if theme_config is not None:
                 design.theme_config = dict(theme_config)
+                light_url = design.theme_config.get("preview_image_url_light")
+                design.preview_asset_id_light = await _resolve_existing_asset_id(
+                    uow,
+                    light_url if isinstance(light_url, str) else None,
+                )
             if is_active is not None:
                 design.is_active = is_active
             if sort_order is not None:

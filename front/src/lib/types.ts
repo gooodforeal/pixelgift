@@ -116,6 +116,8 @@ export interface DesignRating {
 
 export interface AdminBoxDesign extends BoxDesign {
   is_active: boolean;
+  preview_asset_id?: string | null;
+  preview_asset_id_light?: string | null;
 }
 
 export interface DesignAssetUpload {

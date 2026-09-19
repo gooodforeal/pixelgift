@@ -229,6 +229,8 @@ def _seed_designs(client: BaseClient, bucket: str) -> tuple[int, int]:
                 UPDATE box_designs
                 SET
                     preview_image_url = %(preview_url)s,
+                    preview_asset_id = %(dark_id)s,
+                    preview_asset_id_light = %(light_id)s,
                     theme_config = jsonb_set(
                         jsonb_set(
                             COALESCE(theme_config, '{}'::jsonb),
@@ -243,6 +245,8 @@ def _seed_designs(client: BaseClient, bucket: str) -> tuple[int, int]:
                 {
                     "preview_url": dark_url,
                     "light_url": light_url,
+                    "dark_id": dark_id,
+                    "light_id": light_id,
                     "cover_position": "50% 50%",
                     "code": code,
                 },

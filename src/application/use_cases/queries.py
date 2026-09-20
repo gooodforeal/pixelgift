@@ -7,7 +7,7 @@ import jwt
 
 from src.application.dto.media import MediaContent
 from src.application.ports.storage.base import BaseObjectStorage
-from src.application.ports.task_queue import BaseTaskQueue
+from src.application.ports.queues.base import BaseTaskQueue
 from src.application.services.jwt import JwtService
 from src.application.services.notifications import OwnerTelegramEvent
 from src.application.uow.base import BaseUnitOfWork

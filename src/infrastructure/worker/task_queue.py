@@ -1,6 +1,6 @@
 import uuid
 
-from src.application.ports.task_queue import BaseTaskQueue
+from src.application.ports.queues.base import BaseTaskQueue
 
 
 class TaskiqTaskQueue(BaseTaskQueue):

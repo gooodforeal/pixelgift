@@ -2,7 +2,7 @@ import logging
 
 import httpx
 
-from src.application.ports.notifications import BaseTelegramNotifier
+from src.application.ports.notifications.base import BaseTelegramNotifier
 from src.settings import Settings
 
 logger = logging.getLogger(__name__)

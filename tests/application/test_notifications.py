@@ -2,8 +2,11 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 import uuid
 
-from src.application.ports.notifications import BaseEmailSender, BaseTelegramNotifier
-from src.application.ports.task_queue import BaseTaskQueue
+from src.application.ports.notifications.base import (
+    BaseEmailSender,
+    BaseTelegramNotifier,
+)
+from src.application.ports.queues.base import BaseTaskQueue
 from src.application.services.notifications import (
     NotificationService,
     OwnerTelegramEvent,

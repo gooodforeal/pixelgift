@@ -6,7 +6,10 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from datetime import datetime
 import logging
 
-from src.application.ports.notifications import BaseEmailSender, BaseTelegramNotifier
+from src.application.ports.notifications.base import (
+    BaseEmailSender,
+    BaseTelegramNotifier,
+)
 from src.domain.aggregates.boxes import Box, BoxStatus
 from src.domain.entities.users import User
 

@@ -14,7 +14,7 @@ from src.application.dto.boxes import (
     UpdateBoxCommand,
     UpdateBoxItemCommand,
 )
-from src.application.ports.task_queue import BaseTaskQueue
+from src.application.ports.queues.base import BaseTaskQueue
 from src.application.services.notifications import OwnerTelegramEvent
 from src.application.uow.base import BaseUnitOfWork
 from src.application.use_cases.notifications import sync_gift_ready_job

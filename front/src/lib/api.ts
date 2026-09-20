@@ -187,6 +187,36 @@ export const api = {
 
   box: (boxId: string) => request<Box>(`/boxes/${boxId}`),
 
+  downloadGiftCertificate: async (
+    boxId: string,
+    theme: "dark" | "light" = "dark",
+  ) => {
+    const path = `/boxes/${boxId}/certificate.pdf?theme=${theme}`;
+    const doFetch = () =>
+      fetch(`${API_URL}${path}`, { credentials: "include" });
+
+    let response = await doFetch();
+    if (response.status === 401) {
+      const ok = await refreshAccessToken();
+      if (ok) response = await doFetch();
+    }
+    if (!response.ok) {
+      throw new ApiError(response.status, await readError(response));
+    }
+    const blob = await response.blob();
+    const disposition = response.headers.get("Content-Disposition") ?? "";
+    const match = /filename="([^"]+)"/.exec(disposition);
+    const filename = match?.[1] ?? `pixelgift-${boxId}-${theme}.pdf`;
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  },
+
   createBox: (payload: BoxPayload) =>
     request<Box>("/boxes", { method: "POST", body: JSON.stringify(payload) }),
 

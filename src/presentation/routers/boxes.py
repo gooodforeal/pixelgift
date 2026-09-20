@@ -1,6 +1,7 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import Response
 
 from src.application.dto.boxes import (
     AddBoxItemCommand,
@@ -36,6 +37,7 @@ from src.domain.exceptions.boxes import (
     BoxNotArchivedError,
     BoxNotEditableError,
     BoxNotFoundError,
+    BoxCertificateNotAvailableError,
     BoxNotPublishableError,
     BoxWithoutItemsError,
     PublicSlugAlreadyTakenError,
@@ -62,6 +64,7 @@ from src.presentation.deps.boxes import (
     get_archive_box_uc,
     get_create_box_uc,
     get_get_box_uc,
+    get_gift_certificate_uc,
     get_list_boxes_uc,
     get_publish_box_uc,
     get_remove_box_item_uc,
@@ -71,6 +74,7 @@ from src.presentation.deps.boxes import (
     get_update_box_uc,
 )
 from src.presentation.deps.common import PaginationParams, pagination_dep
+from src.application.use_cases.certificates import GenerateGiftCertificateUseCase
 from src.presentation.schemas.boxes import (
     AddBoxItemRequest,
     BoxResponse,
@@ -94,6 +98,7 @@ def _http_error(exc: Exception) -> HTTPException:
         (MediaFileAccessDeniedError, status.HTTP_403_FORBIDDEN),
         (BoxNotEditableError, status.HTTP_409_CONFLICT),
         (BoxNotPublishableError, status.HTTP_409_CONFLICT),
+        (BoxCertificateNotAvailableError, status.HTTP_409_CONFLICT),
         (BoxAlreadyArchivedError, status.HTTP_409_CONFLICT),
         (BoxNotArchivedError, status.HTTP_409_CONFLICT),
         (BoxAlreadyOpenedError, status.HTTP_409_CONFLICT),
@@ -173,6 +178,31 @@ async def get_box(
     except Exception as exc:
         raise _http_error(exc) from exc
     return box_to_response(box)
+
+
+@router.get("/{box_id}/certificate.pdf")
+async def download_gift_certificate(
+    box_id: uuid.UUID,
+    theme: str = Query(default="dark", pattern="^(dark|light)$"),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    uc: GenerateGiftCertificateUseCase = Depends(get_gift_certificate_uc),
+) -> Response:
+    try:
+        certificate = await uc.execute(
+            box_id=box_id,
+            actor_id=user_id,
+            theme=theme,  # type: ignore[arg-type]
+        )
+    except Exception as exc:
+        raise _http_error(exc) from exc
+    return Response(
+        content=certificate.data,
+        media_type=certificate.media_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{certificate.filename}"',
+            "Cache-Control": "private, no-store",
+        },
+    )
 
 
 @router.put("/{box_id}", response_model=BoxResponse)

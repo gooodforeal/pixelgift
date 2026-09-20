@@ -1,4 +1,11 @@
-export type BoxWizardStepId = "design" | "details" | "content" | "publish";
+import { ChevronRight } from "lucide-react";
+
+export type BoxWizardStepId =
+  | "design"
+  | "details"
+  | "content"
+  | "publish"
+  | "certificate";
 
 export interface BoxWizardStep {
   id: BoxWizardStepId;
@@ -29,6 +36,12 @@ export const BOX_WIZARD_STEPS: BoxWizardStep[] = [
     id: "publish",
     title: "Публикация",
     instruction: "Проверьте ссылку и опубликуйте бокс, когда будете готовы.",
+  },
+  {
+    id: "certificate",
+    title: "Сертификат",
+    instruction:
+      "Скачайте PDF-сертификат с QR и паролем — после публикации бокса.",
   },
 ];
 
@@ -62,6 +75,7 @@ export function BoxWizardProgress({
           const reachable = index <= maxReachableIndex;
           const done = index < currentIndex;
           const isCurrent = index === currentIndex;
+          const showArrow = index < BOX_WIZARD_STEPS.length - 1;
 
           return (
             <li key={step.id} className="box-wizard__step-wrap">
@@ -79,6 +93,13 @@ export function BoxWizardProgress({
                 <span className="box-wizard__num">{index + 1}</span>
                 <span className="box-wizard__label">{step.title}</span>
               </button>
+              {showArrow ? (
+                <ChevronRight
+                  className="box-wizard__arrow"
+                  aria-hidden
+                  strokeWidth={2}
+                />
+              ) : null}
             </li>
           );
         })}

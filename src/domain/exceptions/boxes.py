@@ -202,6 +202,16 @@ class BoxNotPublishableError(BaseException):
         super().__init__(f"Box {box_id} with status {status!r} cannot be published")
 
 
+class BoxCertificateNotAvailableError(BaseException):
+    def __init__(self, box_id: uuid.UUID, status: str) -> None:
+        self.box_id = box_id
+        self.status = status
+        super().__init__(
+            f"Certificate for box {box_id} is available only after publish "
+            f"(current status {status!r})"
+        )
+
+
 class BoxWithoutItemsError(BaseException):
     def __init__(self, box_id: uuid.UUID) -> None:
         self.box_id = box_id

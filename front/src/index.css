@@ -463,7 +463,7 @@ html[data-theme="light"] .site-footer__meta {
 }
 
 .status-badge {
-  @apply inline-flex shrink-0 items-center gap-1 rounded-lg px-1.5 py-0.5
+  @apply inline-flex shrink-0 items-center gap-1 rounded-lg px-1.5 py-1
     text-[10px] font-semibold leading-none tracking-wide;
   border: 1px solid transparent;
   background: rgb(255 255 255 / 0.04);
@@ -747,16 +747,22 @@ html[data-theme="light"] .aurora-blob {
 }
 
 .box-wizard__steps {
-  @apply grid grid-cols-4 gap-1 sm:gap-2;
+  @apply flex flex-col items-stretch gap-0 sm:flex-row sm:flex-nowrap sm:items-center;
 }
 
 .box-wizard__step-wrap {
-  @apply min-w-0;
+  @apply flex flex-col items-center sm:min-w-0 sm:flex-1 sm:flex-row;
 }
 
 .box-wizard__step {
-  @apply flex w-full cursor-pointer flex-col items-center gap-1.5 rounded-2xl px-1 py-2
-    text-center transition sm:flex-row sm:justify-center sm:gap-2 sm:px-2;
+  @apply flex w-full min-w-0 cursor-pointer flex-row items-center justify-start gap-2.5
+    rounded-2xl px-2 py-2 text-left transition
+    sm:flex-1 sm:justify-center sm:gap-1.5 sm:px-1.5 sm:text-center;
+}
+
+.box-wizard__arrow {
+  @apply my-0.5 size-3.5 shrink-0 rotate-90 text-slate-500
+    sm:mx-1 sm:my-0 sm:size-4 sm:rotate-0;
 }
 
 .box-wizard__step:hover:not(:disabled) {
@@ -787,8 +793,7 @@ html[data-theme="light"] .aurora-blob {
 }
 
 .box-wizard__label {
-  @apply truncate text-[0.65rem] font-semibold tracking-wide text-slate-400 uppercase
-    sm:text-xs sm:normal-case sm:tracking-normal;
+  @apply truncate text-xs font-semibold tracking-normal text-slate-400 normal-case;
 }
 
 .box-wizard__step.is-current .box-wizard__label {
@@ -825,6 +830,10 @@ html[data-theme="light"] .box-wizard {
 
 html[data-theme="light"] .box-wizard__track {
   @apply bg-slate-900/10;
+}
+
+html[data-theme="light"] .box-wizard__arrow {
+  @apply text-slate-400;
 }
 
 html[data-theme="light"] .box-wizard__step:hover:not(:disabled) {
@@ -1347,6 +1356,32 @@ html[data-theme="light"] .boxes-view-toggle__btn {
 
 html[data-theme="light"] .boxes-view-toggle__btn.is-active {
   @apply bg-white text-slate-900 shadow-slate-900/10;
+}
+
+.certificate-theme-toggle {
+  @apply inline-flex items-center gap-0.5 rounded-xl border border-white/12
+    bg-white/[0.04] p-1;
+}
+
+.certificate-theme-toggle__btn {
+  @apply inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold
+    text-slate-400 transition hover:bg-white/10 hover:text-slate-100;
+}
+
+.certificate-theme-toggle__btn.is-active {
+  @apply bg-glow-violet/25 text-white shadow-sm shadow-black/20;
+}
+
+html[data-theme="light"] .certificate-theme-toggle {
+  @apply border-slate-900/10 bg-slate-900/[0.04];
+}
+
+html[data-theme="light"] .certificate-theme-toggle__btn {
+  @apply text-slate-600 hover:bg-slate-900/[0.06] hover:text-slate-900;
+}
+
+html[data-theme="light"] .certificate-theme-toggle__btn.is-active {
+  @apply bg-violet-100 text-violet-900 shadow-none;
 }
 
 html[data-theme="light"] .boxes-list__cover {

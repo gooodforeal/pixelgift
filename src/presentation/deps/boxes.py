@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import Depends
 
+from src.application.use_cases.certificates import GenerateGiftCertificateUseCase
 from src.application.use_cases.boxes import (
     AddBoxItemUseCase,
     ArchiveBoxUseCase,
@@ -20,11 +21,20 @@ from src.application.use_cases.queries import (
     ListBoxesUseCase,
     UnlockPublicBoxUseCase,
 )
+from src.infrastructure.certificates.gift_certificate_pdf import (
+    ReportLabGiftCertificateRenderer,
+)
 from src.infrastructure.storage.s3_storage import S3ObjectStorage
 from src.infrastructure.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from src.infrastructure.worker.task_queue import TaskiqTaskQueue
-from src.presentation.deps.common import get_jwt_service, get_storage, get_task_queue
+from src.presentation.deps.common import (
+    get_jwt_service,
+    get_settings,
+    get_storage,
+    get_task_queue,
+)
 from src.application.services.jwt import JwtService
+from src.settings import Settings
 
 
 def get_create_box_uc() -> CreateBoxUseCase:
@@ -69,6 +79,16 @@ def get_list_boxes_uc() -> ListBoxesUseCase:
 
 def get_get_box_uc() -> GetBoxUseCase:
     return GetBoxUseCase(SqlAlchemyUnitOfWork())
+
+
+def get_gift_certificate_uc(
+    settings: Settings = Depends(get_settings),
+) -> GenerateGiftCertificateUseCase:
+    return GenerateGiftCertificateUseCase(
+        SqlAlchemyUnitOfWork(),
+        ReportLabGiftCertificateRenderer(),
+        public_web_url=settings.public_web_url,
+    )
 
 
 def get_public_box_uc(

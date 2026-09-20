@@ -9,10 +9,13 @@ import {
   ArrowUp,
   ArchiveRestore,
   Copy,
+  Download,
   ExternalLink,
   Lock,
+  Moon,
   Rocket,
   Save,
+  Sun,
   Trash2,
 } from "lucide-react";
 
@@ -22,6 +25,10 @@ import {
   isBoxWizardStepId,
   type BoxWizardStepId,
 } from "../components/BoxWizardProgress";
+import {
+  CertificatePreview,
+  type CertificateTheme,
+} from "../components/CertificatePreview";
 import { DesignPicker } from "../components/DesignPicker";
 import { MediaDropzone } from "../components/MediaDropzone";
 import { MediaPreview } from "../components/MediaPreview";
@@ -132,7 +139,13 @@ export function BoxEditorPage() {
 
   const stepParam = searchParams.get("step");
   const step: BoxWizardStepId =
-    isBoxWizardStepId(stepParam) && !(isNew && (stepParam === "content" || stepParam === "publish"))
+    isBoxWizardStepId(stepParam) &&
+    !(
+      isNew &&
+      (stepParam === "content" ||
+        stepParam === "publish" ||
+        stepParam === "certificate")
+    )
       ? stepParam
       : "design";
 
@@ -318,7 +331,8 @@ export function BoxEditorPage() {
     mutationFn: () => api.publishBox(boxId!),
     onSuccess: (updated) => {
       setBoxData(updated);
-      toast("Бокс опубликован — можно отправлять ссылку");
+      toast("Бокс опубликован — можно скачать сертификат");
+      setStep("certificate");
     },
     onError: (error: Error) => toast(error.message, "error"),
   });
@@ -329,6 +343,15 @@ export function BoxEditorPage() {
       setBoxData(updated);
       toast("Бокс возвращён из архива");
     },
+    onError: (error: Error) => toast(error.message, "error"),
+  });
+
+  const [certificateTheme, setCertificateTheme] =
+    useState<CertificateTheme>("dark");
+
+  const downloadCertificate = useMutation({
+    mutationFn: () => api.downloadGiftCertificate(boxId!, certificateTheme),
+    onSuccess: () => toast("Сертификат скачан"),
     onError: (error: Error) => toast(error.message, "error"),
   });
 
@@ -399,6 +422,11 @@ export function BoxEditorPage() {
 
     if (step === "content") {
       setStep("publish");
+      return;
+    }
+
+    if (step === "publish") {
+      setStep("certificate");
     }
   };
 
@@ -447,7 +475,7 @@ export function BoxEditorPage() {
             </h1>
             <p className="mt-1 line-clamp-2 text-xs text-slate-400 sm:text-sm">
               {isNew
-                ? "Соберите подарок за четыре шага"
+                ? "Соберите подарок за пять шагов"
                 : readOnly
                   ? box?.status === "archived"
                     ? "Бокс в архиве — только просмотр"
@@ -1000,6 +1028,62 @@ export function BoxEditorPage() {
           </>
         )}
 
+        {step === "certificate" && box && (
+          <>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm font-medium text-slate-200">
+                Сертификат для печати
+              </p>
+              <div className="certificate-theme-toggle" role="group" aria-label="Тема сертификата">
+                <button
+                  type="button"
+                  className={`certificate-theme-toggle__btn ${
+                    certificateTheme === "dark" ? "is-active" : ""
+                  }`}
+                  onClick={() => setCertificateTheme("dark")}
+                >
+                  <Moon className="size-3.5" />
+                  Тёмная
+                </button>
+                <button
+                  type="button"
+                  className={`certificate-theme-toggle__btn ${
+                    certificateTheme === "light" ? "is-active" : ""
+                  }`}
+                  onClick={() => setCertificateTheme("light")}
+                >
+                  <Sun className="size-3.5" />
+                  Светлая
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-col items-center">
+              <CertificatePreview theme={certificateTheme} />
+              <p className="mt-2 text-center text-xs text-slate-500">
+                Пример шаблона (A4). В PDF подставятся данные вашего бокса.
+              </p>
+            </div>
+            {box.status === "draft" ? (
+              <p className="publish-hint mt-4 rounded-2xl border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+                Сначала опубликуйте бокс на шаге «Публикация» — затем можно
+                скачать сертификат.
+              </p>
+            ) : (
+              <button
+                type="button"
+                className="btn-primary mt-4 w-full sm:w-auto"
+                disabled={downloadCertificate.isPending}
+                onClick={() => downloadCertificate.mutate()}
+              >
+                <Download className="size-4" />
+                {downloadCertificate.isPending
+                  ? "Готовим PDF…"
+                  : "Скачать сертификат PDF"}
+              </button>
+            )}
+          </>
+        )}
+
         <div className="box-wizard__nav">
           <button
             type="button"
@@ -1011,7 +1095,7 @@ export function BoxEditorPage() {
             Назад
           </button>
 
-          {step !== "publish" ? (
+          {step !== "certificate" ? (
             <button
               type="button"
               className="btn-primary"

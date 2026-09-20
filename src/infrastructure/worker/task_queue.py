@@ -1,10 +1,8 @@
-import uuid
-
 from src.application.ports.queues.base import BaseTaskQueue
 
 
 class TaskiqTaskQueue(BaseTaskQueue):
-    async def enqueue_owner_telegram(self, box_id: uuid.UUID, event: str) -> None:
-        from src.infrastructure.worker.tasks import notify_owner_telegram
+    async def kick_notification_dispatch(self) -> None:
+        from src.infrastructure.worker.tasks import kick_notification_dispatch
 
-        await notify_owner_telegram.kiq(str(box_id), event)
+        await kick_notification_dispatch.kiq()

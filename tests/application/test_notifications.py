@@ -15,7 +15,7 @@ from src.application.services.notifications import (
 )
 from src.application.use_cases.notifications import (
     DispatchDueNotificationsUseCase,
-    NotifyOwnerTelegramUseCase,
+    schedule_owner_notification_job,
 )
 from src.application.use_cases.queries import GetPublicBoxUseCase
 from src.domain.aggregates.boxes import Box, BoxStatus
@@ -70,14 +70,10 @@ class RecordingTelegramNotifier(BaseTelegramNotifier):
 
 @dataclass
 class RecordingTaskQueue(BaseTaskQueue):
-    events: list[tuple[uuid.UUID, str]] = field(default_factory=list)
+    kicks: int = 0
 
-    async def enqueue_owner_telegram(self, box_id: uuid.UUID, event: str) -> None:
-        self.events.append((box_id, event))
-
-    @property
-    def opened(self) -> list[uuid.UUID]:
-        return [box_id for box_id, event in self.events if event == "opened"]
+    async def kick_notification_dispatch(self) -> None:
+        self.kicks += 1
 
 
 def _service(
@@ -123,10 +119,10 @@ class TestDispatchDueNotificationsUseCase:
         await uow.users.add(owner)
         await uow.boxes.add(box)
         await uow.notification_jobs.add(
-            NotificationJob(
+            NotificationJob.create(
                 box_id=box.id,
                 template=NotificationTemplate.GIFT_READY,
-                run_at=box.activates_at.value,
+                scheduled_at=box.activates_at.value,
             )
         )
 
@@ -156,10 +152,10 @@ class TestDispatchDueNotificationsUseCase:
         box = _box(owner_id=owner.id)
         await uow.users.add(owner)
         await uow.boxes.add(box)
-        job = NotificationJob(
+        job = NotificationJob.create(
             box_id=box.id,
             template=NotificationTemplate.GIFT_READY,
-            run_at=box.activates_at.value,
+            scheduled_at=box.activates_at.value,
         )
         job.mark_sent()
         await uow.notification_jobs.add(job)
@@ -172,9 +168,90 @@ class TestDispatchDueNotificationsUseCase:
         assert email.messages == []
         assert telegram.messages == []
 
+    async def test_retries_then_fails_permanently(self):
+        uow = InMemoryUnitOfWork()
+        owner = _owner(uuid.uuid4())
+        box = _box(owner_id=owner.id)
+        await uow.users.add(owner)
+        await uow.boxes.add(box)
+        await uow.notification_jobs.add(
+            NotificationJob.create(
+                box_id=box.id,
+                template=NotificationTemplate.GIFT_READY,
+                scheduled_at=box.activates_at.value,
+            )
+        )
+
+        class BoomEmail(BaseEmailSender):
+            async def send_html(self, *, to: str, subject: str, html: str) -> None:
+                raise RuntimeError("smtp down")
+
+        telegram = RecordingTelegramNotifier()
+        now = datetime.now(timezone.utc)
+        uc = DispatchDueNotificationsUseCase(
+            uow,
+            NotificationService(
+                BoomEmail(),
+                telegram,
+                public_web_url="https://pixelgift.test",
+            ),
+            max_attempts=2,
+        )
+
+        first = await uc.execute(now=now)
+        job = await uow.notification_jobs.get_by_box_and_template(
+            box.id, NotificationTemplate.GIFT_READY
+        )
+        assert first == 0
+        assert job is not None
+        assert job.status == NotificationJobStatus.SCHEDULED
+        assert job.attempt_count == 1
+        assert job.last_error == "smtp down"
+        assert job.scheduled_at == box.activates_at.value
+        assert job.next_run_at == now + timedelta(minutes=1)
+
+        second = await uc.execute(now=job.next_run_at)
+        job = await uow.notification_jobs.get_by_box_and_template(
+            box.id, NotificationTemplate.GIFT_READY
+        )
+        assert second == 0
+        assert job is not None
+        assert job.status == NotificationJobStatus.FAILED
+        assert job.attempt_count == 2
+        assert job.last_error == "smtp down"
+        assert job.scheduled_at == box.activates_at.value
+
+    async def test_permanent_error_does_not_retry(self):
+        uow = InMemoryUnitOfWork()
+        box = _box(owner_id=uuid.uuid4())
+        await uow.boxes.add(box)
+        await uow.notification_jobs.add(
+            NotificationJob.create(
+                box_id=box.id,
+                template=NotificationTemplate.GIFT_READY,
+                scheduled_at=box.activates_at.value,
+            )
+        )
+
+        email = RecordingEmailSender()
+        telegram = RecordingTelegramNotifier()
+        sent = await DispatchDueNotificationsUseCase(
+            uow, _service(email, telegram), max_attempts=2
+        ).execute()
+
+        job = await uow.notification_jobs.get_by_box_and_template(
+            box.id, NotificationTemplate.GIFT_READY
+        )
+        assert sent == 0
+        assert job is not None
+        assert job.status == NotificationJobStatus.FAILED
+        assert job.attempt_count == 0
+        assert "owner not found" in (job.last_error or "").lower()
+        assert email.messages == []
+
 
 class TestGetPublicBoxUseCaseOpenedNotification:
-    async def test_enqueues_on_first_open(self):
+    async def test_schedules_job_and_kicks_on_first_open(self):
         uow = InMemoryUnitOfWork()
         box = _box(owner_id=uuid.uuid4(), status=BoxStatus.SCHEDULED)
         await uow.boxes.add(box)
@@ -187,7 +264,12 @@ class TestGetPublicBoxUseCaseOpenedNotification:
         assert view.content_unlocked is True
         assert view.box.first_opened_at is not None
         assert view.box.status == BoxStatus.OPENED
-        assert queue.opened == [box.id]
+        assert queue.kicks == 1
+        job = await uow.notification_jobs.get_by_box_and_template(
+            box.id, NotificationTemplate.BOX_OPENED
+        )
+        assert job is not None
+        assert job.status == NotificationJobStatus.SCHEDULED
 
     async def test_password_keeps_content_locked_until_unlock(self):
         from src.application.services.jwt import JwtService
@@ -205,7 +287,7 @@ class TestGetPublicBoxUseCaseOpenedNotification:
             uow, task_queue=queue, jwt_service=jwt_service
         ).execute(public_slug=box.public_slug.value)
         assert locked.content_unlocked is False
-        assert queue.opened == []
+        assert queue.kicks == 0
 
         from src.application.use_cases.queries import UnlockPublicBoxUseCase
 
@@ -214,9 +296,13 @@ class TestGetPublicBoxUseCaseOpenedNotification:
         ).execute(public_slug=box.public_slug.value, password="gift2026")
         assert unlocked.content_unlocked is True
         assert unlocked.unlock_token
-        assert queue.opened == [box.id]
+        assert queue.kicks == 1
+        job = await uow.notification_jobs.get_by_box_and_template(
+            box.id, NotificationTemplate.BOX_OPENED
+        )
+        assert job is not None
 
-    async def test_does_not_enqueue_on_second_open(self):
+    async def test_does_not_kick_on_second_open(self):
         uow = InMemoryUnitOfWork()
         box = _box(owner_id=uuid.uuid4(), status=BoxStatus.OPENED)
         box.first_opened_at = datetime.now(timezone.utc)
@@ -227,7 +313,7 @@ class TestGetPublicBoxUseCaseOpenedNotification:
             public_slug=box.public_slug.value
         )
 
-        assert queue.opened == []
+        assert queue.kicks == 0
 
 
 class TestGiftReadyEmailTemplate:
@@ -316,32 +402,29 @@ class TestOwnerTelegramCaptions:
         assert "🗄" not in html
 
 
-class TestNotifyOwnerTelegramUseCase:
-    async def test_sends_published_card(self):
+class TestDispatchOwnerTelegramJobs:
+    async def test_dispatches_published_card(self):
         uow = InMemoryUnitOfWork()
         owner = _owner(uuid.uuid4())
-        box = _box(owner_id=owner.id)
+        box = _box(owner_id=owner.id, status=BoxStatus.SCHEDULED)
         await uow.users.add(owner)
         await uow.boxes.add(box)
+        await schedule_owner_notification_job(
+            uow,
+            box_id=box.id,
+            template=NotificationTemplate.BOX_PUBLISHED,
+        )
 
         email = RecordingEmailSender()
         telegram = RecordingTelegramNotifier()
-        sent = await NotifyOwnerTelegramUseCase(uow, _service(email, telegram)).execute(
-            box_id=box.id,
-            event=OwnerTelegramEvent.PUBLISHED.value,
-        )
+        sent = await DispatchDueNotificationsUseCase(
+            uow, _service(email, telegram)
+        ).execute()
 
-        assert sent is True
+        assert sent == 1
         assert email.messages == []
         assert telegram.messages[0]["filename"] == "tg-published.png"
         assert "Бокс опубликован" in telegram.messages[0]["text"]
-
-    async def test_rejects_unknown_event(self):
-        uow = InMemoryUnitOfWork()
-        sent = await NotifyOwnerTelegramUseCase(
-            uow, _service(RecordingEmailSender(), RecordingTelegramNotifier())
-        ).execute(box_id=uuid.uuid4(), event="nope")
-        assert sent is False
 
     async def test_opened_notifies_owner_once(self):
         uow = InMemoryUnitOfWork()
@@ -353,13 +436,26 @@ class TestNotifyOwnerTelegramUseCase:
 
         email = RecordingEmailSender()
         telegram = RecordingTelegramNotifier()
-        uc = NotifyOwnerTelegramUseCase(uow, _service(email, telegram))
+        uc = DispatchDueNotificationsUseCase(uow, _service(email, telegram))
 
-        first = await uc.execute(box_id=box.id, event=OwnerTelegramEvent.OPENED.value)
-        second = await uc.execute(box_id=box.id, event=OwnerTelegramEvent.OPENED.value)
+        await schedule_owner_notification_job(
+            uow,
+            box_id=box.id,
+            template=NotificationTemplate.BOX_OPENED,
+            at=box.first_opened_at,
+        )
+        first = await uc.execute()
+        second_scheduled = await schedule_owner_notification_job(
+            uow,
+            box_id=box.id,
+            template=NotificationTemplate.BOX_OPENED,
+            at=box.first_opened_at,
+        )
+        second = await uc.execute()
 
-        assert first is True
-        assert second is False
+        assert first == 1
+        assert second_scheduled is False
+        assert second == 0
         assert len(telegram.messages) == 1
         assert "открыл" in telegram.messages[0]["text"]
         assert telegram.messages[0]["filename"] == "tg-opened.png"

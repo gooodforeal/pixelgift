@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     smtp_from_email: str = "PixelGift <noreply@pixelgift.local>"
     smtp_use_tls: bool = False
 
+    # Total send attempts per notification job (1 first try + retries).
+    notification_max_attempts: int = 2
+    # Reclaim jobs stuck in processing longer than this (minutes).
+    notification_processing_stale_minutes: int = 10
+
     access_cookie_name: str = "access_token"
     refresh_cookie_name: str = "refresh_token"
 

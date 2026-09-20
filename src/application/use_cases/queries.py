@@ -9,10 +9,11 @@ from src.application.dto.media import MediaContent
 from src.application.ports.storage.base import BaseObjectStorage
 from src.application.ports.queues.base import BaseTaskQueue
 from src.application.services.jwt import JwtService
-from src.application.services.notifications import OwnerTelegramEvent
 from src.application.uow.base import BaseUnitOfWork
+from src.application.use_cases.notifications import schedule_owner_notification_job
 from src.domain.aggregates.boxes import Box
 from src.domain.entities.box_designs import BoxDesign
+from src.domain.entities.notification_jobs import NotificationTemplate
 from src.domain.entities.users import User
 from src.domain.exceptions.auth import UserInactiveError
 from src.domain.exceptions.boxes import (
@@ -30,6 +31,15 @@ from src.domain.values.public_slug import PublicSlug
 
 _HIDDEN_STATUSES = frozenset({"draft", "archived"})
 logger = logging.getLogger(__name__)
+
+
+async def _kick_notification_dispatch(task_queue: BaseTaskQueue | None) -> None:
+    if task_queue is None:
+        return
+    try:
+        await task_queue.kick_notification_dispatch()
+    except Exception:
+        logger.exception("Failed to kick notification dispatch")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -160,6 +170,12 @@ class GetPublicBoxUseCase:
                 just_opened = box.mark_opened(now=now)
                 if just_opened:
                     await uow.boxes.update(box)
+                    await schedule_owner_notification_job(
+                        uow,
+                        box_id=box.id,
+                        template=NotificationTemplate.BOX_OPENED,
+                        at=box.first_opened_at,
+                    )
                     await uow.commit()
             elif box.activate_if_due(now=now):
                 await uow.boxes.update(box)
@@ -167,17 +183,10 @@ class GetPublicBoxUseCase:
 
             design = await uow.box_designs.get_by_id(box.design_id)
             view = PublicBoxView(box=box, content_unlocked=unlocked, design=design)
-            opened_box_id = box.id if just_opened else None
+            should_kick = just_opened
 
-        if opened_box_id is not None and self._task_queue is not None:
-            try:
-                await self._task_queue.enqueue_owner_telegram(
-                    opened_box_id, OwnerTelegramEvent.OPENED.value
-                )
-            except Exception:
-                logger.exception(
-                    "Failed to enqueue box opened notification for %s", opened_box_id
-                )
+        if should_kick:
+            await _kick_notification_dispatch(self._task_queue)
         return view
 
 
@@ -220,6 +229,12 @@ class UnlockPublicBoxUseCase:
                 just_opened = box.mark_opened(now=now)
                 if just_opened:
                     await uow.boxes.update(box)
+                    await schedule_owner_notification_job(
+                        uow,
+                        box_id=box.id,
+                        template=NotificationTemplate.BOX_OPENED,
+                        at=box.first_opened_at,
+                    )
                     await uow.commit()
             elif box.activate_if_due(now=now):
                 await uow.boxes.update(box)
@@ -232,17 +247,10 @@ class UnlockPublicBoxUseCase:
                 design=design,
                 unlock_token=token,
             )
-            opened_box_id = box.id if just_opened else None
+            should_kick = just_opened
 
-        if opened_box_id is not None and self._task_queue is not None:
-            try:
-                await self._task_queue.enqueue_owner_telegram(
-                    opened_box_id, OwnerTelegramEvent.OPENED.value
-                )
-            except Exception:
-                logger.exception(
-                    "Failed to enqueue box opened notification for %s", opened_box_id
-                )
+        if should_kick:
+            await _kick_notification_dispatch(self._task_queue)
         return view
 
 

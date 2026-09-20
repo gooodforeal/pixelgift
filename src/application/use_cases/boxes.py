@@ -15,12 +15,15 @@ from src.application.dto.boxes import (
     UpdateBoxItemCommand,
 )
 from src.application.ports.queues.base import BaseTaskQueue
-from src.application.services.notifications import OwnerTelegramEvent
 from src.application.uow.base import BaseUnitOfWork
-from src.application.use_cases.notifications import sync_gift_ready_job
+from src.application.use_cases.notifications import (
+    schedule_owner_notification_job,
+    sync_gift_ready_job,
+)
 from src.domain.aggregates.boxes import Box, BoxStatus
 from src.domain.entities.box_items import BoxItemType
 from src.domain.entities.media_files import MediaKind
+from src.domain.entities.notification_jobs import NotificationTemplate
 from src.domain.exceptions.box_items import BoxItemInvalidError
 from src.domain.exceptions.boxes import (
     BoxAccessDeniedError,
@@ -42,19 +45,13 @@ _SLUG_GENERATE_ATTEMPTS = 5
 logger = logging.getLogger(__name__)
 
 
-async def _enqueue_owner_telegram(
-    task_queue: BaseTaskQueue | None,
-    box_id: uuid.UUID,
-    event: OwnerTelegramEvent,
-) -> None:
+async def _kick_notification_dispatch(task_queue: BaseTaskQueue | None) -> None:
     if task_queue is None:
         return
     try:
-        await task_queue.enqueue_owner_telegram(box_id, event.value)
+        await task_queue.kick_notification_dispatch()
     except Exception:
-        logger.exception(
-            "Failed to enqueue owner telegram %s for box %s", event.value, box_id
-        )
+        logger.exception("Failed to kick notification dispatch")
 
 
 def generate_public_slug() -> PublicSlug:
@@ -361,10 +358,13 @@ class PublishBoxUseCase:
             box.publish()
             updated = await uow.boxes.update(box)
             await sync_gift_ready_job(uow, updated)
+            await schedule_owner_notification_job(
+                uow,
+                box_id=updated.id,
+                template=NotificationTemplate.BOX_PUBLISHED,
+            )
             await uow.commit()
-        await _enqueue_owner_telegram(
-            self._task_queue, updated.id, OwnerTelegramEvent.PUBLISHED
-        )
+        await _kick_notification_dispatch(self._task_queue)
         return updated
 
 
@@ -385,10 +385,14 @@ class ArchiveBoxUseCase:
             box.archive()
             updated = await uow.boxes.update(box)
             await sync_gift_ready_job(uow, updated)
+            await schedule_owner_notification_job(
+                uow,
+                box_id=updated.id,
+                template=NotificationTemplate.BOX_ARCHIVED,
+                resend_if_sent=True,
+            )
             await uow.commit()
-        await _enqueue_owner_telegram(
-            self._task_queue, updated.id, OwnerTelegramEvent.ARCHIVED
-        )
+        await _kick_notification_dispatch(self._task_queue)
         return updated
 
 
@@ -409,10 +413,14 @@ class UnarchiveBoxUseCase:
             box.unarchive()
             updated = await uow.boxes.update(box)
             await sync_gift_ready_job(uow, updated)
+            await schedule_owner_notification_job(
+                uow,
+                box_id=updated.id,
+                template=NotificationTemplate.BOX_UNARCHIVED,
+                resend_if_sent=True,
+            )
             await uow.commit()
-        await _enqueue_owner_telegram(
-            self._task_queue, updated.id, OwnerTelegramEvent.UNARCHIVED
-        )
+        await _kick_notification_dispatch(self._task_queue)
         return updated
 
 

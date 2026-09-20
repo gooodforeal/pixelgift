@@ -1,7 +1,16 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, Text, UniqueConstraint, Uuid
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    Uuid,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.infrastructure.models.base import Base, TimestampMixin
@@ -15,7 +24,7 @@ class NotificationJobModel(TimestampMixin, Base):
             "template",
             name="uq_notification_jobs_box_id_template",
         ),
-        Index("ix_notification_jobs_status_run_at", "status", "run_at"),
+        Index("ix_notification_jobs_status_next_run_at", "status", "next_run_at"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -29,10 +38,18 @@ class NotificationJobModel(TimestampMixin, Base):
         nullable=False,
     )
     template: Mapped[str] = mapped_column(String(32), nullable=False)
-    run_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    scheduled_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+    next_run_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
     status: Mapped[str] = mapped_column(String(16), nullable=False)
     sent_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

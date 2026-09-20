@@ -1,7 +1,7 @@
 from datetime import datetime
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.entities.notification_jobs import (
@@ -61,14 +61,28 @@ class SqlAlchemyNotificationJobsRepository(BaseNotificationJobsRepository):
         now: datetime,
         *,
         limit: int = 20,
+        stale_before: datetime | None = None,
     ) -> list[NotificationJob]:
+        scheduled_due = and_(
+            NotificationJobModel.status == NotificationJobStatus.SCHEDULED.value,
+            NotificationJobModel.next_run_at <= now,
+        )
+        if stale_before is not None:
+            condition = or_(
+                scheduled_due,
+                and_(
+                    NotificationJobModel.status
+                    == NotificationJobStatus.PROCESSING.value,
+                    NotificationJobModel.updated_at <= stale_before,
+                ),
+            )
+        else:
+            condition = scheduled_due
+
         result = await self._session.execute(
             select(NotificationJobModel)
-            .where(
-                NotificationJobModel.status == NotificationJobStatus.SCHEDULED.value,
-                NotificationJobModel.run_at <= now,
-            )
-            .order_by(NotificationJobModel.run_at.asc())
+            .where(condition)
+            .order_by(NotificationJobModel.next_run_at.asc())
             .limit(limit)
             .with_for_update(skip_locked=True)
         )

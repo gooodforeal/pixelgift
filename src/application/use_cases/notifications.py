@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import logging
 import uuid
 
@@ -15,6 +15,13 @@ from src.domain.entities.notification_jobs import (
 )
 
 logger = logging.getLogger(__name__)
+
+_TEMPLATE_TELEGRAM_EVENT: dict[NotificationTemplate, OwnerTelegramEvent] = {
+    NotificationTemplate.BOX_OPENED: OwnerTelegramEvent.OPENED,
+    NotificationTemplate.BOX_PUBLISHED: OwnerTelegramEvent.PUBLISHED,
+    NotificationTemplate.BOX_ARCHIVED: OwnerTelegramEvent.ARCHIVED,
+    NotificationTemplate.BOX_UNARCHIVED: OwnerTelegramEvent.UNARCHIVED,
+}
 
 
 async def sync_gift_ready_job(uow: BaseUnitOfWork, box: Box) -> None:
@@ -38,13 +45,13 @@ async def sync_gift_ready_job(uow: BaseUnitOfWork, box: Box) -> None:
     if box.recipient_email is None:
         return
 
-    run_at = box.activates_at.value
+    scheduled_at = box.activates_at.value
     if existing is None:
         await uow.notification_jobs.add(
-            NotificationJob(
+            NotificationJob.create(
                 box_id=box.id,
                 template=NotificationTemplate.GIFT_READY,
-                run_at=run_at,
+                scheduled_at=scheduled_at,
             )
         )
         return
@@ -52,8 +59,45 @@ async def sync_gift_ready_job(uow: BaseUnitOfWork, box: Box) -> None:
     if existing.status == NotificationJobStatus.SENT:
         return
 
-    existing.reschedule(run_at)
+    existing.reschedule(scheduled_at)
     await uow.notification_jobs.update(existing)
+
+
+async def schedule_owner_notification_job(
+    uow: BaseUnitOfWork,
+    *,
+    box_id: uuid.UUID,
+    template: NotificationTemplate,
+    at: datetime | None = None,
+    resend_if_sent: bool = False,
+) -> bool:
+    """
+    Ensure a notification job exists and is due at ``at``.
+
+    Returns True if the job is scheduled for (re)delivery.
+    """
+    if template is NotificationTemplate.GIFT_READY:
+        raise ValueError("Use sync_gift_ready_job for gift_ready")
+
+    moment = at or datetime.now(timezone.utc)
+    existing = await uow.notification_jobs.get_by_box_and_template(box_id, template)
+
+    if existing is None:
+        await uow.notification_jobs.add(
+            NotificationJob.create(
+                box_id=box_id,
+                template=template,
+                scheduled_at=moment,
+            )
+        )
+        return True
+
+    if existing.status == NotificationJobStatus.SENT and not resend_if_sent:
+        return False
+
+    existing.reschedule(moment)
+    await uow.notification_jobs.update(existing)
+    return True
 
 
 class DispatchDueNotificationsUseCase:
@@ -61,17 +105,25 @@ class DispatchDueNotificationsUseCase:
         self,
         uow: BaseUnitOfWork,
         notifications: NotificationService,
+        *,
+        max_attempts: int = 2,
+        processing_stale_minutes: int = 10,
     ) -> None:
         self._uow = uow
         self._notifications = notifications
+        self._max_attempts = max_attempts
+        self._processing_stale_minutes = processing_stale_minutes
 
     async def execute(self, *, now: datetime | None = None) -> int:
+        now = now or datetime.now(timezone.utc)
+        stale_before = now - timedelta(minutes=self._processing_stale_minutes)
         dispatched = 0
         while True:
             async with self._uow as uow:
                 jobs = await uow.notification_jobs.claim_due(
-                    now or datetime.now(timezone.utc),
+                    now,
                     limit=1,
+                    stale_before=stale_before,
                 )
                 if not jobs:
                     return dispatched
@@ -80,11 +132,30 @@ class DispatchDueNotificationsUseCase:
                 try:
                     sent = await self._dispatch_job(uow, job)
                     if sent:
-                        job.mark_sent()
+                        job.mark_sent(now=now)
                         dispatched += 1
+                except ValueError as exc:
+                    logger.warning(
+                        "Notification job %s failed permanently: %s", job.id, exc
+                    )
+                    job.mark_failed(str(exc))
                 except Exception as exc:
                     logger.exception("Failed to dispatch notification job %s", job.id)
-                    job.mark_failed(str(exc))
+                    retried = job.register_failure(
+                        str(exc),
+                        max_attempts=self._max_attempts,
+                        now=now,
+                    )
+                    if retried:
+                        logger.info(
+                            "Notification job %s rescheduled (attempt %s/%s) "
+                            "next_run_at=%s scheduled_at=%s",
+                            job.id,
+                            job.attempt_count,
+                            self._max_attempts,
+                            job.next_run_at.isoformat(),
+                            job.scheduled_at.isoformat(),
+                        )
 
                 await uow.notification_jobs.update(job)
                 await uow.commit()
@@ -93,97 +164,43 @@ class DispatchDueNotificationsUseCase:
         box = await uow.boxes.get_by_id(job.box_id)
         if box is None:
             raise ValueError(f"Box not found: {job.box_id}")
-        if box.status == BoxStatus.ARCHIVED:
-            job.cancel()
-            return False
-        if box.recipient_email is None:
-            raise ValueError("Box has no recipient email")
 
         owner = await uow.users.get_by_id(box.owner_id)
         if owner is None:
             raise ValueError(f"Box owner not found: {box.owner_id}")
 
-        await self._notifications.notify_gift_ready(box=box, owner=owner)
-        return True
-
-
-class NotifyOwnerTelegramUseCase:
-    def __init__(
-        self,
-        uow: BaseUnitOfWork,
-        notifications: NotificationService,
-    ) -> None:
-        self._uow = uow
-        self._notifications = notifications
-
-    async def execute(self, *, box_id: uuid.UUID, event: str) -> bool:
-        try:
-            parsed = OwnerTelegramEvent(event)
-        except ValueError:
-            logger.warning("Unknown owner telegram event: %s", event)
-            return False
-
-        if parsed is OwnerTelegramEvent.OPENED:
-            return await self._execute_opened(box_id)
-
-        async with self._uow as uow:
-            box = await uow.boxes.get_by_id(box_id)
-            if box is None:
+        if job.template is NotificationTemplate.GIFT_READY:
+            if box.status == BoxStatus.ARCHIVED:
+                job.cancel()
                 return False
-            owner = await uow.users.get_by_id(box.owner_id)
-            if owner is None:
+            if box.recipient_email is None:
+                raise ValueError("Box has no recipient email")
+            await self._notifications.notify_gift_ready(box=box, owner=owner)
+            return True
+
+        event = _TEMPLATE_TELEGRAM_EVENT.get(job.template)
+        if event is None:
+            raise ValueError(f"Unknown notification template: {job.template}")
+
+        if job.template is NotificationTemplate.BOX_OPENED:
+            if box.first_opened_at is None:
+                raise ValueError("Box has not been opened yet")
+        elif job.template is NotificationTemplate.BOX_ARCHIVED:
+            if box.status != BoxStatus.ARCHIVED:
+                job.cancel()
+                return False
+        elif job.template is NotificationTemplate.BOX_UNARCHIVED:
+            if box.status == BoxStatus.ARCHIVED:
+                job.cancel()
+                return False
+        elif job.template is NotificationTemplate.BOX_PUBLISHED:
+            if box.status == BoxStatus.DRAFT:
+                job.cancel()
                 return False
 
         await self._notifications.notify_owner_telegram(
-            box=box, owner=owner, event=parsed
+            box=box,
+            owner=owner,
+            event=event,
         )
         return True
-
-    async def _execute_opened(self, box_id: uuid.UUID) -> bool:
-        async with self._uow as uow:
-            box = await uow.boxes.get_by_id(box_id)
-            if box is None or box.first_opened_at is None:
-                return False
-
-            existing = await uow.notification_jobs.get_by_box_and_template(
-                box.id,
-                NotificationTemplate.BOX_OPENED,
-            )
-            if existing is not None and existing.status == NotificationJobStatus.SENT:
-                return False
-
-            job = existing or NotificationJob(
-                box_id=box.id,
-                template=NotificationTemplate.BOX_OPENED,
-                run_at=box.first_opened_at,
-                status=NotificationJobStatus.PROCESSING,
-            )
-            if existing is None:
-                await uow.notification_jobs.add(job)
-            else:
-                job.mark_processing()
-
-            owner = await uow.users.get_by_id(box.owner_id)
-            if owner is None:
-                job.mark_failed(f"Box owner not found: {box.owner_id}")
-                await uow.notification_jobs.update(job)
-                await uow.commit()
-                return False
-
-            try:
-                await self._notifications.notify_owner_telegram(
-                    box=box,
-                    owner=owner,
-                    event=OwnerTelegramEvent.OPENED,
-                )
-                job.mark_sent()
-            except Exception as exc:
-                logger.exception("Failed to notify owner about opened box %s", box.id)
-                job.mark_failed(str(exc))
-                await uow.notification_jobs.update(job)
-                await uow.commit()
-                return False
-
-            await uow.notification_jobs.update(job)
-            await uow.commit()
-            return True

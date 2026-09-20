@@ -358,13 +358,19 @@ class InMemoryNotificationJobsRepository(BaseNotificationJobsRepository):
         now: datetime,
         *,
         limit: int = 20,
+        stale_before: datetime | None = None,
     ) -> list[NotificationJob]:
-        due = [
-            job
-            for job in self.items.values()
-            if job.status == NotificationJobStatus.SCHEDULED and job.run_at <= now
-        ]
-        due.sort(key=lambda job: job.run_at)
+        due = []
+        for job in self.items.values():
+            if job.status == NotificationJobStatus.SCHEDULED and job.next_run_at <= now:
+                due.append(job)
+            elif (
+                stale_before is not None
+                and job.status == NotificationJobStatus.PROCESSING
+                and job.updated_at <= stale_before
+            ):
+                due.append(job)
+        due.sort(key=lambda job: job.next_run_at)
         claimed: list[NotificationJob] = []
         for job in due[:limit]:
             job.mark_processing()

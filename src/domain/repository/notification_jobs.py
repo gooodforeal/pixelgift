@@ -23,4 +23,5 @@ class BaseNotificationJobsRepository(BaseRepository[NotificationJob], ABC):
         now: datetime,
         *,
         limit: int = 20,
+        stale_before: datetime | None = None,
     ) -> list[NotificationJob]: ...

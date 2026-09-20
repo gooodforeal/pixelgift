@@ -796,13 +796,19 @@ class TestPublishAndArchiveBoxUseCases:
         assert published.status == BoxStatus.SCHEDULED
         assert published.published_at is not None
         assert uow.committed is True
-        assert queue.events == [(published.id, "published")]
-        job = await uow.notification_jobs.get_by_box_and_template(
+        assert queue.kicks == 1
+        gift_job = await uow.notification_jobs.get_by_box_and_template(
             published.id, NotificationTemplate.GIFT_READY
         )
-        assert job is not None
-        assert job.status == NotificationJobStatus.SCHEDULED
-        assert job.run_at == published.activates_at.value
+        assert gift_job is not None
+        assert gift_job.status == NotificationJobStatus.SCHEDULED
+        assert gift_job.scheduled_at == published.activates_at.value
+        assert gift_job.next_run_at == published.activates_at.value
+        published_job = await uow.notification_jobs.get_by_box_and_template(
+            published.id, NotificationTemplate.BOX_PUBLISHED
+        )
+        assert published_job is not None
+        assert published_job.status == NotificationJobStatus.SCHEDULED
 
     async def test_rejects_publishing_empty_box(
         self,
@@ -874,7 +880,12 @@ class TestPublishAndArchiveBoxUseCases:
             ArchiveBoxCommand(box_id=box.id, actor_id=user_id)
         )
         assert archived.status == BoxStatus.ARCHIVED
-        assert queue.events == [(archived.id, "archived")]
+        assert queue.kicks == 1
+        archived_job = await uow.notification_jobs.get_by_box_and_template(
+            archived.id, NotificationTemplate.BOX_ARCHIVED
+        )
+        assert archived_job is not None
+        assert archived_job.status == NotificationJobStatus.SCHEDULED
 
         with pytest.raises(BoxAlreadyArchivedError):
             await ArchiveBoxUseCase(uow).execute(

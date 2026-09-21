@@ -3,6 +3,8 @@ from collections.abc import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
+from fastapi.responses import HTMLResponse
 
 from src.presentation.admin import setup_admin
 from src.presentation.routers import (
@@ -27,7 +29,13 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     await broker.shutdown()
 
 
-app = FastAPI(title="Pixelgift API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(
+    title="Pixelgift API",
+    version="0.1.0",
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -51,3 +59,19 @@ setup_admin(app)
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/docs", include_in_schema=False)
+async def swagger_ui() -> HTMLResponse:
+    return get_swagger_ui_html(
+        openapi_url="openapi.json",
+        title=f"{app.title} - Docs",
+    )
+
+
+@app.get("/redoc", include_in_schema=False)
+async def redoc_ui() -> HTMLResponse:
+    return get_redoc_html(
+        openapi_url="openapi.json",
+        title=f"{app.title} - ReDoc",
+    )

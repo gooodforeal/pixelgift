@@ -68,7 +68,7 @@ def _database_url() -> str:
 
 
 def _api_base_url() -> str:
-    return _env("API_BASE_URL", "http://localhost:8000").rstrip("/")
+    return _env("API_BASE_URL", "http://localhost:8080/api").rstrip("/")
 
 
 def _design_asset_id(code: str, variant: str = "dark") -> uuid.UUID:

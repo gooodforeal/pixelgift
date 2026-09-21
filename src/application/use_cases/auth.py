@@ -241,7 +241,7 @@ class CompleteTelegramLoginUseCase:
         uow: BaseUnitOfWork,
         storage: BaseObjectStorage | None = None,
         *,
-        api_base_url: str = "http://localhost:8000",
+        api_base_url: str = "http://localhost:8080/api",
     ) -> None:
         self._uow = uow
         self._storage = storage

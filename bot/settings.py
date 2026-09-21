@@ -2,6 +2,8 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Локальный (не-docker) запуск: опциональный bot/.env.
+# В docker переменные приходят из docker/bot/.env через env_file.
 _ENV_FILE = Path(__file__).resolve().parent / ".env"
 
 

@@ -38,7 +38,7 @@ def _env(name: str, default: str | None = None) -> str:
 
 
 def _load_dotenv() -> None:
-    for env_path in (ROOT / "app" / ".env", ROOT / ".env"):
+    for env_path in (ROOT / "app" / ".env", ROOT / "docker" / "app" / ".env"):
         if not env_path.is_file():
             continue
         for line in env_path.read_text().splitlines():

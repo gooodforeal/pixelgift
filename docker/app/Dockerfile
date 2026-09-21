@@ -1,5 +1,3 @@
-# API / worker image. Build from repo root:
-#   docker build -f app/Dockerfile .
 FROM python:3.12-slim-bookworm
 
 COPY --from=ghcr.io/astral-sh/uv:0.8.4 /uv /usr/local/bin/uv

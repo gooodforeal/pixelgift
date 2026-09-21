@@ -80,14 +80,6 @@ export function ProfilePage() {
           className="glass overflow-hidden"
         >
           <div className="relative px-5 py-8 sm:px-8 sm:py-10">
-            <div
-              className="pointer-events-none absolute inset-x-0 -top-24 h-48 opacity-50 blur-3xl"
-              style={{
-                background:
-                  "radial-gradient(circle at 20% 40%, rgb(168 85 247 / 0.35), transparent 55%), radial-gradient(circle at 80% 20%, rgb(34 211 238 / 0.22), transparent 50%)",
-              }}
-            />
-
             <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
               <div className="relative w-fit shrink-0 self-start">
                 {photoSrc ? (

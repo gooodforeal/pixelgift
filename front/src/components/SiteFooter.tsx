@@ -15,7 +15,6 @@ export function SiteFooter() {
         { to: "/#how", label: "Как это работает" },
         { to: "/app", label: "Мои боксы" },
         { to: "/app/profile", label: "Профиль" },
-        { to: "/app/boxes/new", label: "Новый бокс" },
         { to: "/support", label: "Поддержка" },
       ]
     : [

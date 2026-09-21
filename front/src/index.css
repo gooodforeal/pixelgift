@@ -1316,6 +1316,526 @@ html[data-theme="light"] .landing-hero::before {
   filter: blur(30px);
 }
 
+.workflow-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+  max-width: 52rem;
+  margin-inline: auto;
+  justify-items: stretch;
+}
+
+@media (min-width: 640px) {
+  .workflow-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.15rem 1.35rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .workflow-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem 1.5rem;
+    max-width: 54rem;
+  }
+}
+
+.workflow-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 1.35rem;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  background: rgb(255 255 255 / 0.03);
+  box-shadow: 0 18px 40px -28px rgb(0 0 0 / 0.7);
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease;
+}
+
+.workflow-card:hover {
+  transform: translateY(-4px);
+  border-color: rgb(168 85 247 / 0.35);
+}
+
+.workflow-card__preview {
+  height: 14.5rem;
+  flex-shrink: 0;
+  padding: 0.85rem 0.75rem;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.workflow-card--violet .workflow-card__preview {
+  background: linear-gradient(165deg, #3b2468 0%, #2a1650 100%);
+}
+
+.workflow-card--pink .workflow-card__preview {
+  background: linear-gradient(165deg, #5a1f4a 0%, #3a1535 100%);
+}
+
+.workflow-card--cyan .workflow-card__preview {
+  background: linear-gradient(165deg, #164a5c 0%, #12283a 100%);
+}
+
+.workflow-card--amber .workflow-card__preview {
+  background: linear-gradient(165deg, #5a3a16 0%, #3a2412 100%);
+}
+
+.workflow-card--indigo .workflow-card__preview {
+  background: linear-gradient(165deg, #2a2f6a 0%, #1a1d45 100%);
+}
+
+.workflow-card--emerald .workflow-card__preview {
+  background: linear-gradient(165deg, #164a3a 0%, #12352c 100%);
+}
+
+.workflow-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1.05rem 1.1rem 1.2rem;
+  background: rgb(12 8 24 / 0.72);
+  border-top: 1px solid rgb(255 255 255 / 0.06);
+}
+
+.workflow-card__num {
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+  background: var(--color-glow-violet);
+  box-shadow: 0 8px 18px -10px rgb(168 85 247 / 0.9);
+}
+
+.workflow-card--pink .workflow-card__num {
+  background: #ec4899;
+}
+
+.workflow-card--cyan .workflow-card__num {
+  background: #06b6d4;
+}
+
+.workflow-card--amber .workflow-card__num {
+  background: #f59e0b;
+}
+
+.workflow-card--indigo .workflow-card__num {
+  background: #6366f1;
+}
+
+.workflow-card--emerald .workflow-card__num {
+  background: #10b981;
+}
+
+.workflow-card__body h3 {
+  @apply text-sm font-semibold tracking-tight text-white sm:text-[0.95rem];
+}
+
+.workflow-card__body p {
+  @apply text-[0.78rem] leading-relaxed text-slate-400;
+}
+
+.workflow-mock {
+  width: 100%;
+  max-width: 10.25rem;
+  max-height: 100%;
+  border-radius: 0.95rem;
+  padding: 0.7rem 0.65rem;
+  background: rgb(18 12 32 / 0.92);
+  color: #e8e2f5;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.06) inset,
+    0 14px 28px -16px rgb(0 0 0 / 0.65);
+}
+
+.workflow-mock__eyebrow {
+  margin: 0;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a78bca;
+}
+
+.workflow-mock__title {
+  margin: 0.28rem 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #f3eefc;
+}
+
+.workflow-mock__field {
+  margin-top: 0.28rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  background: rgb(255 255 255 / 0.06);
+  padding: 0.34rem 0.48rem;
+  font-size: 0.64rem;
+  color: #c4b5d9;
+}
+
+.workflow-mock__field--muted {
+  color: #8b7aa5;
+  font-style: italic;
+}
+
+.workflow-mock__notify {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+}
+
+.workflow-mock__notify span {
+  border-radius: 0.5rem;
+  background: rgb(168 85 247 / 0.16);
+  color: #d8b4fe;
+  font-size: 0.58rem;
+  font-weight: 600;
+  padding: 0.28rem 0.4rem;
+}
+
+.workflow-mock--fill .workflow-mock__moments {
+  margin: 0.15rem 0 0.35rem;
+}
+
+.workflow-mock__field.is-active {
+  border-color: rgb(168 85 247 / 0.55);
+  background: rgb(168 85 247 / 0.22);
+  color: #e9d5ff;
+  font-weight: 600;
+}
+
+.workflow-mock__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+}
+
+.workflow-mock__chips span {
+  border-radius: 999px;
+  background: rgb(168 85 247 / 0.18);
+  color: #d8b4fe;
+  font-size: 0.58rem;
+  font-weight: 600;
+  padding: 0.18rem 0.4rem;
+}
+
+.workflow-mock__btn {
+  margin-top: 0.5rem;
+  border-radius: 0.6rem;
+  background: linear-gradient(135deg, #f472b6, #a855f7 55%, #22d3ee);
+  color: white;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 0.4rem 0.55rem;
+}
+
+.workflow-mock__btn.is-soft {
+  background: rgb(168 85 247 / 0.2);
+  color: #e9d5ff;
+}
+
+.workflow-mock__link {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 0.55rem;
+  background: rgb(255 255 255 / 0.06);
+  padding: 0.45rem 0.55rem;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #d8b4fe;
+  overflow: hidden;
+}
+
+.workflow-mock__link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workflow-mock__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.45rem;
+  font-size: 0.68rem;
+  color: #a78bca;
+}
+
+.workflow-mock__digits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+  margin: 0.55rem 0 0.45rem;
+}
+
+.workflow-mock__digits span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 0.55rem;
+  background: rgb(255 255 255 / 0.06);
+  padding: 0.4rem 0.2rem;
+}
+
+.workflow-mock__digits b {
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  color: #f3eefc;
+}
+
+.workflow-mock__digits small {
+  font-size: 0.55rem;
+  color: #8b7aa5;
+  text-transform: uppercase;
+}
+
+.workflow-mock__hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.65rem;
+  color: #a78bca;
+}
+
+.workflow-mock__lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  width: 100%;
+  margin-top: 0.55rem;
+  border-radius: 999px;
+  background: rgb(6 182 212 / 0.16);
+  color: #67e8f9;
+  font-size: 0.58rem;
+  font-weight: 600;
+  padding: 0.3rem 0.45rem;
+}
+
+.workflow-mock--open {
+  text-align: center;
+}
+
+.workflow-mock__gift {
+  font-size: 1.75rem;
+  line-height: 1;
+  filter: drop-shadow(0 8px 12px rgb(168 85 247 / 0.35));
+}
+
+.workflow-mock__moments {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+  margin: 0.55rem 0 0.15rem;
+}
+
+.workflow-mock__moments span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  border-radius: 999px;
+  background: rgb(168 85 247 / 0.18);
+  color: #d8b4fe;
+  font-size: 0.58rem;
+  font-weight: 600;
+  padding: 0.22rem 0.45rem;
+}
+
+.workflow-mock__cert-card {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 0.7rem;
+  border: 1px dashed rgb(255 255 255 / 0.16);
+  background: rgb(255 255 255 / 0.04);
+  padding: 0.55rem;
+}
+
+.workflow-mock__qr {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 0.35rem;
+  background:
+    linear-gradient(90deg, #e9d5ff 25%, transparent 25%) 0 0 / 0.35rem 0.35rem,
+    linear-gradient(#e9d5ff 25%, transparent 25%) 0 0 / 0.35rem 0.35rem,
+    #1a1030;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+}
+
+.workflow-mock__cert-card small {
+  display: block;
+  font-size: 0.58rem;
+  color: #8b7aa5;
+}
+
+.workflow-mock__cert-card strong {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.72rem;
+  color: #f3eefc;
+}
+
+html[data-theme="light"] .workflow-card {
+  border-color: rgb(15 23 42 / 0.08);
+  background: #fff;
+  box-shadow: 0 16px 36px -28px rgb(15 23 42 / 0.35);
+}
+
+html[data-theme="light"] .workflow-card:hover {
+  border-color: rgb(168 85 247 / 0.35);
+}
+
+html[data-theme="light"] .workflow-card--violet .workflow-card__preview {
+  background: linear-gradient(165deg, #efe7ff 0%, #e4d7ff 100%);
+}
+
+html[data-theme="light"] .workflow-card--pink .workflow-card__preview {
+  background: linear-gradient(165deg, #ffe4f1 0%, #ffd6ea 100%);
+}
+
+html[data-theme="light"] .workflow-card--cyan .workflow-card__preview {
+  background: linear-gradient(165deg, #dff7fb 0%, #d0eff8 100%);
+}
+
+html[data-theme="light"] .workflow-card--amber .workflow-card__preview {
+  background: linear-gradient(165deg, #fff1d6 0%, #ffe4b8 100%);
+}
+
+html[data-theme="light"] .workflow-card--indigo .workflow-card__preview {
+  background: linear-gradient(165deg, #e4e7ff 0%, #d7dbff 100%);
+}
+
+html[data-theme="light"] .workflow-card--emerald .workflow-card__preview {
+  background: linear-gradient(165deg, #d8f5e9 0%, #c5eedc 100%);
+}
+
+html[data-theme="light"] .workflow-card__body {
+  background: #fff;
+  border-top-color: rgb(15 23 42 / 0.06);
+}
+
+html[data-theme="light"] .workflow-card__body h3 {
+  @apply text-slate-900;
+}
+
+html[data-theme="light"] .workflow-card__body p {
+  @apply text-slate-500;
+}
+
+html[data-theme="light"] .workflow-mock {
+  background: rgb(255 255 255 / 0.96);
+  color: #1e1433;
+  border-color: transparent;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.7) inset,
+    0 14px 28px -16px rgb(0 0 0 / 0.45);
+}
+
+html[data-theme="light"] .workflow-mock__eyebrow {
+  color: #7c6a9a;
+}
+
+html[data-theme="light"] .workflow-mock__title {
+  color: #1a1030;
+}
+
+html[data-theme="light"] .workflow-mock__field {
+  border-color: #e6dff2;
+  background: #f7f4fc;
+  color: #5b4d78;
+}
+
+html[data-theme="light"] .workflow-mock__field--muted {
+  color: #9a8bb8;
+}
+
+html[data-theme="light"] .workflow-mock__field.is-active {
+  border-color: #c4a4f5;
+  background: #f3eaff;
+  color: #5b21b6;
+}
+
+html[data-theme="light"] .workflow-mock__notify span {
+  background: #f4f0fb;
+  color: #5b21b6;
+}
+
+html[data-theme="light"] .workflow-mock__chips span,
+html[data-theme="light"] .workflow-mock__moments span {
+  background: #efe7fb;
+  color: #6d28d9;
+}
+
+html[data-theme="light"] .workflow-mock__btn.is-soft {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+html[data-theme="light"] .workflow-mock__link {
+  background: #f4f0fb;
+  color: #5b21b6;
+}
+
+html[data-theme="light"] .workflow-mock__row,
+html[data-theme="light"] .workflow-mock__hint {
+  color: #6b5b88;
+}
+
+html[data-theme="light"] .workflow-mock__digits span {
+  background: #f3f0fa;
+}
+
+html[data-theme="light"] .workflow-mock__digits b {
+  color: #1a1030;
+}
+
+html[data-theme="light"] .workflow-mock__digits small {
+  color: #8a7aa8;
+}
+
+html[data-theme="light"] .workflow-mock__lock {
+  background: #ecfeff;
+  color: #0e7490;
+}
+
+html[data-theme="light"] .workflow-mock__cert-card {
+  border-color: #d8ccef;
+  background: #faf8ff;
+}
+
+html[data-theme="light"] .workflow-mock__qr {
+  background:
+    linear-gradient(90deg, #1a1030 25%, transparent 25%) 0 0 / 0.35rem 0.35rem,
+    linear-gradient(#1a1030 25%, transparent 25%) 0 0 / 0.35rem 0.35rem,
+    #fff;
+  box-shadow: inset 0 0 0 1px #d4c6ee;
+}
+
+html[data-theme="light"] .workflow-mock__cert-card small {
+  color: #8a7aa8;
+}
+
+html[data-theme="light"] .workflow-mock__cert-card strong {
+  color: #1a1030;
+}
+
+html[data-theme="light"] .landing-band--how .text-slate-400 {
+  @apply text-slate-500;
+}
+
 .landing-cta {
   border: none;
   border-radius: 0;

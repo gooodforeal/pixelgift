@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
-  CalendarClock,
   CalendarHeart,
   Camera,
   Film,
@@ -81,28 +80,201 @@ const ctaIcons: { Icon: LucideIcon; color: string }[] = [
   { Icon: Sparkles, color: "#c026d3" },
 ];
 
-const steps = [
+const workflowSteps = [
   {
-    icon: Wand2,
-    title: "Выберите оформление",
-    text: "Шесть тем — от романтичной ночи до пиксельного ретро.",
+    tone: "violet",
+    title: "Создайте бокс",
+    text: "Заполните основные поля: название, описание, получателя и тему оформления.",
+    preview: "create",
   },
   {
-    icon: Images,
+    tone: "cyan",
+    title: "Выберите дату и время",
+    text: "Укажите момент открытия — до него бокс останется закрытым, без спойлеров.",
+    preview: "timer",
+  },
+  {
+    tone: "pink",
     title: "Наполните бокс",
-    text: "Фото, гифки, видео и голосовые с подписями в нужном порядке.",
+    text: "Добавьте фото, видео, голосовые и текст — до 12 моментов в одном сюрпризе.",
+    preview: "fill",
   },
   {
-    icon: CalendarClock,
-    title: "Задайте дату",
-    text: "Бокс откроется секунда в секунду в выбранный момент.",
+    tone: "amber",
+    title: "Опубликуйте бокс",
+    text: "Получите ссылку и пароль. Получателю уйдёт письмо на почту, вам — уведомление в Telegram.",
+    preview: "publish",
   },
   {
-    icon: Send,
-    title: "Отправьте ссылку",
-    text: "Получателю не нужен аккаунт — только одна ссылка.",
+    tone: "indigo",
+    title: "Скачайте сертификат",
+    text: "PDF с QR и паролем — можно распечатать и вложить в физический подарок.",
+    preview: "certificate",
   },
-];
+  {
+    tone: "emerald",
+    title: "Откройте бокс",
+    text: "В нужную секунду бокс оживёт у получателя, а вам придёт уведомление в Telegram.",
+    preview: "open",
+  },
+] as const;
+
+type WorkflowPreview = (typeof workflowSteps)[number]["preview"];
+
+function WorkflowPreviewMock({ kind }: { kind: WorkflowPreview }) {
+  if (kind === "create") {
+    return (
+      <div className="workflow-mock workflow-mock--form">
+        <p className="workflow-mock__eyebrow">Новый бокс</p>
+        <p className="workflow-mock__title">Основные поля</p>
+        <div className="workflow-mock__field is-active">Получатель: Мария</div>
+        <div className="workflow-mock__field">Название: День рождения</div>
+        <div className="workflow-mock__field workflow-mock__field--muted">
+          Описание сюрприза…
+        </div>
+        <div className="workflow-mock__btn">Далее</div>
+      </div>
+    );
+  }
+  if (kind === "timer") {
+    return (
+      <div className="workflow-mock workflow-mock--timer">
+        <p className="workflow-mock__eyebrow">Дата и время</p>
+        <div className="workflow-mock__digits">
+          <span>
+            <b>14</b>
+            <small>мар</small>
+          </span>
+          <span>
+            <b>19</b>
+            <small>ч</small>
+          </span>
+          <span>
+            <b>00</b>
+            <small>м</small>
+          </span>
+        </div>
+        <p className="workflow-mock__hint">Откроется ровно в эту секунду</p>
+        <div className="workflow-mock__lock">
+          <Lock className="size-3.5" />
+          Без спойлеров до открытия
+        </div>
+      </div>
+    );
+  }
+  if (kind === "fill") {
+    return (
+      <div className="workflow-mock workflow-mock--fill">
+        <p className="workflow-mock__eyebrow">Содержимое</p>
+        <p className="workflow-mock__title">Наполните бокс</p>
+        <div className="workflow-mock__moments">
+          <span>
+            <Camera className="size-3" />
+            Фото
+          </span>
+          <span>
+            <Mic2 className="size-3" />
+            Голос
+          </span>
+          <span>
+            <Film className="size-3" />
+            Видео
+          </span>
+          <span>
+            <Heart className="size-3" />
+            Текст
+          </span>
+        </div>
+        <div className="workflow-mock__row">
+          <span>Моментов</span>
+          <strong>7 / 12</strong>
+        </div>
+        <div className="workflow-mock__btn">Добавить</div>
+      </div>
+    );
+  }
+  if (kind === "publish") {
+    return (
+      <div className="workflow-mock workflow-mock--publish">
+        <p className="workflow-mock__eyebrow">Публикация</p>
+        <p className="workflow-mock__title">Ссылка на бокс</p>
+        <div className="workflow-mock__link">
+          <Link2 className="size-3.5 shrink-0" />
+          <span>pixelgift.app/b/maria</span>
+        </div>
+        <div className="workflow-mock__notify">
+          <span>✉️ Почта получателю</span>
+          <span>✈️ Telegram вам</span>
+        </div>
+        <div className="workflow-mock__btn">Опубликовать</div>
+      </div>
+    );
+  }
+  if (kind === "certificate") {
+    return (
+      <div className="workflow-mock workflow-mock--cert">
+        <p className="workflow-mock__eyebrow">PDF · Pixelgift</p>
+        <p className="workflow-mock__title">Сертификат подарка</p>
+        <div className="workflow-mock__cert-card">
+          <span className="workflow-mock__qr" aria-hidden />
+          <div>
+            <small>Для Марии</small>
+            <strong>Открой бокс</strong>
+          </div>
+        </div>
+        <div className="workflow-mock__btn">Скачать PDF</div>
+      </div>
+    );
+  }
+  return (
+    <div className="workflow-mock workflow-mock--open">
+      <div className="workflow-mock__gift">🎁</div>
+      <p className="workflow-mock__title">Бокс открыт!</p>
+      <div className="workflow-mock__moments">
+        <span>
+          <Camera className="size-3" />
+          Фото
+        </span>
+        <span>
+          <Mic2 className="size-3" />
+          Голос
+        </span>
+        <span>
+          <Heart className="size-3" />
+          Письмо
+        </span>
+      </div>
+      <div className="workflow-mock__btn is-soft">Смотреть моменты</div>
+    </div>
+  );
+}
+
+function WorkflowCard({
+  step,
+  index,
+}: {
+  step: (typeof workflowSteps)[number];
+  index: number;
+}) {
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ delay: index * 0.06, duration: 0.45 }}
+      className={`workflow-card workflow-card--${step.tone}`}
+    >
+      <div className="workflow-card__preview">
+        <WorkflowPreviewMock kind={step.preview} />
+      </div>
+      <div className="workflow-card__body">
+        <span className="workflow-card__num">{index + 1}</span>
+        <h3>{step.title}</h3>
+        <p>{step.text}</p>
+      </div>
+    </motion.article>
+  );
+}
 
 const features = [
   {
@@ -240,34 +412,31 @@ export function LandingPage() {
         </motion.div>
       </LandingBand>
 
-      <LandingBand tone="how" id="how" className="scroll-mt-24" innerClassName="py-16">
-        <div className="section-kicker">Просто и по-настоящему лично</div>
-        <h2 className="font-display text-center text-3xl tracking-tight sm:text-4xl">
-          Четыре шага до сюрприза
-        </h2>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map((step, index) => (
-            <motion.div
-              key={step.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ delay: index * 0.07 }}
-              className="landing-step glass-soft relative overflow-hidden p-6"
-            >
-              <span className="landing-step__glow" />
-              <div className="flex items-center justify-between">
-                <span className="grid size-11 place-items-center rounded-2xl bg-glow-violet/15 text-glow-violet">
-                  <step.icon className="size-5" />
-                </span>
-                <span className="font-display text-2xl text-white/10">
-                  0{index + 1}
-                </span>
-              </div>
-              <h3 className="mt-4 text-base font-semibold">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{step.text}</p>
-            </motion.div>
+      <LandingBand tone="how" id="how" className="scroll-mt-24" innerClassName="py-16 sm:py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <div className="section-kicker">Как это работает</div>
+          <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
+            От идеи до открытия —{" "}
+            <span className="text-gradient">шесть понятных шагов</span>
+          </h2>
+          <p className="mt-4 text-sm leading-relaxed text-slate-400 sm:text-base">
+            Создайте бокс, задайте время, наполните и опубликуйте. Получатель
+            узнает о подарке по почте, а вам придёт уведомление в Telegram —
+            когда бокс опубликован и когда его откроют.
+          </p>
+        </div>
+
+        <div className="workflow-grid mt-10">
+          {workflowSteps.map((step, index) => (
+            <WorkflowCard key={step.title} step={step} index={index} />
           ))}
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          <Link to="/login" className="btn-primary px-8 py-3.5 text-base">
+            <Gift className="size-5" />
+            Создать подарок
+          </Link>
         </div>
       </LandingBand>
 

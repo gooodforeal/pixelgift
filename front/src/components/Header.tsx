@@ -110,7 +110,7 @@ export function Header() {
 
   const isBoxes = path === "/app" || path.startsWith("/app/boxes");
   const isProfile = path.startsWith("/app/profile");
-  const isAdminArea = path.startsWith("/admin");
+  const isAdminArea = path.startsWith("/app/panel");
   const isSupport = path.startsWith("/support");
   const isLogin = path.startsWith("/login");
 
@@ -148,7 +148,7 @@ export function Header() {
                 </RailLink>
                 {isAdmin ? (
                   <RailLink
-                    to="/admin"
+                    to="/app/panel"
                     label="Панель"
                     active={isAdminArea}
                     withLabel
@@ -228,7 +228,7 @@ export function Header() {
                 </MenuLink>
                 {isAdmin ? (
                   <MenuLink
-                    to="/admin"
+                    to="/app/panel"
                     label="Панель"
                     active={isAdminArea}
                     onNavigate={closeMenu}

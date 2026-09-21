@@ -14,6 +14,10 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
+      "/admin": {
+        target: apiTarget,
+        changeOrigin: false,
+      },
     },
   },
 });

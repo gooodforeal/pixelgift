@@ -147,7 +147,7 @@ export function AdminDesignEditorPage() {
       void queryClient.invalidateQueries({ queryKey: ["admin-designs"] });
       void queryClient.invalidateQueries({ queryKey: ["designs"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-design", design.id] });
-      navigate(`/admin/designs/${design.id}`, { replace: true });
+      navigate(`/app/panel/designs/${design.id}`, { replace: true });
     },
     onError: (err) => setError((err as Error).message),
   });
@@ -223,7 +223,7 @@ export function AdminDesignEditorPage() {
       <div className="pt-10 pb-10 sm:pt-14">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link
-            to="/admin/designs"
+            to="/app/panel/designs"
             className="btn-ghost inline-flex items-center gap-2 px-3 py-2 text-sm"
           >
             <ArrowLeft className="size-4" />

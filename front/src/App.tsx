@@ -159,7 +159,7 @@ export function App() {
             }
           />
           <Route
-            path="/admin"
+            path="/app/panel"
             element={
               <RequireAuth>
                 <RequireAdmin>
@@ -171,7 +171,7 @@ export function App() {
             }
           />
           <Route
-            path="/admin/support"
+            path="/app/panel/support"
             element={
               <RequireAuth>
                 <RequireAdmin>
@@ -183,7 +183,7 @@ export function App() {
             }
           />
           <Route
-            path="/admin/designs"
+            path="/app/panel/designs"
             element={
               <RequireAuth>
                 <RequireAdmin>
@@ -195,7 +195,7 @@ export function App() {
             }
           />
           <Route
-            path="/admin/designs/new"
+            path="/app/panel/designs/new"
             element={
               <RequireAuth>
                 <RequireAdmin>
@@ -207,7 +207,7 @@ export function App() {
             }
           />
           <Route
-            path="/admin/designs/:designId"
+            path="/app/panel/designs/:designId"
             element={
               <RequireAuth>
                 <RequireAdmin>

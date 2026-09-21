@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.presentation.admin import setup_admin
 from src.presentation.routers import (
     admin_designs,
     admin_support,
@@ -44,6 +45,7 @@ app.include_router(boxes.router)
 app.include_router(media.router)
 app.include_router(public.router)
 app.include_router(support.router)
+setup_admin(app)
 
 
 @app.get("/health")

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -48,6 +50,12 @@ class Settings(BaseSettings):
 
     access_cookie_name: str = "access_token"
     refresh_cookie_name: str = "refresh_token"
+
+    sqladmin_username: str = "admin"
+    sqladmin_password: str = "admin"
+    sqladmin_secret_key: str = "dev-sqladmin-session-secret"
+    sqladmin_cookie_secure: bool = False
+    sqladmin_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     @property
     def cors_origins_list(self) -> list[str]:

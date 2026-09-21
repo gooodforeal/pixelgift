@@ -113,7 +113,7 @@ export function AdminSupportPage() {
     <PageTransition>
       <div className="pt-10 pb-8 sm:pt-14">
         <Link
-          to="/admin"
+          to="/app/panel"
           className="btn-ghost inline-flex items-center gap-2 px-3 py-2 text-sm"
         >
           <ArrowLeft className="size-4" />

@@ -46,7 +46,7 @@ export function AdminDesignsPage() {
     <PageTransition>
       <div className="pt-10 pb-6 sm:pt-14">
         <Link
-          to="/admin"
+          to="/app/panel"
           className="btn-ghost inline-flex items-center gap-2 px-3 py-2 text-sm"
         >
           <ArrowLeft className="size-4" />
@@ -56,7 +56,7 @@ export function AdminDesignsPage() {
           <div>
             <p className="chip w-fit">
               <Palette className="size-3.5" />
-              Админ
+              Панель
             </p>
             <h1 className="mt-3 font-sans text-2xl font-semibold tracking-tight sm:text-3xl">
               Дизайны коробок
@@ -65,7 +65,7 @@ export function AdminDesignsPage() {
               Создавайте темы, палитры и превью. Неактивные скрыты из выбора у пользователей.
             </p>
           </div>
-          <Link to="/admin/designs/new" className="btn-primary">
+          <Link to="/app/panel/designs/new" className="btn-primary">
             <Plus className="size-4" />
             Новый дизайн
           </Link>
@@ -128,7 +128,7 @@ function DesignCard({
             onChange={onToggle}
           />
           <Link
-            to={`/admin/designs/${design.id}`}
+            to={`/app/panel/designs/${design.id}`}
             className="btn-ghost inline-flex items-center gap-1.5 px-3 py-2 text-sm"
           >
             <Pencil className="size-3.5" />

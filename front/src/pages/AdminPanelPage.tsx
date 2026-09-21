@@ -1,21 +1,30 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Headphones, Palette, Shield } from "lucide-react";
+import { Database, Headphones, Palette, Shield } from "lucide-react";
 
 import { PageTransition } from "../components/PageTransition";
 
 const SECTIONS = [
   {
-    to: "/admin/designs",
+    to: "/app/panel/designs",
     title: "Дизайны",
     description: "Темы коробок, палитры, обложки и активность.",
     icon: Palette,
+    external: false,
   },
   {
-    to: "/admin/support",
+    to: "/app/panel/support",
     title: "Поддержка",
     description: "Обращения пользователей и смена статусов.",
     icon: Headphones,
+    external: false,
+  },
+  {
+    to: "/admin",
+    title: "Админка",
+    description: "SQLAdmin: пользователи, боксы, уведомления и остальные таблицы.",
+    icon: Database,
+    external: true,
   },
 ] as const;
 
@@ -25,7 +34,7 @@ export function AdminPanelPage() {
       <div className="pt-10 pb-6 sm:pt-14">
         <p className="chip w-fit">
           <Shield className="size-3.5" />
-          Админ
+          Панель
         </p>
         <h1 className="mt-3 font-sans text-2xl font-semibold tracking-tight sm:text-3xl">
           Панель
@@ -35,17 +44,9 @@ export function AdminPanelPage() {
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {SECTIONS.map((section, index) => (
-            <motion.div
-              key={section.to}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.04 }}
-            >
-              <Link
-                to={section.to}
-                className="glass group flex h-full flex-col gap-3 p-5 transition hover:border-white/20 sm:p-6"
-              >
+          {SECTIONS.map((section, index) => {
+            const body = (
+              <>
                 <span className="grid size-11 place-items-center rounded-2xl border border-white/10 bg-white/[0.05] text-glow-cyan transition group-hover:border-glow-violet/40 group-hover:text-glow-violet">
                   <section.icon className="size-5" />
                 </span>
@@ -57,9 +58,29 @@ export function AdminPanelPage() {
                     {section.description}
                   </p>
                 </div>
-              </Link>
-            </motion.div>
-          ))}
+              </>
+            );
+            const className =
+              "glass group flex h-full flex-col gap-3 p-5 transition hover:border-white/20 sm:p-6";
+            return (
+              <motion.div
+                key={section.to}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.04 }}
+              >
+                {section.external ? (
+                  <a href={section.to} className={className}>
+                    {body}
+                  </a>
+                ) : (
+                  <Link to={section.to} className={className}>
+                    {body}
+                  </Link>
+                )}
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </PageTransition>

@@ -62,7 +62,6 @@ function RailLink({
       onClick={onNavigate}
     >
       <span className="app-rail__hit">
-        <span className="app-rail__blob" aria-hidden />
         <span className="app-rail__icon">{children}</span>
       </span>
       {withLabel ? <span className="app-rail__caption">{label}</span> : null}

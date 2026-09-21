@@ -1,22 +1,107 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutGrid, Menu, Shield, UserRound, X } from "lucide-react";
+import {
+  Gift,
+  Headset,
+  LogIn,
+  Menu,
+  Shield,
+  UserRound,
+  X,
+} from "lucide-react";
 
 import { useAuth } from "../hooks/useAuth";
 import { api } from "../lib/api";
-import { Logo } from "./Logo";
-import { TelegramIcon } from "./TelegramIcon";
 import { UiThemeToggle } from "./UiThemeToggle";
+
+function RailLogo({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <Link
+      to="/"
+      className="app-rail__logo"
+      aria-label="Pixelgift — на главную"
+      title="Pixelgift"
+      onClick={onNavigate}
+    >
+      <span className="app-rail__logo-mark" aria-hidden>
+        🎁
+      </span>
+      <span className="app-rail__brand">
+        Pixel<span className="text-gradient">gift</span>
+      </span>
+    </Link>
+  );
+}
+
+function RailLink({
+  to,
+  label,
+  active,
+  withLabel = false,
+  onNavigate,
+  children,
+}: {
+  to: string;
+  label: string;
+  active: boolean;
+  withLabel?: boolean;
+  onNavigate?: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      to={to}
+      className={`app-rail__link ${withLabel ? "has-label" : ""} ${
+        active ? "is-active" : ""
+      }`}
+      aria-label={label}
+      title={label}
+      aria-current={active ? "page" : undefined}
+      onClick={onNavigate}
+    >
+      <span className="app-rail__hit">
+        <span className="app-rail__blob" aria-hidden />
+        <span className="app-rail__icon">{children}</span>
+      </span>
+      {withLabel ? <span className="app-rail__caption">{label}</span> : null}
+    </Link>
+  );
+}
+
+function MenuLink({
+  to,
+  label,
+  active,
+  onNavigate,
+  children,
+}: {
+  to: string;
+  label: string;
+  active: boolean;
+  onNavigate: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      to={to}
+      className={`app-rail-menu__link ${active ? "is-active" : ""}`}
+      aria-current={active ? "page" : undefined}
+      onClick={onNavigate}
+    >
+      <span className="app-rail-menu__icon">{children}</span>
+      <span>{label}</span>
+    </Link>
+  );
+}
 
 export function Header() {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
+  const path = location.pathname;
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
-  const menuRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
   const meQuery = useQuery({
     queryKey: ["me"],
     queryFn: api.me,
@@ -24,154 +109,165 @@ export function Header() {
   });
   const isAdmin = Boolean(meQuery.data?.is_admin);
 
+  const isBoxes = path === "/app" || path.startsWith("/app/boxes");
+  const isProfile = path.startsWith("/app/profile");
+  const isAdminArea = path.startsWith("/admin");
+  const isSupport = path.startsWith("/support");
+  const isLogin = path.startsWith("/login");
+
+  const closeMenu = () => setMenuOpen(false);
+
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
-    const media = window.matchMedia("(min-width: 768px)");
-    const onChange = () => {
-      if (media.matches) setMenuOpen(false);
-    };
-    onChange();
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
-  }, []);
-
-  useEffect(() => {
     if (!menuOpen) return;
-
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setMenuOpen(false);
     };
-
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (
-        menuRef.current?.contains(target) ||
-        buttonRef.current?.contains(target)
-      ) {
-        return;
-      }
-      setMenuOpen(false);
-    };
-
     document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("pointerdown", onPointerDown);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("pointerdown", onPointerDown);
+      document.body.style.overflow = prev;
     };
   }, [menuOpen]);
 
   return createPortal(
-    <header className="app-header">
-      <div className="relative mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:h-16 sm:gap-3 sm:px-6">
-        <Logo to="/" />
+    <>
+      <header className="app-rail" aria-label="Основная навигация">
+        <div className="app-rail__inner">
+          <RailLogo />
 
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
-          <nav className="header-desktop-nav">
+          <nav className="app-rail__nav" aria-label="Разделы">
             {isAuthenticated ? (
               <>
-                <Link
-                  to="/app"
-                  className="header-nav-btn"
-                  aria-label="Мои боксы"
-                  title="Мои боксы"
-                >
-                  <LayoutGrid className="size-4 shrink-0" />
-                  <span>Мои боксы</span>
-                </Link>
+                <RailLink to="/app" label="Боксы" active={isBoxes} withLabel>
+                  <Gift className="size-5" strokeWidth={2} />
+                </RailLink>
                 {isAdmin ? (
-                  <Link
+                  <RailLink
                     to="/admin"
-                    className="header-nav-btn"
-                    aria-label="Панель"
-                    title="Панель"
+                    label="Панель"
+                    active={isAdminArea}
+                    withLabel
                   >
-                    <Shield className="size-4 shrink-0" />
-                    <span>Панель</span>
-                  </Link>
+                    <Shield className="size-5" strokeWidth={2} />
+                  </RailLink>
                 ) : null}
-                <Link
-                  to="/app/profile"
-                  className="header-nav-btn"
-                  aria-label="Профиль"
-                  title="Профиль"
-                >
-                  <UserRound className="size-4 shrink-0" />
-                  <span>Профиль</span>
-                </Link>
               </>
             ) : (
-              <Link to="/login" className="btn-primary px-5 py-2.5 text-sm">
-                <TelegramIcon className="size-4 shrink-0" />
-                Войти через Telegram
-              </Link>
+              <RailLink to="/login" label="Войти" active={isLogin} withLabel>
+                <LogIn className="size-5" strokeWidth={2} />
+              </RailLink>
             )}
+            <RailLink to="/support" label="Поддержка" active={isSupport} withLabel>
+              <Headset className="size-5" strokeWidth={2} />
+            </RailLink>
           </nav>
 
-          <button
-            ref={buttonRef}
-            type="button"
-            className="header-menu-btn"
-            aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"}
-            aria-expanded={menuOpen}
-            aria-controls={menuId}
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            {menuOpen ? (
-              <X className="size-5" strokeWidth={2.25} />
-            ) : (
-              <Menu className="size-5" strokeWidth={2.25} />
-            )}
-          </button>
-
-          <UiThemeToggle />
+          <div className="app-rail__footer">
+            {isAuthenticated ? (
+              <RailLink to="/app/profile" label="Профиль" active={isProfile}>
+                <UserRound className="size-5" strokeWidth={2} />
+              </RailLink>
+            ) : null}
+            <UiThemeToggle className="app-rail__theme" />
+            <button
+              type="button"
+              className="app-rail__burger"
+              aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"}
+              aria-expanded={menuOpen}
+              aria-controls={menuId}
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              {menuOpen ? (
+                <X className="size-5" strokeWidth={2.25} />
+              ) : (
+                <Menu className="size-5" strokeWidth={2.25} />
+              )}
+            </button>
+          </div>
         </div>
+      </header>
 
-        {menuOpen ? (
-          <div
-            ref={menuRef}
-            id={menuId}
-            className="header-menu absolute inset-x-3 top-[calc(100%+0.5rem)]"
-            role="menu"
-          >
+      {menuOpen ? (
+        <div
+          id={menuId}
+          className="app-rail-menu"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Меню"
+        >
+          <div className="app-rail-menu__bar">
+            <RailLogo onNavigate={closeMenu} />
+            <div className="app-rail-menu__bar-actions">
+              <UiThemeToggle className="app-rail__theme" />
+              <button
+                type="button"
+                className="app-rail__burger"
+                aria-label="Закрыть меню"
+                onClick={closeMenu}
+              >
+                <X className="size-5" strokeWidth={2.25} />
+              </button>
+            </div>
+          </div>
+
+          <nav className="app-rail-menu__nav" aria-label="Мобильная навигация">
             {isAuthenticated ? (
               <>
-                <Link to="/app" className="header-menu__link" role="menuitem">
-                  <LayoutGrid className="size-4 shrink-0" />
-                  Мои боксы
-                </Link>
-                {isAdmin ? (
-                  <Link
-                    to="/admin"
-                    className="header-menu__link"
-                    role="menuitem"
-                  >
-                    <Shield className="size-4 shrink-0" />
-                    Панель
-                  </Link>
-                ) : null}
-                <Link
-                  to="/app/profile"
-                  className="header-menu__link"
-                  role="menuitem"
+                <MenuLink
+                  to="/app"
+                  label="Боксы"
+                  active={isBoxes}
+                  onNavigate={closeMenu}
                 >
-                  <UserRound className="size-4 shrink-0" />
-                  Профиль
-                </Link>
+                  <Gift className="size-5" strokeWidth={2} />
+                </MenuLink>
+                {isAdmin ? (
+                  <MenuLink
+                    to="/admin"
+                    label="Панель"
+                    active={isAdminArea}
+                    onNavigate={closeMenu}
+                  >
+                    <Shield className="size-5" strokeWidth={2} />
+                  </MenuLink>
+                ) : null}
+                <MenuLink
+                  to="/app/profile"
+                  label="Профиль"
+                  active={isProfile}
+                  onNavigate={closeMenu}
+                >
+                  <UserRound className="size-5" strokeWidth={2} />
+                </MenuLink>
               </>
             ) : (
-              <Link to="/login" className="header-menu__link" role="menuitem">
-                <TelegramIcon className="size-4 shrink-0" />
-                Войти через Telegram
-              </Link>
+              <MenuLink
+                to="/login"
+                label="Войти"
+                active={isLogin}
+                onNavigate={closeMenu}
+              >
+                <LogIn className="size-5" strokeWidth={2} />
+              </MenuLink>
             )}
-          </div>
-        ) : null}
-      </div>
-    </header>,
+            <MenuLink
+              to="/support"
+              label="Поддержка"
+              active={isSupport}
+              onNavigate={closeMenu}
+            >
+              <Headset className="size-5" strokeWidth={2} />
+            </MenuLink>
+          </nav>
+        </div>
+      ) : null}
+    </>,
     document.body,
   );
 }

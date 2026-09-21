@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 
-from src.domain.entities.users import User
-from src.domain.values.telegram_id import TelegramId
-from src.domain.values.url import Url
+from app.domain.entities.users import User
+from app.domain.values.telegram_id import TelegramId
+from app.domain.values.url import Url
 
 
 class TestUser:

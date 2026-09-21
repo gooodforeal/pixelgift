@@ -2,28 +2,28 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from src.application.dto.auth import (
+from app.application.dto.auth import (
     CompleteTelegramLoginCommand,
     LogoutCommand,
     PollTelegramLoginCommand,
     RefreshAccessTokenCommand,
     StartTelegramLoginCommand,
 )
-from src.application.services.jwt import JwtService
-from src.application.services.refresh_tokens import hash_refresh_token
-from src.application.use_cases.auth import (
+from app.application.services.jwt import JwtService
+from app.application.services.refresh_tokens import hash_refresh_token
+from app.application.use_cases.auth import (
     CompleteTelegramLoginUseCase,
     LogoutUseCase,
     PollTelegramLoginStatusUseCase,
     RefreshAccessTokenUseCase,
     StartTelegramLoginUseCase,
 )
-from src.domain.entities.telegram_login_challenges import LoginChallengeStatus
-from src.domain.exceptions.auth import (
+from app.domain.entities.telegram_login_challenges import LoginChallengeStatus
+from app.domain.exceptions.auth import (
     InvalidRefreshTokenError,
     LoginChallengeNotFoundError,
 )
-from src.settings import Settings
+from app.settings import Settings
 from tests.application.fakes import InMemoryUnitOfWork
 
 

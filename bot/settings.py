@@ -1,10 +1,14 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_ENV_FILE = Path(__file__).resolve().parent / ".env"
 
 
 class BotSettings(BaseSettings):
     """Settings for the aiogram bot process (no DB access)."""
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=_ENV_FILE, extra="ignore")
 
     telegram_bot_token: str = ""
     telegram_bot_username: str = ""

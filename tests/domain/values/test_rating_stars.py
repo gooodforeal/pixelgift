@@ -1,8 +1,8 @@
-from src.domain.exceptions.design_ratings import (
+from app.domain.exceptions.design_ratings import (
     DesignRatingStarsNotIntegerError,
     DesignRatingStarsOutOfRangeError,
 )
-from src.domain.values.rating_stars import RatingStars
+from app.domain.values.rating_stars import RatingStars
 import pytest
 
 

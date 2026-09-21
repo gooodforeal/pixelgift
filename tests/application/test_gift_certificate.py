@@ -1,5 +1,5 @@
-from src.application.ports.certificates.base import GiftCertificateData
-from src.infrastructure.certificates.gift_certificate_pdf import (
+from app.application.ports.certificates.base import GiftCertificateData
+from app.infrastructure.certificates.gift_certificate_pdf import (
     ReportLabGiftCertificateRenderer,
 )
 

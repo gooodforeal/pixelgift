@@ -1,10 +1,10 @@
 import pytest
 
-from src.domain.exceptions.sort_order import (
+from app.domain.exceptions.sort_order import (
     SortOrderNonPositiveError,
     SortOrderNotIntegerError,
 )
-from src.domain.values.sort_order import SortOrder
+from app.domain.values.sort_order import SortOrder
 
 
 class TestSortOrder:

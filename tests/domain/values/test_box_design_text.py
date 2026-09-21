@@ -1,14 +1,14 @@
 import pytest
 
-from src.domain.exceptions.box_designs import (
+from app.domain.exceptions.box_designs import (
     BoxDesignDescriptionEmptyError,
     BoxDesignDescriptionTooLongError,
     BoxDesignNameEmptyError,
     BoxDesignNameSurroundingWhitespaceError,
     BoxDesignNameTooLongError,
 )
-from src.domain.values.box_design_description import BoxDesignDescription
-from src.domain.values.box_design_name import BoxDesignName
+from app.domain.values.box_design_description import BoxDesignDescription
+from app.domain.values.box_design_name import BoxDesignName
 
 
 class TestBoxDesignName:

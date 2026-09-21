@@ -1,8 +1,8 @@
 import uuid
 
-from src.domain.entities.box_items import BoxItem, BoxItemType
-from src.domain.values.box_item_caption import BoxItemCaption
-from src.domain.values.sort_order import SortOrder
+from app.domain.entities.box_items import BoxItem, BoxItemType
+from app.domain.values.box_item_caption import BoxItemCaption
+from app.domain.values.sort_order import SortOrder
 
 
 class TestBoxItem:

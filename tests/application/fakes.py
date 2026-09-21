@@ -2,37 +2,37 @@ from datetime import datetime
 from typing import Optional
 import uuid
 
-from src.application.uow.base import BaseUnitOfWork
-from src.domain.aggregates.boxes import Box, BoxStatus
-from src.domain.entities.box_designs import BoxDesign
-from src.domain.entities.design_assets import DesignAsset
-from src.domain.entities.design_ratings import DesignRating
-from src.domain.entities.media_files import MediaFile
-from src.domain.entities.notification_jobs import (
+from app.application.uow.base import BaseUnitOfWork
+from app.domain.aggregates.boxes import Box, BoxStatus
+from app.domain.entities.box_designs import BoxDesign
+from app.domain.entities.design_assets import DesignAsset
+from app.domain.entities.design_ratings import DesignRating
+from app.domain.entities.media_files import MediaFile
+from app.domain.entities.notification_jobs import (
     NotificationJob,
     NotificationJobStatus,
     NotificationTemplate,
 )
-from src.domain.entities.support_tickets import SupportTicket, SupportTicketStatus
-from src.domain.entities.telegram_login_challenges import TelegramLoginChallenge
-from src.domain.entities.user_sessions import UserSession
-from src.domain.entities.users import User
-from src.domain.repository.box_designs import BaseBoxDesignsRepository
-from src.domain.repository.boxes import BaseBoxesRepository
-from src.domain.repository.design_assets import BaseDesignAssetsRepository
-from src.domain.repository.design_ratings import (
+from app.domain.entities.support_tickets import SupportTicket, SupportTicketStatus
+from app.domain.entities.telegram_login_challenges import TelegramLoginChallenge
+from app.domain.entities.user_sessions import UserSession
+from app.domain.entities.users import User
+from app.domain.repository.box_designs import BaseBoxDesignsRepository
+from app.domain.repository.boxes import BaseBoxesRepository
+from app.domain.repository.design_assets import BaseDesignAssetsRepository
+from app.domain.repository.design_ratings import (
     BaseDesignRatingsRepository,
     DesignRatingAggregate,
 )
-from src.domain.repository.media_files import BaseMediaFilesRepository
-from src.domain.repository.notification_jobs import BaseNotificationJobsRepository
-from src.domain.repository.support_tickets import BaseSupportTicketsRepository
-from src.domain.repository.telegram_login_challenges import (
+from app.domain.repository.media_files import BaseMediaFilesRepository
+from app.domain.repository.notification_jobs import BaseNotificationJobsRepository
+from app.domain.repository.support_tickets import BaseSupportTicketsRepository
+from app.domain.repository.telegram_login_challenges import (
     BaseTelegramLoginChallengesRepository,
 )
-from src.domain.repository.user_sessions import BaseUserSessionsRepository
-from src.domain.repository.users import BaseUsersRepository
-from src.domain.values.public_slug import PublicSlug
+from app.domain.repository.user_sessions import BaseUserSessionsRepository
+from app.domain.repository.users import BaseUsersRepository
+from app.domain.values.public_slug import PublicSlug
 
 
 class InMemoryBoxesRepository(BaseBoxesRepository):

@@ -38,17 +38,18 @@ def _env(name: str, default: str | None = None) -> str:
 
 
 def _load_dotenv() -> None:
-    env_path = ROOT / ".env"
-    if not env_path.is_file():
-        return
-    for line in env_path.read_text().splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#") or "=" not in stripped:
+    for env_path in (ROOT / "app" / ".env", ROOT / ".env"):
+        if not env_path.is_file():
             continue
-        key, value = stripped.split("=", 1)
-        key = key.strip()
-        value = value.strip().strip('"').strip("'")
-        os.environ.setdefault(key, value)
+        for line in env_path.read_text().splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") or "=" not in stripped:
+                continue
+            key, value = stripped.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            os.environ.setdefault(key, value)
+        return
 
 
 def _content_type(path: Path) -> str:

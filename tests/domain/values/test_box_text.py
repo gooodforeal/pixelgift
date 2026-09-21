@@ -1,6 +1,6 @@
 import pytest
 
-from src.domain.exceptions.boxes import (
+from app.domain.exceptions.boxes import (
     BoxMessageEmptyError,
     BoxMessageTooLongError,
     BoxPreviewTitleEmptyError,
@@ -12,10 +12,10 @@ from src.domain.exceptions.boxes import (
     BoxTitleSurroundingWhitespaceError,
     BoxTitleTooLongError,
 )
-from src.domain.values.box_message import BoxMessage
-from src.domain.values.box_preview_title import BoxPreviewTitle
-from src.domain.values.box_recipient_name import BoxRecipientName
-from src.domain.values.box_title import BoxTitle
+from app.domain.values.box_message import BoxMessage
+from app.domain.values.box_preview_title import BoxPreviewTitle
+from app.domain.values.box_recipient_name import BoxRecipientName
+from app.domain.values.box_title import BoxTitle
 
 
 class TestBoxTitle:

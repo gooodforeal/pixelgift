@@ -1,6 +1,6 @@
-from src.application.use_cases.media import resolve_media_kind
-from src.domain.entities.media_files import MediaKind
-from src.domain.exceptions.media_files import UnsupportedMediaTypeError
+from app.application.use_cases.media import resolve_media_kind
+from app.domain.entities.media_files import MediaKind
+from app.domain.exceptions.media_files import UnsupportedMediaTypeError
 import pytest
 
 

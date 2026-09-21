@@ -1,5 +1,7 @@
 .venv
 front
+bot
+nginx
 __pycache__
 *.py[cod]
 .pytest_cache
@@ -7,7 +9,10 @@ __pycache__
 .ruff_cache
 .git
 .env
+**/.env
 *.egg-info
 .coverage
 htmlcov
 .DS_Store
+app/Dockerfile
+app/.env.example

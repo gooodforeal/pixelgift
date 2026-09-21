@@ -1,10 +1,10 @@
 import pytest
 
-from src.domain.exceptions.boxes import (
+from app.domain.exceptions.boxes import (
     BoxRecipientEmailInvalidError,
     BoxRecipientEmailSurroundingWhitespaceError,
 )
-from src.domain.values.box_recipient_email import BoxRecipientEmail
+from app.domain.values.box_recipient_email import BoxRecipientEmail
 
 
 class TestBoxRecipientEmail:

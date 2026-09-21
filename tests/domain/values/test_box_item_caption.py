@@ -1,11 +1,11 @@
 import pytest
 
-from src.domain.exceptions.box_items import (
+from app.domain.exceptions.box_items import (
     BoxItemCaptionEmptyError,
     BoxItemCaptionSurroundingWhitespaceError,
     BoxItemCaptionTooLongError,
 )
-from src.domain.values.box_item_caption import BoxItemCaption
+from app.domain.values.box_item_caption import BoxItemCaption
 
 
 class TestBoxItemCaption:

@@ -31,43 +31,14 @@ services:
       retries: 20
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: app/Dockerfile
     env_file:
-      - .env
+      - ./app/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET: ${MINIO_BUCKET}
-      MINIO_REGION: ${MINIO_REGION}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
-      SUPPORT_TELEGRAM_URL: ${SUPPORT_TELEGRAM_URL}
-      BOT_API_SECRET: ${BOT_API_SECRET}
-      API_BASE_URL: ${API_BASE_URL}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_ALGORITHM: ${JWT_ALGORITHM}
-      JWT_ACCESS_TOKEN_TTL_MINUTES: ${JWT_ACCESS_TOKEN_TTL_MINUTES}
-      JWT_REFRESH_TOKEN_TTL_DAYS: ${JWT_REFRESH_TOKEN_TTL_DAYS:-30}
-      COOKIE_SECURE: ${COOKIE_SECURE:-false}
-      LOGIN_CHALLENGE_TTL_MINUTES: ${LOGIN_CHALLENGE_TTL_MINUTES}
-      CORS_ORIGINS: ${CORS_ORIGINS}
-      REDIS_URL: ${REDIS_URL}
-      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USERNAME: ${SMTP_USERNAME}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
-      SMTP_USE_TLS: ${SMTP_USE_TLS}
-      NOTIFICATION_MAX_ATTEMPTS: ${NOTIFICATION_MAX_ATTEMPTS:-2}
-      NOTIFICATION_PROCESSING_STALE_MINUTES: ${NOTIFICATION_PROCESSING_STALE_MINUTES:-10}
-      SQLADMIN_USERNAME: ${SQLADMIN_USERNAME:-admin}
-      SQLADMIN_PASSWORD: ${SQLADMIN_PASSWORD:-admin}
-      SQLADMIN_SECRET_KEY: ${SQLADMIN_SECRET_KEY:-dev-sqladmin-session-secret}
-      SQLADMIN_COOKIE_SECURE: ${SQLADMIN_COOKIE_SECURE:-false}
-      SQLADMIN_COOKIE_SAMESITE: ${SQLADMIN_COOKIE_SAMESITE:-lax}
     depends_on:
       db:
         condition: service_healthy
@@ -118,15 +89,9 @@ services:
     restart: unless-stopped
 
   bot:
-    build: .
-    command: ["python", "-m", "bot"]
+    build: ./bot
     env_file:
-      - .env
-    environment:
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
-      API_BASE_URL: http://app:8000
-      BOT_API_SECRET: ${BOT_API_SECRET}
+      - ./bot/.env
     depends_on:
       app:
         condition: service_healthy
@@ -150,28 +115,19 @@ services:
     restart: unless-stopped
 
   taskiq_worker:
-    build: .
+    build:
+      context: .
+      dockerfile: app/Dockerfile
     command:
       [
         "taskiq",
         "worker",
-        "src.infrastructure.worker.app:broker",
+        "app.infrastructure.worker.app:broker",
       ]
     env_file:
-      - .env
+      - ./app/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      REDIS_URL: ${REDIS_URL}
-      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USERNAME: ${SMTP_USERNAME}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
-      SMTP_USE_TLS: ${SMTP_USE_TLS}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      NOTIFICATION_MAX_ATTEMPTS: ${NOTIFICATION_MAX_ATTEMPTS:-2}
-      NOTIFICATION_PROCESSING_STALE_MINUTES: ${NOTIFICATION_PROCESSING_STALE_MINUTES:-10}
     depends_on:
       db:
         condition: service_healthy
@@ -182,18 +138,19 @@ services:
     restart: unless-stopped
 
   taskiq_scheduler:
-    build: .
+    build:
+      context: .
+      dockerfile: app/Dockerfile
     command:
       [
         "taskiq",
         "scheduler",
-        "src.infrastructure.worker.app:scheduler",
+        "app.infrastructure.worker.app:scheduler",
       ]
     env_file:
-      - .env
+      - ./app/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      REDIS_URL: ${REDIS_URL}
     depends_on:
       db:
         condition: service_healthy

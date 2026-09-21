@@ -1,6 +1,6 @@
 import uuid
 
-from src.domain.entities.media_files import MediaFile, MediaKind
+from app.domain.entities.media_files import MediaFile, MediaKind
 
 
 class TestMediaFile:

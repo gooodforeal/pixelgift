@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from src.domain.values.activates_at import ActivatesAt
+from app.domain.values.activates_at import ActivatesAt
 
 
 @pytest.fixture

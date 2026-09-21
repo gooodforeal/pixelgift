@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from src.domain.entities.telegram_login_challenges import (
+from app.domain.entities.telegram_login_challenges import (
     LoginChallengeStatus,
     TelegramLoginChallenge,
 )
-from src.domain.values.telegram_id import TelegramId
+from app.domain.values.telegram_id import TelegramId
 
 
 class TestTelegramLoginChallenge:

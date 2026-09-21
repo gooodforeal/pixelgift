@@ -3,10 +3,10 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.domain.entities.box_items import BoxItemType
-from src.domain.aggregates.boxes import MAX_BOX_ITEMS, Box, BoxStatus
-from src.domain.exceptions.box_items import BoxItemInvalidError
-from src.domain.exceptions.boxes import (
+from app.domain.entities.box_items import BoxItemType
+from app.domain.aggregates.boxes import MAX_BOX_ITEMS, Box, BoxStatus
+from app.domain.exceptions.box_items import BoxItemInvalidError
+from app.domain.exceptions.boxes import (
     BoxAlreadyArchivedError,
     BoxAlreadyOpenedError,
     BoxItemDuplicateSortOrderError,
@@ -15,16 +15,16 @@ from src.domain.exceptions.boxes import (
     BoxItemsLimitExceededError,
     BoxNotArchivedError,
 )
-from src.domain.values.activates_at import ActivatesAt
-from src.domain.values.box_item_caption import BoxItemCaption
-from src.domain.values.box_message import BoxMessage
-from src.domain.values.box_preview_title import BoxPreviewTitle
-from src.domain.values.box_recipient_email import BoxRecipientEmail
-from src.domain.values.box_recipient_name import BoxRecipientName
-from src.domain.values.box_title import BoxTitle
-from src.domain.values.public_slug import PublicSlug
-from src.domain.values.sort_order import SortOrder
-from src.domain.values.url import Url
+from app.domain.values.activates_at import ActivatesAt
+from app.domain.values.box_item_caption import BoxItemCaption
+from app.domain.values.box_message import BoxMessage
+from app.domain.values.box_preview_title import BoxPreviewTitle
+from app.domain.values.box_recipient_email import BoxRecipientEmail
+from app.domain.values.box_recipient_name import BoxRecipientName
+from app.domain.values.box_title import BoxTitle
+from app.domain.values.public_slug import PublicSlug
+from app.domain.values.sort_order import SortOrder
+from app.domain.values.url import Url
 
 
 def _make_box(activates_at: ActivatesAt, **kwargs: object) -> Box:

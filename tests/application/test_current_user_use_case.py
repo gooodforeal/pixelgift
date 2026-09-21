@@ -2,11 +2,11 @@ import uuid
 
 import pytest
 
-from src.application.use_cases.queries import GetCurrentUserUseCase
-from src.domain.entities.users import User
-from src.domain.exceptions.auth import UserInactiveError
-from src.domain.exceptions.users import UserNotFoundError
-from src.domain.values.telegram_id import TelegramId
+from app.application.use_cases.queries import GetCurrentUserUseCase
+from app.domain.entities.users import User
+from app.domain.exceptions.auth import UserInactiveError
+from app.domain.exceptions.users import UserNotFoundError
+from app.domain.values.telegram_id import TelegramId
 from tests.application.fakes import InMemoryUnitOfWork
 
 

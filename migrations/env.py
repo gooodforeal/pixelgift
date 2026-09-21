@@ -4,8 +4,8 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
-from src.infrastructure.models import Base
-from src.settings import settings
+from app.infrastructure.models import Base
+from app.settings import settings
 
 config = context.config
 # Alembic runs sync migrations via psycopg.

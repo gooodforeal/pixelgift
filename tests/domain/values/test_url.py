@@ -1,12 +1,12 @@
 import pytest
 
-from src.domain.exceptions.url import (
+from app.domain.exceptions.url import (
     UrlEmptyError,
     UrlMissingHostError,
     UrlSurroundingWhitespaceError,
     UrlUnsupportedSchemeError,
 )
-from src.domain.values.url import Url
+from app.domain.values.url import Url
 
 
 class TestUrl:

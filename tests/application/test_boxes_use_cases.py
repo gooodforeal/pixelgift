@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from src.application.dto.boxes import (
+from app.application.dto.boxes import (
     AddBoxItemCommand,
     ArchiveBoxCommand,
     CreateBoxCommand,
@@ -14,7 +14,7 @@ from src.application.dto.boxes import (
     UpdateBoxCommand,
     UpdateBoxItemCommand,
 )
-from src.application.use_cases.boxes import (
+from app.application.use_cases.boxes import (
     ActivateDueBoxesUseCase,
     AddBoxItemUseCase,
     ArchiveBoxUseCase,
@@ -26,16 +26,16 @@ from src.application.use_cases.boxes import (
     UpdateBoxItemUseCase,
     UpdateBoxUseCase,
 )
-from src.domain.aggregates.boxes import MAX_BOX_ITEMS, Box, BoxStatus
-from src.domain.entities.box_designs import BoxDesign
-from src.domain.entities.box_items import BoxItemType
-from src.domain.entities.media_files import MediaFile, MediaKind
-from src.domain.entities.notification_jobs import (
+from app.domain.aggregates.boxes import MAX_BOX_ITEMS, Box, BoxStatus
+from app.domain.entities.box_designs import BoxDesign
+from app.domain.entities.box_items import BoxItemType
+from app.domain.entities.media_files import MediaFile, MediaKind
+from app.domain.entities.notification_jobs import (
     NotificationJobStatus,
     NotificationTemplate,
 )
-from src.domain.exceptions.box_items import BoxItemInvalidError
-from src.domain.exceptions.boxes import (
+from app.domain.exceptions.box_items import BoxItemInvalidError
+from app.domain.exceptions.boxes import (
     BoxAccessDeniedError,
     BoxAlreadyArchivedError,
     BoxAlreadyOpenedError,
@@ -47,21 +47,21 @@ from src.domain.exceptions.boxes import (
     BoxWithoutItemsError,
     PublicSlugAlreadyTakenError,
 )
-from src.domain.exceptions.media_files import (
+from app.domain.exceptions.media_files import (
     MediaFileAccessDeniedError,
     MediaFileNotFoundError,
 )
-from src.domain.values.activates_at import ActivatesAt
-from src.domain.values.box_design_name import BoxDesignName
-from src.domain.values.box_item_caption import BoxItemCaption
-from src.domain.values.box_message import BoxMessage
-from src.domain.values.box_preview_title import BoxPreviewTitle
-from src.domain.values.box_recipient_email import BoxRecipientEmail
-from src.domain.values.box_recipient_name import BoxRecipientName
-from src.domain.values.box_title import BoxTitle
-from src.domain.values.box_unlock_password import BoxUnlockPassword
-from src.domain.values.public_slug import PublicSlug
-from src.domain.values.url import Url
+from app.domain.values.activates_at import ActivatesAt
+from app.domain.values.box_design_name import BoxDesignName
+from app.domain.values.box_item_caption import BoxItemCaption
+from app.domain.values.box_message import BoxMessage
+from app.domain.values.box_preview_title import BoxPreviewTitle
+from app.domain.values.box_recipient_email import BoxRecipientEmail
+from app.domain.values.box_recipient_name import BoxRecipientName
+from app.domain.values.box_title import BoxTitle
+from app.domain.values.box_unlock_password import BoxUnlockPassword
+from app.domain.values.public_slug import PublicSlug
+from app.domain.values.url import Url
 from tests.application.fakes import InMemoryUnitOfWork
 from tests.application.test_notifications import RecordingTaskQueue
 

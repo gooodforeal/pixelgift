@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from src.domain.entities.user_sessions import UserSession
+from app.domain.entities.user_sessions import UserSession
 
 
 class TestUserSession:

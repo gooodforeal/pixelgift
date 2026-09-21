@@ -1,11 +1,11 @@
 import pytest
 
-from src.domain.exceptions.users import (
+from app.domain.exceptions.users import (
     TelegramIdNonPositiveError,
     TelegramIdNotNumericError,
     TelegramIdTooLongError,
 )
-from src.domain.values.telegram_id import TelegramId
+from app.domain.values.telegram_id import TelegramId
 
 
 class TestTelegramId:

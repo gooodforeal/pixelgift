@@ -1,15 +1,15 @@
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from src.domain.aggregates.boxes import Box, BoxStatus
-from src.domain.entities.box_items import BoxItemType
-from src.domain.values.activates_at import ActivatesAt
-from src.domain.values.box_item_caption import BoxItemCaption
-from src.domain.values.box_recipient_email import BoxRecipientEmail
-from src.domain.values.box_recipient_name import BoxRecipientName
-from src.domain.values.box_title import BoxTitle
-from src.domain.values.public_slug import PublicSlug
-from src.infrastructure.mappers.boxes import box_to_entity, box_to_model
+from app.domain.aggregates.boxes import Box, BoxStatus
+from app.domain.entities.box_items import BoxItemType
+from app.domain.values.activates_at import ActivatesAt
+from app.domain.values.box_item_caption import BoxItemCaption
+from app.domain.values.box_recipient_email import BoxRecipientEmail
+from app.domain.values.box_recipient_name import BoxRecipientName
+from app.domain.values.box_title import BoxTitle
+from app.domain.values.public_slug import PublicSlug
+from app.infrastructure.mappers.boxes import box_to_entity, box_to_model
 
 
 class TestBoxMapper:

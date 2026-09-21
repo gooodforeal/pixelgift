@@ -2,35 +2,35 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 import uuid
 
-from src.application.ports.notifications.base import (
+from app.application.ports.notifications.base import (
     BaseEmailSender,
     BaseTelegramNotifier,
 )
-from src.application.ports.queues.base import BaseTaskQueue
-from src.application.services.notifications import (
+from app.application.ports.queues.base import BaseTaskQueue
+from app.application.services.notifications import (
     NotificationService,
     OwnerTelegramEvent,
     render_gift_ready_html,
     render_owner_telegram_html,
 )
-from src.application.use_cases.notifications import (
+from app.application.use_cases.notifications import (
     DispatchDueNotificationsUseCase,
     schedule_owner_notification_job,
 )
-from src.application.use_cases.queries import GetPublicBoxUseCase
-from src.domain.aggregates.boxes import Box, BoxStatus
-from src.domain.entities.notification_jobs import (
+from app.application.use_cases.queries import GetPublicBoxUseCase
+from app.domain.aggregates.boxes import Box, BoxStatus
+from app.domain.entities.notification_jobs import (
     NotificationJob,
     NotificationJobStatus,
     NotificationTemplate,
 )
-from src.domain.entities.users import User
-from src.domain.values.activates_at import ActivatesAt
-from src.domain.values.box_recipient_email import BoxRecipientEmail
-from src.domain.values.box_recipient_name import BoxRecipientName
-from src.domain.values.box_title import BoxTitle
-from src.domain.values.public_slug import PublicSlug
-from src.domain.values.telegram_id import TelegramId
+from app.domain.entities.users import User
+from app.domain.values.activates_at import ActivatesAt
+from app.domain.values.box_recipient_email import BoxRecipientEmail
+from app.domain.values.box_recipient_name import BoxRecipientName
+from app.domain.values.box_title import BoxTitle
+from app.domain.values.public_slug import PublicSlug
+from app.domain.values.telegram_id import TelegramId
 from tests.application.fakes import InMemoryUnitOfWork
 
 
@@ -272,9 +272,9 @@ class TestGetPublicBoxUseCaseOpenedNotification:
         assert job.status == NotificationJobStatus.SCHEDULED
 
     async def test_password_keeps_content_locked_until_unlock(self):
-        from src.application.services.jwt import JwtService
-        from src.domain.values.box_unlock_password import BoxUnlockPassword
-        from src.settings import Settings
+        from app.application.services.jwt import JwtService
+        from app.domain.values.box_unlock_password import BoxUnlockPassword
+        from app.settings import Settings
 
         uow = InMemoryUnitOfWork()
         box = _box(owner_id=uuid.uuid4(), status=BoxStatus.SCHEDULED)
@@ -289,7 +289,7 @@ class TestGetPublicBoxUseCaseOpenedNotification:
         assert locked.content_unlocked is False
         assert queue.kicks == 0
 
-        from src.application.use_cases.queries import UnlockPublicBoxUseCase
+        from app.application.use_cases.queries import UnlockPublicBoxUseCase
 
         unlocked = await UnlockPublicBoxUseCase(
             uow, jwt_service, task_queue=queue

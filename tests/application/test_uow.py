@@ -3,18 +3,18 @@ from unittest.mock import AsyncMock
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.uow.base import BaseUnitOfWork
-from src.domain.repository.boxes import BaseBoxesRepository
-from src.domain.repository.box_designs import BaseBoxDesignsRepository
-from src.domain.repository.design_assets import BaseDesignAssetsRepository
-from src.domain.repository.media_files import BaseMediaFilesRepository
-from src.domain.repository.notification_jobs import BaseNotificationJobsRepository
-from src.domain.repository.telegram_login_challenges import (
+from app.application.uow.base import BaseUnitOfWork
+from app.domain.repository.boxes import BaseBoxesRepository
+from app.domain.repository.box_designs import BaseBoxDesignsRepository
+from app.domain.repository.design_assets import BaseDesignAssetsRepository
+from app.domain.repository.media_files import BaseMediaFilesRepository
+from app.domain.repository.notification_jobs import BaseNotificationJobsRepository
+from app.domain.repository.telegram_login_challenges import (
     BaseTelegramLoginChallengesRepository,
 )
-from src.domain.repository.user_sessions import BaseUserSessionsRepository
-from src.domain.repository.users import BaseUsersRepository
-from src.infrastructure.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
+from app.domain.repository.user_sessions import BaseUserSessionsRepository
+from app.domain.repository.users import BaseUsersRepository
+from app.infrastructure.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 
 
 class _FakeUnitOfWork(BaseUnitOfWork):

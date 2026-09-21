@@ -1,15 +1,15 @@
 import pytest
 
-from src.application.use_cases.designs import ListBoxDesignsUseCase, RateDesignUseCase
-from src.domain.entities.box_designs import BoxDesign
-from src.domain.exceptions.boxes import BoxDesignNotAvailableError
-from src.domain.exceptions.design_ratings import (
+from app.application.use_cases.designs import ListBoxDesignsUseCase, RateDesignUseCase
+from app.domain.entities.box_designs import BoxDesign
+from app.domain.exceptions.boxes import BoxDesignNotAvailableError
+from app.domain.exceptions.design_ratings import (
     DesignAlreadyRatedError,
     DesignRatingStarsOutOfRangeError,
 )
-from src.domain.values.box_design_name import BoxDesignName
-from src.domain.values.sort_order import SortOrder
-from src.domain.values.url import Url
+from app.domain.values.box_design_name import BoxDesignName
+from app.domain.values.sort_order import SortOrder
+from app.domain.values.url import Url
 from tests.application.fakes import InMemoryUnitOfWork
 import uuid
 

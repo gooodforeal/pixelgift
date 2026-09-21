@@ -1,10 +1,10 @@
 import pytest
 
-from src.domain.exceptions.boxes import (
+from app.domain.exceptions.boxes import (
     PublicSlugFormatError,
     PublicSlugSurroundingWhitespaceError,
 )
-from src.domain.values.public_slug import PublicSlug
+from app.domain.values.public_slug import PublicSlug
 
 
 class TestPublicSlug:

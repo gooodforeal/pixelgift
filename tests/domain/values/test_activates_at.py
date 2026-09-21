@@ -1,8 +1,8 @@
 import pytest
 from datetime import datetime, timedelta, timezone
 
-from src.domain.exceptions.boxes import BoxActivatesAtNotInFutureError
-from src.domain.values.activates_at import ActivatesAt
+from app.domain.exceptions.boxes import BoxActivatesAtNotInFutureError
+from app.domain.values.activates_at import ActivatesAt
 
 
 class TestActivatesAt:

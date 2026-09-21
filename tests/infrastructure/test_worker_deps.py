@@ -1,6 +1,6 @@
 from taskiq_dependencies import DependencyGraph
 
-from src.infrastructure.worker.tasks import (
+from app.infrastructure.worker.tasks import (
     dispatch_due_notifications,
     kick_notification_dispatch,
 )

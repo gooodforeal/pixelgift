@@ -14,6 +14,15 @@ htmlcov
 
 front
 bot
-docker
 tests
 docs
+
+docker/bot
+docker/front
+docker/nginx
+docker/db
+docker/minio
+docker/app/Dockerfile
+docker/app/Dockerfile.dockerignore
+docker/app/.env
+docker/app/.env.example

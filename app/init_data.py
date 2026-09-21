@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Seed design preview assets into MinIO + design_assets / box_designs."""
 from __future__ import annotations
 
 import mimetypes

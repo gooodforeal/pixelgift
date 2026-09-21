@@ -1,3 +1,4 @@
+# API + taskiq worker/scheduler. Build context: repo root.
 FROM python:3.12-slim-bookworm
 
 COPY --from=ghcr.io/astral-sh/uv:0.8.4 /uv /usr/local/bin/uv
@@ -17,12 +18,12 @@ RUN uv sync --frozen --no-dev
 
 COPY alembic.ini ./
 COPY migrations ./migrations
-COPY scripts ./scripts
 COPY assets ./assets
 COPY app ./app
+COPY docker/app/entrypoint.sh /app/entrypoint.sh
 
-RUN chmod +x /app/scripts/entrypoint.sh /app/scripts/seed_static_assets.py
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8000
 
-CMD ["/app/scripts/entrypoint.sh"]
+CMD ["/app/entrypoint.sh"]

@@ -806,7 +806,7 @@ html[data-theme="light"] .design-cover__scrim {
 
 .design-banner {
   @apply relative isolate flex min-h-[19rem] items-end overflow-hidden rounded-3xl
-    border border-white/10 shadow-xl shadow-black/30 sm:min-h-[20rem];
+    shadow-xl shadow-black/30 sm:min-h-[20rem];
 }
 
 .design-banner__image {
@@ -871,7 +871,7 @@ html[data-theme="light"] .design-cover__scrim {
 }
 
 html[data-theme="light"] .design-banner {
-  @apply border-slate-900/10 shadow-slate-900/20;
+  @apply shadow-slate-900/20;
 }
 
 html[data-theme="light"] .design-banner__scrim {

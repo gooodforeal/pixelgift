@@ -1,14 +1,14 @@
 from app.domain.entities.support_tickets import SupportTicket, SupportTicketAttachment
 from app.presentation.schemas.support import (
-    SupportTicketAttachmentResponse,
-    SupportTicketResponse,
+    SupportTicketAttachmentSchema,
+    SupportTicketSchema,
 )
 
 
 def support_attachment_to_response(
     item: SupportTicketAttachment,
-) -> SupportTicketAttachmentResponse:
-    return SupportTicketAttachmentResponse(
+) -> SupportTicketAttachmentSchema:
+    return SupportTicketAttachmentSchema(
         id=item.id,
         mime_type=item.mime_type,
         size_bytes=item.size_bytes,
@@ -16,8 +16,8 @@ def support_attachment_to_response(
     )
 
 
-def support_ticket_to_response(ticket: SupportTicket) -> SupportTicketResponse:
-    return SupportTicketResponse(
+def support_ticket_to_response(ticket: SupportTicket) -> SupportTicketSchema:
+    return SupportTicketSchema(
         id=ticket.id,
         contact=ticket.contact,
         subject=ticket.subject,

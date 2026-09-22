@@ -20,6 +20,13 @@ import type {
 } from "./types";
 import { isAuthed, setAuthed } from "./auth";
 
+export interface OpenedThisMonthStats {
+  count: number;
+  period_start: string;
+  period_end: string;
+  timezone: string;
+}
+
 export const API_URL = import.meta.env.VITE_API_URL ?? "/api";
 
 export class ApiError extends Error {
@@ -102,12 +109,17 @@ async function request<T>(
   }
 
   if (response.status === 204) return undefined as T;
-  return (await response.json()) as T;
+  const data = (await response.json()) as { result?: T };
+  return data.result as T;
 }
 
 async function readError(response: Response): Promise<string> {
   try {
-    const data = (await response.json()) as { detail?: unknown };
+    const data = (await response.json()) as {
+      message?: unknown;
+      detail?: unknown;
+    };
+    if (typeof data.message === "string" && data.message) return data.message;
     if (typeof data.detail === "string") return data.detail;
     if (Array.isArray(data.detail)) {
       const first = data.detail[0] as { msg?: string } | undefined;
@@ -132,6 +144,8 @@ export const api = {
     request<void>("/auth/logout", { method: "POST" }, { retryOnUnauthorized: false }),
 
   me: () => request<CurrentUser>("/auth/me"),
+
+  openedThisMonth: () => request<OpenedThisMonthStats>("/boxes/opens"),
 
   updateMe: (payload: { notifications_enabled: boolean }) =>
     request<CurrentUser>("/auth/me", {

@@ -337,3 +337,43 @@ class GetCurrentUserUseCase:
             if not user.is_active:
                 raise UserInactiveError(user_id)
             return user
+
+
+@dataclass(frozen=True, kw_only=True)
+class OpenedThisMonthStats:
+    count: int
+    period_start: datetime
+    period_end: datetime
+    timezone: str
+
+
+class GetOpenedThisMonthStatsUseCase:
+    """Global count of boxes first opened in the current calendar month (Moscow)."""
+
+    TIMEZONE = "Europe/Moscow"
+
+    def __init__(self, uow: BaseUnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(self, *, now: datetime | None = None) -> OpenedThisMonthStats:
+        from zoneinfo import ZoneInfo
+
+        tz = ZoneInfo(self.TIMEZONE)
+        moment = now.astimezone(tz) if now is not None else datetime.now(tz)
+        period_start = datetime(moment.year, moment.month, 1, tzinfo=tz)
+        if moment.month == 12:
+            period_end = datetime(moment.year + 1, 1, 1, tzinfo=tz)
+        else:
+            period_end = datetime(moment.year, moment.month + 1, 1, tzinfo=tz)
+
+        async with self._uow as uow:
+            count = await uow.boxes.count_opened_between(
+                start=period_start,
+                end=period_end,
+            )
+        return OpenedThisMonthStats(
+            count=count,
+            period_start=period_start,
+            period_end=period_end,
+            timezone=self.TIMEZONE,
+        )

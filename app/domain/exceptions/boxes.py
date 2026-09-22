@@ -145,12 +145,16 @@ class BoxItemDuplicateSortOrderError(BoxItemAggregateError):
 
 
 class BoxItemsLimitExceededError(BoxItemAggregateError):
+    status_code = 409
+
     def __init__(self, limit: int) -> None:
         self.limit = limit
         super().__init__(f"Box cannot contain more than {limit} items")
 
 
 class BoxItemNotFoundError(BoxItemAggregateError):
+    status_code = 404
+
     def __init__(self, item_id: uuid.UUID) -> None:
         self.item_id = item_id
         super().__init__(f"Box item not found: {item_id}")
@@ -164,18 +168,24 @@ class BoxItemReorderError(BoxItemAggregateError):
 
 
 class BoxNotFoundError(BaseException):
+    status_code = 404
+
     def __init__(self, box_id: uuid.UUID) -> None:
         self.box_id = box_id
         super().__init__(f"Box not found: {box_id}")
 
 
 class BoxNotFoundBySlugError(BaseException):
+    status_code = 404
+
     def __init__(self, public_slug: str) -> None:
         self.public_slug = public_slug
         super().__init__(f"Box not found for slug: {public_slug!r}")
 
 
 class BoxAccessDeniedError(BaseException):
+    status_code = 403
+
     def __init__(self, box_id: uuid.UUID, actor_id: uuid.UUID) -> None:
         self.box_id = box_id
         self.actor_id = actor_id
@@ -183,6 +193,8 @@ class BoxAccessDeniedError(BaseException):
 
 
 class BoxNotEditableError(BaseException):
+    status_code = 409
+
     def __init__(self, box_id: uuid.UUID, status: str) -> None:
         self.box_id = box_id
         self.status = status
@@ -190,12 +202,16 @@ class BoxNotEditableError(BaseException):
 
 
 class PublicSlugAlreadyTakenError(PublicSlugError):
+    status_code = 409
+
     def __init__(self, slug: str) -> None:
         self.slug = slug
         super().__init__(f"Public slug already taken: {slug!r}")
 
 
 class BoxNotPublishableError(BaseException):
+    status_code = 409
+
     def __init__(self, box_id: uuid.UUID, status: str) -> None:
         self.box_id = box_id
         self.status = status
@@ -203,6 +219,8 @@ class BoxNotPublishableError(BaseException):
 
 
 class BoxCertificateNotAvailableError(BaseException):
+    status_code = 409
+
     def __init__(self, box_id: uuid.UUID, status: str) -> None:
         self.box_id = box_id
         self.status = status
@@ -219,18 +237,24 @@ class BoxWithoutItemsError(BaseException):
 
 
 class BoxAlreadyArchivedError(BaseException):
+    status_code = 409
+
     def __init__(self, box_id: uuid.UUID) -> None:
         self.box_id = box_id
         super().__init__(f"Box {box_id} is already archived")
 
 
 class BoxNotArchivedError(BaseException):
+    status_code = 409
+
     def __init__(self, box_id: uuid.UUID) -> None:
         self.box_id = box_id
         super().__init__(f"Box {box_id} is not archived")
 
 
 class BoxAlreadyOpenedError(BaseException):
+    status_code = 409
+
     def __init__(self, box_id: uuid.UUID) -> None:
         self.box_id = box_id
         super().__init__(
@@ -239,6 +263,8 @@ class BoxAlreadyOpenedError(BaseException):
 
 
 class BoxContentLockedError(BaseException):
+    status_code = 403
+
     def __init__(self, public_slug: str) -> None:
         self.public_slug = public_slug
         super().__init__(f"Box content is still locked: {public_slug!r}")
@@ -275,12 +301,16 @@ class BoxUnlockPasswordFormatError(BoxUnlockPasswordError):
 
 
 class BoxUnlockPasswordIncorrectError(BaseException):
+    status_code = 403
+
     def __init__(self, public_slug: str) -> None:
         self.public_slug = public_slug
         super().__init__(f"Incorrect unlock password for box: {public_slug!r}")
 
 
 class BoxUnlockNotYetAvailableError(BaseException):
+    status_code = 403
+
     def __init__(self, public_slug: str) -> None:
         self.public_slug = public_slug
         super().__init__(

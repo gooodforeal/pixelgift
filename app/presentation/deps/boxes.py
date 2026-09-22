@@ -16,6 +16,7 @@ from app.application.use_cases.boxes import (
 )
 from app.application.use_cases.queries import (
     GetBoxUseCase,
+    GetOpenedThisMonthStatsUseCase,
     GetPublicBoxItemContentUseCase,
     GetPublicBoxUseCase,
     ListBoxesUseCase,
@@ -115,3 +116,7 @@ def get_public_box_item_content_uc(
     return GetPublicBoxItemContentUseCase(
         SqlAlchemyUnitOfWork(), storage, jwt_service
     )
+
+
+def get_opened_this_month_stats_uc() -> GetOpenedThisMonthStatsUseCase:
+    return GetOpenedThisMonthStatsUseCase(SqlAlchemyUnitOfWork())

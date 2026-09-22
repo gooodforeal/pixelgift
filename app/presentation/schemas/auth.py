@@ -1,24 +1,40 @@
+from base64 import b64decode
+import binascii
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+
+from app.presentation.schemas.base import BaseResponseSchema
 
 
-class TelegramLoginStartResponse(BaseModel):
+class TelegramLoginStartSchema(BaseModel):
     code: str
     bot_url: str
     expires_at: str
 
 
-class TelegramLoginStatusResponse(BaseModel):
+class TelegramLoginStartResponse(BaseResponseSchema[TelegramLoginStartSchema]):
+    pass
+
+
+class TelegramLoginStatusSchema(BaseModel):
     status: str
     access_token: str | None = None
     token_type: str | None = None
     user_id: uuid.UUID | None = None
 
 
-class AccessTokenResponse(BaseModel):
+class TelegramLoginStatusResponse(BaseResponseSchema[TelegramLoginStatusSchema]):
+    pass
+
+
+class AccessTokenSchema(BaseModel):
     token_type: str = "bearer"
     user_id: uuid.UUID | None = None
+
+
+class AccessTokenResponse(BaseResponseSchema[AccessTokenSchema]):
+    pass
 
 
 class CompleteTelegramLoginRequest(BaseModel):
@@ -31,13 +47,28 @@ class CompleteTelegramLoginRequest(BaseModel):
     photo_base64: str | None = None
     photo_content_type: str | None = None
 
+    @field_validator("photo_base64")
+    @classmethod
+    def validate_photo_base64(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        try:
+            b64decode(value, validate=True)
+        except (binascii.Error, ValueError) as exc:
+            raise ValueError("Invalid photo_base64") from exc
+        return value
 
-class CompleteTelegramLoginResponse(BaseModel):
+
+class CompleteTelegramLoginSchema(BaseModel):
     ok: bool
     reply_text: str
 
 
-class CurrentUserResponse(BaseModel):
+class CompleteTelegramLoginResponse(BaseResponseSchema[CompleteTelegramLoginSchema]):
+    pass
+
+
+class CurrentUserSchema(BaseModel):
     id: uuid.UUID
     first_name: str
     last_name: str | None = None
@@ -48,6 +79,10 @@ class CurrentUserResponse(BaseModel):
     notifications_enabled: bool = True
     created_at: str
     last_seen_at: str | None = None
+
+
+class CurrentUserResponse(BaseResponseSchema[CurrentUserSchema]):
+    pass
 
 
 class UpdateCurrentUserSettingsRequest(BaseModel):

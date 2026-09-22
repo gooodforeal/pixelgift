@@ -7,6 +7,8 @@ class SupportTicketError(BaseException):
 
 
 class SupportTicketNotFoundError(SupportTicketError):
+    status_code = 404
+
     def __init__(self, ticket_id: uuid.UUID) -> None:
         self.ticket_id = ticket_id
         super().__init__(f"Support ticket not found: {ticket_id}")
@@ -18,6 +20,8 @@ class SupportTicketValidationError(SupportTicketError):
 
 
 class SupportTicketAttachmentNotFoundError(SupportTicketError):
+    status_code = 404
+
     def __init__(self, attachment_id: uuid.UUID) -> None:
         self.attachment_id = attachment_id
         super().__init__(f"Support ticket attachment not found: {attachment_id}")

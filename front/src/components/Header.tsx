@@ -14,8 +14,34 @@ import {
 
 import { useAuth } from "../hooks/useAuth";
 import { api } from "../lib/api";
+import { pluralize } from "../lib/format";
 import { LogoMark } from "./Logo";
 import { UiThemeToggle } from "./UiThemeToggle";
+
+function OpenedThisMonthStat({ className = "" }: { className?: string }) {
+  const statsQuery = useQuery({
+    queryKey: ["boxes", "opens"],
+    queryFn: api.openedThisMonth,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+
+  if (!statsQuery.data) return null;
+
+  const count = statsQuery.data.count;
+  const giftsWord = pluralize(count, ["подарок", "подарка", "подарков"]);
+  const label = `${count} ${giftsWord} открыто в этом месяце`;
+
+  return (
+    <p className={`app-rail__stat ${className}`} title={label}>
+      <span className="app-rail__stat-line">
+        <span className="app-rail__stat-count">{count}</span>
+        <span className="app-rail__stat-word"> {giftsWord}</span>
+      </span>
+      <span className="app-rail__stat-sub">открыто в этом месяце</span>
+    </p>
+  );
+}
 
 function RailLogo({ onNavigate }: { onNavigate?: () => void }) {
   return (
@@ -139,7 +165,10 @@ export function Header() {
     <>
       <header className="app-rail" aria-label="Основная навигация">
         <div className="app-rail__inner">
-          <RailLogo />
+          <div className="app-rail__lead">
+            <RailLogo />
+            <OpenedThisMonthStat className="app-rail__stat--desktop" />
+          </div>
 
           <nav className="app-rail__nav" aria-label="Разделы">
             {isAuthenticated ? (
@@ -217,6 +246,7 @@ export function Header() {
           </div>
 
           <nav className="app-rail-menu__nav" aria-label="Мобильная навигация">
+            <OpenedThisMonthStat className="app-rail__stat--menu" />
             {isAuthenticated ? (
               <>
                 <MenuLink

@@ -1,33 +1,38 @@
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 
 from app.application.dto.support import (
     CreateSupportTicketCommand,
     SupportAttachmentUpload,
 )
 from app.application.use_cases.support import CreateSupportTicketUseCase
-from app.domain.exceptions.support import SupportTicketValidationError
 from app.presentation.deps.common import get_settings
 from app.presentation.deps.support import get_create_support_ticket_uc
-from app.presentation.schemas.support import SupportTicketResponse
+from app.presentation.schemas.support import (
+    SupportConfigResponse,
+    SupportConfigSchema,
+    SupportTicketResponse,
+)
 from app.presentation.schemas.support_mappers import support_ticket_to_response
 from app.settings import Settings
 
 router = APIRouter(prefix="/support", tags=["support"])
 
 
-class SupportConfigResponse(BaseModel):
-    telegram_url: str
-
-
 @router.get("/config", response_model=SupportConfigResponse)
 async def support_config(
     cfg: Settings = Depends(get_settings),
 ) -> SupportConfigResponse:
-    return SupportConfigResponse(telegram_url=cfg.support_telegram_url)
+    return SupportConfigResponse(
+        message="Success",
+        result=SupportConfigSchema(telegram_url=cfg.support_telegram_url),
+    )
 
 
-@router.post("", response_model=SupportTicketResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=SupportTicketResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_support_ticket(
     contact: str = Form(...),
     subject: str = Form(...),
@@ -46,16 +51,14 @@ async def create_support_ticket(
             )
         )
 
-    try:
-        ticket = await uc.execute(
-            CreateSupportTicketCommand(
-                contact=contact,
-                subject=subject,
-                description=description,
-                files=tuple(uploads),
-            )
+    ticket = await uc.execute(
+        CreateSupportTicketCommand(
+            contact=contact,
+            subject=subject,
+            description=description,
+            files=tuple(uploads),
         )
-    except SupportTicketValidationError as exc:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-
-    return support_ticket_to_response(ticket)
+    )
+    return SupportTicketResponse(
+        message="Success", result=support_ticket_to_response(ticket)
+    )

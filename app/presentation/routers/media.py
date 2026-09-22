@@ -7,11 +7,6 @@ from app.application.use_cases.media import (
     UploadMediaUseCase,
 )
 from app.domain.entities.media_files import MediaKind
-from app.domain.exceptions.media_files import (
-    MediaFileAccessDeniedError,
-    MediaFileNotFoundError,
-    UnsupportedMediaTypeError,
-)
 from app.presentation.deps.auth import get_current_user_id
 from app.presentation.deps.media import (
     get_own_media_content_uc,
@@ -25,7 +20,11 @@ router = APIRouter(prefix="/media", tags=["media"])
 _KIND_VALUES = {kind.value for kind in MediaKind}
 
 
-@router.post("", response_model=MediaFileResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=MediaFileResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def upload_media(
     file: UploadFile = File(...),
     kind: str | None = Form(default=None),
@@ -46,22 +45,14 @@ async def upload_media(
         preferred_kind = MediaKind(kind)
 
     content_type = file.content_type or "application/octet-stream"
-    try:
-        media = await uc.execute(
-            owner_id=user_id,
-            data=data,
-            content_type=content_type,
-            original_filename=file.filename,
-            preferred_kind=preferred_kind,
-        )
-    except UnsupportedMediaTypeError as exc:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-    except Exception as exc:
-        raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY,
-            detail=f"Upload failed: {exc}",
-        ) from exc
-    return media_to_response(media)
+    media = await uc.execute(
+        owner_id=user_id,
+        data=data,
+        content_type=content_type,
+        original_filename=file.filename,
+        preferred_kind=preferred_kind,
+    )
+    return MediaFileResponse(message="Success", result=media_to_response(media))
 
 
 @router.get("/{media_id}/content")
@@ -70,13 +61,7 @@ async def get_media_content(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: GetOwnMediaContentUseCase = Depends(get_own_media_content_uc),
 ) -> Response:
-    try:
-        content = await uc.execute(media_id=media_id, actor_id=user_id)
-    except MediaFileNotFoundError as exc:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-    except MediaFileAccessDeniedError as exc:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
-
+    content = await uc.execute(media_id=media_id, actor_id=user_id)
     return Response(
         content=content.data,
         media_type=content.mime_type,

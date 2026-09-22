@@ -101,6 +101,19 @@ class SqlAlchemyBoxesRepository(BaseBoxesRepository):
         )
         return {str(status): int(count) for status, count in result.all()}
 
+    async def count_opened_between(
+        self,
+        *,
+        start: datetime,
+        end: datetime,
+    ) -> int:
+        return await self._session.scalar(
+            select(func.count(BoxModel.id)).where(
+                BoxModel.first_opened_at >= start,
+                BoxModel.first_opened_at < end,
+            )
+        ) or 0
+
     async def claim_due_to_activate(
         self,
         now: datetime,

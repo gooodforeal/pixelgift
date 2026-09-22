@@ -32,6 +32,14 @@ class BaseBoxesRepository(BaseRepository[Box], ABC):
     ) -> dict[str, int]: ...
 
     @abstractmethod
+    async def count_opened_between(
+        self,
+        *,
+        start: datetime,
+        end: datetime,
+    ) -> int: ...
+
+    @abstractmethod
     async def claim_due_to_activate(
         self,
         now: datetime,

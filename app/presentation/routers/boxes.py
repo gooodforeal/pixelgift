@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from fastapi.responses import Response
 
 from app.application.dto.boxes import (
@@ -25,27 +25,11 @@ from app.application.use_cases.boxes import (
     UpdateBoxItemUseCase,
     UpdateBoxUseCase,
 )
-from app.application.use_cases.queries import GetBoxUseCase, ListBoxesUseCase
-from app.domain.exceptions.boxes import (
-    BoxAccessDeniedError,
-    BoxAlreadyArchivedError,
-    BoxAlreadyOpenedError,
-    BoxDesignNotAvailableError,
-    BoxItemNotFoundError,
-    BoxItemReorderError,
-    BoxItemsLimitExceededError,
-    BoxNotArchivedError,
-    BoxNotEditableError,
-    BoxNotFoundError,
-    BoxCertificateNotAvailableError,
-    BoxNotPublishableError,
-    BoxWithoutItemsError,
-    PublicSlugAlreadyTakenError,
-)
-from app.domain.exceptions.box_items import BoxItemInvalidError
-from app.domain.exceptions.media_files import (
-    MediaFileAccessDeniedError,
-    MediaFileNotFoundError,
+from app.application.use_cases.certificates import GenerateGiftCertificateUseCase
+from app.application.use_cases.queries import (
+    GetBoxUseCase,
+    GetOpenedThisMonthStatsUseCase,
+    ListBoxesUseCase,
 )
 from app.domain.values.activates_at import ActivatesAt
 from app.domain.values.box_item_caption import BoxItemCaption
@@ -66,6 +50,7 @@ from app.presentation.deps.boxes import (
     get_get_box_uc,
     get_gift_certificate_uc,
     get_list_boxes_uc,
+    get_opened_this_month_stats_uc,
     get_publish_box_uc,
     get_remove_box_item_uc,
     get_reorder_box_items_uc,
@@ -74,12 +59,14 @@ from app.presentation.deps.boxes import (
     get_update_box_uc,
 )
 from app.presentation.deps.common import PaginationParams, pagination_dep
-from app.application.use_cases.certificates import GenerateGiftCertificateUseCase
 from app.presentation.schemas.boxes import (
     AddBoxItemRequest,
     BoxResponse,
     CreateBoxRequest,
+    OpenedThisMonthStatsResponse,
+    OpenedThisMonthStatsSchema,
     PaginatedBoxesResponse,
+    PaginatedBoxesSchema,
     ReorderBoxItemsRequest,
     UpdateBoxItemRequest,
     UpdateBoxRequest,
@@ -89,62 +76,37 @@ from app.presentation.schemas.mappers import box_to_response
 router = APIRouter(prefix="/boxes", tags=["boxes"])
 
 
-def _http_error(exc: Exception) -> HTTPException:
-    mapping: list[tuple[type[Exception], int]] = [
-        (BoxNotFoundError, status.HTTP_404_NOT_FOUND),
-        (BoxItemNotFoundError, status.HTTP_404_NOT_FOUND),
-        (MediaFileNotFoundError, status.HTTP_404_NOT_FOUND),
-        (BoxAccessDeniedError, status.HTTP_403_FORBIDDEN),
-        (MediaFileAccessDeniedError, status.HTTP_403_FORBIDDEN),
-        (BoxNotEditableError, status.HTTP_409_CONFLICT),
-        (BoxNotPublishableError, status.HTTP_409_CONFLICT),
-        (BoxCertificateNotAvailableError, status.HTTP_409_CONFLICT),
-        (BoxAlreadyArchivedError, status.HTTP_409_CONFLICT),
-        (BoxNotArchivedError, status.HTTP_409_CONFLICT),
-        (BoxAlreadyOpenedError, status.HTTP_409_CONFLICT),
-        (BoxItemsLimitExceededError, status.HTTP_409_CONFLICT),
-        (BoxWithoutItemsError, status.HTTP_400_BAD_REQUEST),
-        (BoxDesignNotAvailableError, status.HTTP_400_BAD_REQUEST),
-        (BoxItemInvalidError, status.HTTP_400_BAD_REQUEST),
-        (PublicSlugAlreadyTakenError, status.HTTP_409_CONFLICT),
-        (BoxItemReorderError, status.HTTP_400_BAD_REQUEST),
-    ]
-    for exc_type, code in mapping:
-        if isinstance(exc, exc_type):
-            return HTTPException(code, detail=str(exc))
-    return HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc))
-
-
-@router.post("", response_model=BoxResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=BoxResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_box(
     body: CreateBoxRequest,
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: CreateBoxUseCase = Depends(get_create_box_uc),
 ) -> BoxResponse:
-    try:
-        box = await uc.execute(
-            CreateBoxCommand(
-                owner_id=user_id,
-                design_id=body.design_id,
-                title=BoxTitle(body.title),
-                recipient_name=BoxRecipientName(body.recipient_name),
-                recipient_email=BoxRecipientEmail(body.recipient_email),
-                unlock_password=BoxUnlockPassword(body.unlock_password),
-                activates_at=ActivatesAt(body.activates_at),
-                timezone=body.timezone,
-                public_slug=PublicSlug(body.public_slug) if body.public_slug else None,
-                message=BoxMessage(body.message) if body.message else None,
-                preview_title=(
-                    BoxPreviewTitle(body.preview_title) if body.preview_title else None
-                ),
-                preview_image_url=(
-                    Url(body.preview_image_url) if body.preview_image_url else None
-                ),
-            )
+    box = await uc.execute(
+        CreateBoxCommand(
+            owner_id=user_id,
+            design_id=body.design_id,
+            title=BoxTitle(body.title),
+            recipient_name=BoxRecipientName(body.recipient_name),
+            recipient_email=BoxRecipientEmail(body.recipient_email),
+            unlock_password=BoxUnlockPassword(body.unlock_password),
+            activates_at=ActivatesAt(body.activates_at),
+            timezone=body.timezone,
+            public_slug=PublicSlug(body.public_slug) if body.public_slug else None,
+            message=BoxMessage(body.message) if body.message else None,
+            preview_title=(
+                BoxPreviewTitle(body.preview_title) if body.preview_title else None
+            ),
+            preview_image_url=(
+                Url(body.preview_image_url) if body.preview_image_url else None
+            ),
         )
-    except Exception as exc:
-        raise _http_error(exc) from exc
-    return box_to_response(box)
+    )
+    return BoxResponse(message="Success", result=box_to_response(box))
 
 
 @router.get("", response_model=PaginatedBoxesResponse)
@@ -159,11 +121,30 @@ async def list_boxes(
         page_size=pagination.page_size,
     )
     return PaginatedBoxesResponse(
-        items=[box_to_response(box) for box in page.items],
-        total=page.total,
-        page=page.page,
-        page_size=page.page_size,
-        status_counts=page.status_counts,
+        message="Success",
+        result=PaginatedBoxesSchema(
+            items=[box_to_response(box) for box in page.items],
+            total=page.total,
+            page=page.page,
+            page_size=page.page_size,
+            status_counts=page.status_counts,
+        ),
+    )
+
+
+@router.get("/opens", response_model=OpenedThisMonthStatsResponse)
+async def get_box_opens(
+    uc: GetOpenedThisMonthStatsUseCase = Depends(get_opened_this_month_stats_uc),
+) -> OpenedThisMonthStatsResponse:
+    result = await uc.execute()
+    return OpenedThisMonthStatsResponse(
+        message="Success",
+        result=OpenedThisMonthStatsSchema(
+            count=result.count,
+            period_start=result.period_start,
+            period_end=result.period_end,
+            timezone=result.timezone,
+        ),
     )
 
 
@@ -173,11 +154,8 @@ async def get_box(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: GetBoxUseCase = Depends(get_get_box_uc),
 ) -> BoxResponse:
-    try:
-        box = await uc.execute(box_id=box_id, actor_id=user_id)
-    except Exception as exc:
-        raise _http_error(exc) from exc
-    return box_to_response(box)
+    box = await uc.execute(box_id=box_id, actor_id=user_id)
+    return BoxResponse(message="Success", result=box_to_response(box))
 
 
 @router.get("/{box_id}/certificate.pdf")
@@ -187,14 +165,11 @@ async def download_gift_certificate(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: GenerateGiftCertificateUseCase = Depends(get_gift_certificate_uc),
 ) -> Response:
-    try:
-        certificate = await uc.execute(
-            box_id=box_id,
-            actor_id=user_id,
-            theme=theme,  # type: ignore[arg-type]
-        )
-    except Exception as exc:
-        raise _http_error(exc) from exc
+    certificate = await uc.execute(
+        box_id=box_id,
+        actor_id=user_id,
+        theme=theme,  # type: ignore[arg-type]
+    )
     return Response(
         content=certificate.data,
         media_type=certificate.media_type,
@@ -212,30 +187,27 @@ async def update_box(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: UpdateBoxUseCase = Depends(get_update_box_uc),
 ) -> BoxResponse:
-    try:
-        box = await uc.execute(
-            UpdateBoxCommand(
-                box_id=box_id,
-                actor_id=user_id,
-                design_id=body.design_id,
-                title=BoxTitle(body.title),
-                recipient_name=BoxRecipientName(body.recipient_name),
-                recipient_email=BoxRecipientEmail(body.recipient_email),
-                unlock_password=BoxUnlockPassword(body.unlock_password),
-                activates_at=ActivatesAt(body.activates_at),
-                timezone=body.timezone,
-                message=BoxMessage(body.message) if body.message else None,
-                preview_title=(
-                    BoxPreviewTitle(body.preview_title) if body.preview_title else None
-                ),
-                preview_image_url=(
-                    Url(body.preview_image_url) if body.preview_image_url else None
-                ),
-            )
+    box = await uc.execute(
+        UpdateBoxCommand(
+            box_id=box_id,
+            actor_id=user_id,
+            design_id=body.design_id,
+            title=BoxTitle(body.title),
+            recipient_name=BoxRecipientName(body.recipient_name),
+            recipient_email=BoxRecipientEmail(body.recipient_email),
+            unlock_password=BoxUnlockPassword(body.unlock_password),
+            activates_at=ActivatesAt(body.activates_at),
+            timezone=body.timezone,
+            message=BoxMessage(body.message) if body.message else None,
+            preview_title=(
+                BoxPreviewTitle(body.preview_title) if body.preview_title else None
+            ),
+            preview_image_url=(
+                Url(body.preview_image_url) if body.preview_image_url else None
+            ),
         )
-    except Exception as exc:
-        raise _http_error(exc) from exc
-    return box_to_response(box)
+    )
+    return BoxResponse(message="Success", result=box_to_response(box))
 
 
 @router.post("/{box_id}/publish", response_model=BoxResponse)
@@ -244,11 +216,8 @@ async def publish_box(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: PublishBoxUseCase = Depends(get_publish_box_uc),
 ) -> BoxResponse:
-    try:
-        box = await uc.execute(PublishBoxCommand(box_id=box_id, actor_id=user_id))
-    except Exception as exc:
-        raise _http_error(exc) from exc
-    return box_to_response(box)
+    box = await uc.execute(PublishBoxCommand(box_id=box_id, actor_id=user_id))
+    return BoxResponse(message="Success", result=box_to_response(box))
 
 
 @router.post("/{box_id}/archive", response_model=BoxResponse)
@@ -257,11 +226,8 @@ async def archive_box(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: ArchiveBoxUseCase = Depends(get_archive_box_uc),
 ) -> BoxResponse:
-    try:
-        box = await uc.execute(ArchiveBoxCommand(box_id=box_id, actor_id=user_id))
-    except Exception as exc:
-        raise _http_error(exc) from exc
-    return box_to_response(box)
+    box = await uc.execute(ArchiveBoxCommand(box_id=box_id, actor_id=user_id))
+    return BoxResponse(message="Success", result=box_to_response(box))
 
 
 @router.post("/{box_id}/unarchive", response_model=BoxResponse)
@@ -270,11 +236,8 @@ async def unarchive_box(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: UnarchiveBoxUseCase = Depends(get_unarchive_box_uc),
 ) -> BoxResponse:
-    try:
-        box = await uc.execute(UnarchiveBoxCommand(box_id=box_id, actor_id=user_id))
-    except Exception as exc:
-        raise _http_error(exc) from exc
-    return box_to_response(box)
+    box = await uc.execute(UnarchiveBoxCommand(box_id=box_id, actor_id=user_id))
+    return BoxResponse(message="Success", result=box_to_response(box))
 
 
 @router.post("/{box_id}/items", response_model=BoxResponse)
@@ -284,21 +247,18 @@ async def add_box_item(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: AddBoxItemUseCase = Depends(get_add_box_item_uc),
 ) -> BoxResponse:
-    try:
-        box = await uc.execute(
-            AddBoxItemCommand(
-                box_id=box_id,
-                actor_id=user_id,
-                media_file_id=body.media_file_id,
-                item_type=body.item_type,
-                caption=BoxItemCaption(body.caption) if body.caption else None,
-                sort_order=SortOrder(body.sort_order) if body.sort_order else None,
-                metadata=body.metadata,
-            )
+    box = await uc.execute(
+        AddBoxItemCommand(
+            box_id=box_id,
+            actor_id=user_id,
+            media_file_id=body.media_file_id,
+            item_type=body.item_type,
+            caption=BoxItemCaption(body.caption) if body.caption else None,
+            sort_order=SortOrder(body.sort_order) if body.sort_order else None,
+            metadata=body.metadata,
         )
-    except Exception as exc:
-        raise _http_error(exc) from exc
-    return box_to_response(box)
+    )
+    return BoxResponse(message="Success", result=box_to_response(box))
 
 
 @router.patch("/{box_id}/items/{item_id}", response_model=BoxResponse)
@@ -309,19 +269,16 @@ async def update_box_item(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: UpdateBoxItemUseCase = Depends(get_update_box_item_uc),
 ) -> BoxResponse:
-    try:
-        box = await uc.execute(
-            UpdateBoxItemCommand(
-                box_id=box_id,
-                actor_id=user_id,
-                item_id=item_id,
-                caption=BoxItemCaption(body.caption) if body.caption else None,
-                metadata=body.metadata,
-            )
+    box = await uc.execute(
+        UpdateBoxItemCommand(
+            box_id=box_id,
+            actor_id=user_id,
+            item_id=item_id,
+            caption=BoxItemCaption(body.caption) if body.caption else None,
+            metadata=body.metadata,
         )
-    except Exception as exc:
-        raise _http_error(exc) from exc
-    return box_to_response(box)
+    )
+    return BoxResponse(message="Success", result=box_to_response(box))
 
 
 @router.delete("/{box_id}/items/{item_id}", response_model=BoxResponse)
@@ -331,13 +288,10 @@ async def remove_box_item(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: RemoveBoxItemUseCase = Depends(get_remove_box_item_uc),
 ) -> BoxResponse:
-    try:
-        box = await uc.execute(
-            RemoveBoxItemCommand(box_id=box_id, actor_id=user_id, item_id=item_id)
-        )
-    except Exception as exc:
-        raise _http_error(exc) from exc
-    return box_to_response(box)
+    box = await uc.execute(
+        RemoveBoxItemCommand(box_id=box_id, actor_id=user_id, item_id=item_id)
+    )
+    return BoxResponse(message="Success", result=box_to_response(box))
 
 
 @router.put("/{box_id}/items/reorder", response_model=BoxResponse)
@@ -347,14 +301,11 @@ async def reorder_box_items(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: ReorderBoxItemsUseCase = Depends(get_reorder_box_items_uc),
 ) -> BoxResponse:
-    try:
-        box = await uc.execute(
-            ReorderBoxItemsCommand(
-                box_id=box_id,
-                actor_id=user_id,
-                item_ids=tuple(body.item_ids),
-            )
+    box = await uc.execute(
+        ReorderBoxItemsCommand(
+            box_id=box_id,
+            actor_id=user_id,
+            item_ids=tuple(body.item_ids),
         )
-    except Exception as exc:
-        raise _http_error(exc) from exc
-    return box_to_response(box)
+    )
+    return BoxResponse(message="Success", result=box_to_response(box))

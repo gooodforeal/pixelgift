@@ -88,6 +88,19 @@ class InMemoryBoxesRepository(BaseBoxesRepository):
             counts[key] = counts.get(key, 0) + 1
         return counts
 
+    async def count_opened_between(
+        self,
+        *,
+        start: datetime,
+        end: datetime,
+    ) -> int:
+        return sum(
+            1
+            for box in self.items.values()
+            if box.first_opened_at is not None
+            and start <= box.first_opened_at < end
+        )
+
     async def claim_due_to_activate(
         self,
         now: datetime,

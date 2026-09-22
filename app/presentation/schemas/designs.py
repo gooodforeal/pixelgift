@@ -3,6 +3,8 @@ import uuid
 
 from pydantic import BaseModel, Field
 
+from app.presentation.schemas.base import BaseResponseSchema
+
 
 class GiftBoxPaletteConfig(BaseModel):
     body: str | None = None
@@ -24,7 +26,7 @@ class ThemeConfigSchema(BaseModel):
     gift_box: GiftBoxPaletteConfig | None = None
 
 
-class BoxDesignResponse(BaseModel):
+class BoxDesignSchema(BaseModel):
     id: uuid.UUID
     code: str
     name: str
@@ -37,21 +39,41 @@ class BoxDesignResponse(BaseModel):
     my_rating: int | None = None
 
 
-class AdminBoxDesignResponse(BoxDesignResponse):
+class BoxDesignResponse(BaseResponseSchema[BoxDesignSchema]):
+    pass
+
+
+class BoxDesignListResponse(BaseResponseSchema[list[BoxDesignSchema]]):
+    pass
+
+
+class AdminBoxDesignSchema(BoxDesignSchema):
     is_active: bool
     preview_asset_id: uuid.UUID | None = None
     preview_asset_id_light: uuid.UUID | None = None
+
+
+class AdminBoxDesignResponse(BaseResponseSchema[AdminBoxDesignSchema]):
+    pass
+
+
+class AdminBoxDesignListResponse(BaseResponseSchema[list[AdminBoxDesignSchema]]):
+    pass
 
 
 class RateDesignRequest(BaseModel):
     stars: int = Field(..., ge=1, le=5)
 
 
-class DesignRatingResponse(BaseModel):
+class DesignRatingSchema(BaseModel):
     design_id: uuid.UUID
     stars: int
     rating_avg: float
     rating_count: int
+
+
+class DesignRatingResponse(BaseResponseSchema[DesignRatingSchema]):
+    pass
 
 
 class CreateBoxDesignRequest(BaseModel):
@@ -84,8 +106,12 @@ class PatchBoxDesignRequest(BaseModel):
     sort_order: int | None = None
 
 
-class DesignAssetUploadResponse(BaseModel):
+class DesignAssetUploadSchema(BaseModel):
     id: uuid.UUID
     url: str
     mime_type: str
     size_bytes: int
+
+
+class DesignAssetUploadResponse(BaseResponseSchema[DesignAssetUploadSchema]):
+    pass

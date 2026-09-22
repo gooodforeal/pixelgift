@@ -26,4 +26,6 @@ class ApiClient:
                 headers=headers,
             )
             response.raise_for_status()
-            return CompleteTelegramLoginResponse.model_validate(response.json())
+            body = response.json()
+            payload = body.get("result", body)
+            return CompleteTelegramLoginResponse.model_validate(payload)

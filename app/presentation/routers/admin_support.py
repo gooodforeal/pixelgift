@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, Query, Response
 
 from app.application.dto.support import UpdateSupportTicketStatusCommand
 from app.application.use_cases.support import (
@@ -11,10 +11,6 @@ from app.application.use_cases.support import (
 )
 from app.domain.entities.support_tickets import SupportTicketStatus
 from app.domain.entities.users import User
-from app.domain.exceptions.support import (
-    SupportTicketAttachmentNotFoundError,
-    SupportTicketNotFoundError,
-)
 from app.presentation.deps.common import PaginationParams, pagination_dep
 from app.presentation.deps.support import (
     get_get_support_ticket_uc,
@@ -25,6 +21,7 @@ from app.presentation.deps.support import (
 from app.presentation.deps.users import require_admin
 from app.presentation.schemas.support import (
     PaginatedSupportTicketsResponse,
+    PaginatedSupportTicketsSchema,
     SupportTicketResponse,
     UpdateSupportTicketStatusRequest,
 )
@@ -35,32 +32,26 @@ router = APIRouter(prefix="/admin/support", tags=["admin-support"])
 
 @router.get("", response_model=PaginatedSupportTicketsResponse)
 async def list_support_tickets(
-    status_filter: str | None = Query(default=None, alias="status"),
+    status_filter: SupportTicketStatus | None = Query(default=None, alias="status"),
     sort: str = Query(default="desc", pattern="^(asc|desc)$"),
     pagination: PaginationParams = Depends(pagination_dep),
     _: User = Depends(require_admin),
     uc: ListSupportTicketsUseCase = Depends(get_list_support_tickets_uc),
 ) -> PaginatedSupportTicketsResponse:
-    parsed: SupportTicketStatus | None = None
-    if status_filter:
-        try:
-            parsed = SupportTicketStatus(status_filter)
-        except ValueError as exc:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown status: {status_filter!r}",
-            ) from exc
     page = await uc.execute(
-        status=parsed,
+        status=status_filter,
         sort_asc=sort == "asc",
         page=pagination.page,
         page_size=pagination.page_size,
     )
     return PaginatedSupportTicketsResponse(
-        items=[support_ticket_to_response(ticket) for ticket in page.items],
-        total=page.total,
-        page=page.page,
-        page_size=page.page_size,
+        message="Success",
+        result=PaginatedSupportTicketsSchema(
+            items=[support_ticket_to_response(ticket) for ticket in page.items],
+            total=page.total,
+            page=page.page,
+            page_size=page.page_size,
+        ),
     )
 
 
@@ -70,11 +61,10 @@ async def get_support_ticket(
     _: User = Depends(require_admin),
     uc: GetSupportTicketUseCase = Depends(get_get_support_ticket_uc),
 ) -> SupportTicketResponse:
-    try:
-        ticket = await uc.execute(ticket_id=ticket_id)
-    except SupportTicketNotFoundError as exc:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-    return support_ticket_to_response(ticket)
+    ticket = await uc.execute(ticket_id=ticket_id)
+    return SupportTicketResponse(
+        message="Success", result=support_ticket_to_response(ticket)
+    )
 
 
 @router.patch("/{ticket_id}", response_model=SupportTicketResponse)
@@ -84,16 +74,15 @@ async def update_support_ticket_status(
     _: User = Depends(require_admin),
     uc: UpdateSupportTicketStatusUseCase = Depends(get_update_support_ticket_status_uc),
 ) -> SupportTicketResponse:
-    try:
-        ticket = await uc.execute(
-            UpdateSupportTicketStatusCommand(
-                ticket_id=ticket_id,
-                status=SupportTicketStatus(body.status),
-            )
+    ticket = await uc.execute(
+        UpdateSupportTicketStatusCommand(
+            ticket_id=ticket_id,
+            status=SupportTicketStatus(body.status),
         )
-    except SupportTicketNotFoundError as exc:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-    return support_ticket_to_response(ticket)
+    )
+    return SupportTicketResponse(
+        message="Success", result=support_ticket_to_response(ticket)
+    )
 
 
 @router.get("/{ticket_id}/attachments/{attachment_id}/content")
@@ -105,13 +94,7 @@ async def get_support_attachment_content(
         get_support_attachment_content_uc
     ),
 ) -> Response:
-    try:
-        content = await uc.execute(ticket_id=ticket_id, attachment_id=attachment_id)
-    except SupportTicketNotFoundError as exc:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-    except SupportTicketAttachmentNotFoundError as exc:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-
+    content = await uc.execute(ticket_id=ticket_id, attachment_id=attachment_id)
     return Response(
         content=content.data,
         media_type=content.mime_type,

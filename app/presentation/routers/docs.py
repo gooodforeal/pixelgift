@@ -1,0 +1,21 @@
+from fastapi import APIRouter, Request
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
+from fastapi.responses import HTMLResponse
+
+router = APIRouter(include_in_schema=False)
+
+
+@router.get("/docs")
+async def swagger_ui(request: Request) -> HTMLResponse:
+    return get_swagger_ui_html(
+        openapi_url="openapi.json",
+        title=f"{request.app.title} - Docs",
+    )
+
+
+@router.get("/redoc")
+async def redoc_ui(request: Request) -> HTMLResponse:
+    return get_redoc_html(
+        openapi_url="openapi.json",
+        title=f"{request.app.title} - ReDoc",
+    )

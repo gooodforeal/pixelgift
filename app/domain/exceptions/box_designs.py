@@ -4,18 +4,24 @@ from app.domain.exceptions.base import BaseException
 
 
 class BoxDesignNotFoundError(BaseException):
+    status_code = 404
+
     def __init__(self, design_id: uuid.UUID) -> None:
         self.design_id = design_id
         super().__init__(f"Box design not found: {design_id}")
 
 
 class BoxDesignCodeConflictError(BaseException):
+    status_code = 409
+
     def __init__(self, code: str) -> None:
         self.code = code
         super().__init__(f"Box design code already exists: {code}")
 
 
 class DesignAssetNotFoundError(BaseException):
+    status_code = 404
+
     def __init__(self, asset_id: uuid.UUID) -> None:
         self.asset_id = asset_id
         super().__init__(f"Design asset not found: {asset_id}")

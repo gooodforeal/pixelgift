@@ -4,16 +4,16 @@ from app.domain.entities.box_designs import BoxDesign
 from app.domain.entities.box_items import BoxItem
 from app.domain.entities.media_files import MediaFile
 from app.presentation.schemas.boxes import (
-    BoxItemResponse,
-    BoxResponse,
-    MediaFileResponse,
-    PublicBoxResponse,
+    BoxItemSchema,
+    BoxSchema,
+    MediaFileSchema,
+    PublicBoxSchema,
 )
-from app.presentation.schemas.designs import AdminBoxDesignResponse, BoxDesignResponse
+from app.presentation.schemas.designs import AdminBoxDesignSchema, BoxDesignSchema
 
 
-def box_item_to_response(item: BoxItem) -> BoxItemResponse:
-    return BoxItemResponse(
+def box_item_to_response(item: BoxItem) -> BoxItemSchema:
+    return BoxItemSchema(
         id=item.id,
         media_file_id=item.media_file_id,
         item_type=item.item_type.value,
@@ -23,8 +23,8 @@ def box_item_to_response(item: BoxItem) -> BoxItemResponse:
     )
 
 
-def box_to_response(box: Box) -> BoxResponse:
-    return BoxResponse(
+def box_to_response(box: Box) -> BoxSchema:
+    return BoxSchema(
         id=box.id,
         owner_id=box.owner_id,
         design_id=box.design_id,
@@ -56,8 +56,8 @@ def public_box_to_response(
     *,
     content_unlocked: bool,
     design: BoxDesign | None = None,
-) -> PublicBoxResponse:
-    return PublicBoxResponse(
+) -> PublicBoxSchema:
+    return PublicBoxSchema(
         public_slug=box.public_slug.value,
         title=box.title.value,
         recipient_name=box.recipient_name.value,
@@ -89,8 +89,8 @@ def box_design_to_response(
     rating_avg: float = 0.0,
     rating_count: int = 0,
     my_rating: int | None = None,
-) -> BoxDesignResponse:
-    return BoxDesignResponse(
+) -> BoxDesignSchema:
+    return BoxDesignSchema(
         id=design.id,
         code=design.code,
         name=design.name.value,
@@ -108,7 +108,7 @@ def box_design_to_response(
 
 def box_design_with_rating_to_response(
     item: BoxDesignWithRating,
-) -> BoxDesignResponse:
+) -> BoxDesignSchema:
     return box_design_to_response(
         item.design,
         rating_avg=item.rating_avg,
@@ -117,8 +117,8 @@ def box_design_with_rating_to_response(
     )
 
 
-def admin_box_design_to_response(design: BoxDesign) -> AdminBoxDesignResponse:
-    return AdminBoxDesignResponse(
+def admin_box_design_to_response(design: BoxDesign) -> AdminBoxDesignSchema:
+    return AdminBoxDesignSchema(
         id=design.id,
         code=design.code,
         name=design.name.value,
@@ -137,8 +137,8 @@ def admin_box_design_to_response(design: BoxDesign) -> AdminBoxDesignResponse:
     )
 
 
-def media_to_response(media: MediaFile) -> MediaFileResponse:
-    return MediaFileResponse(
+def media_to_response(media: MediaFile) -> MediaFileSchema:
+    return MediaFileSchema(
         id=media.id,
         owner_id=media.owner_id,
         storage_key=media.storage_key,

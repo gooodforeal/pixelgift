@@ -4,8 +4,10 @@ import uuid
 
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
+from app.presentation.schemas.base import BaseResponseSchema
 
-class BoxItemResponse(BaseModel):
+
+class BoxItemSchema(BaseModel):
     id: uuid.UUID
     media_file_id: uuid.UUID | None = None
     item_type: str
@@ -14,7 +16,7 @@ class BoxItemResponse(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
-class BoxResponse(BaseModel):
+class BoxSchema(BaseModel):
     id: uuid.UUID
     owner_id: uuid.UUID
     design_id: uuid.UUID
@@ -31,15 +33,23 @@ class BoxResponse(BaseModel):
     preview_image_url: str | None = None
     published_at: datetime | None = None
     first_opened_at: datetime | None = None
-    items: list[BoxItemResponse] = Field(default_factory=list)
+    items: list[BoxItemSchema] = Field(default_factory=list)
 
 
-class PaginatedBoxesResponse(BaseModel):
-    items: list[BoxResponse]
+class BoxResponse(BaseResponseSchema[BoxSchema]):
+    pass
+
+
+class PaginatedBoxesSchema(BaseModel):
+    items: list[BoxSchema]
     total: int
     page: int
     page_size: int
     status_counts: dict[str, int] = Field(default_factory=dict)
+
+
+class PaginatedBoxesResponse(BaseResponseSchema[PaginatedBoxesSchema]):
+    pass
 
 
 class CreateBoxRequest(BaseModel):
@@ -133,7 +143,7 @@ class ReorderBoxItemsRequest(BaseModel):
     item_ids: list[uuid.UUID]
 
 
-class MediaFileResponse(BaseModel):
+class MediaFileSchema(BaseModel):
     id: uuid.UUID
     owner_id: uuid.UUID
     storage_key: str
@@ -143,7 +153,11 @@ class MediaFileResponse(BaseModel):
     original_filename: str | None = None
 
 
-class PublicBoxResponse(BaseModel):
+class MediaFileResponse(BaseResponseSchema[MediaFileSchema]):
+    pass
+
+
+class PublicBoxSchema(BaseModel):
     public_slug: str
     title: str
     recipient_name: str
@@ -157,13 +171,32 @@ class PublicBoxResponse(BaseModel):
     message: str | None = None
     design_code: str | None = None
     theme_config: dict[str, Any] = Field(default_factory=dict)
-    items: list[BoxItemResponse] = Field(default_factory=list)
+    items: list[BoxItemSchema] = Field(default_factory=list)
+
+
+class PublicBoxResponse(BaseResponseSchema[PublicBoxSchema]):
+    pass
 
 
 class UnlockPublicBoxRequest(BaseModel):
     password: str = Field(min_length=1, max_length=12)
 
 
-class UnlockPublicBoxResponse(BaseModel):
+class UnlockPublicBoxSchema(BaseModel):
     unlock_token: str | None = None
-    box: PublicBoxResponse
+    box: PublicBoxSchema
+
+
+class UnlockPublicBoxResponse(BaseResponseSchema[UnlockPublicBoxSchema]):
+    pass
+
+
+class OpenedThisMonthStatsSchema(BaseModel):
+    count: int
+    period_start: datetime
+    period_end: datetime
+    timezone: str
+
+
+class OpenedThisMonthStatsResponse(BaseResponseSchema[OpenedThisMonthStatsSchema]):
+    pass

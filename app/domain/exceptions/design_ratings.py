@@ -20,6 +20,8 @@ class DesignRatingStarsOutOfRangeError(DesignRatingError):
 
 
 class DesignAlreadyRatedError(DesignRatingError):
+    status_code = 409
+
     def __init__(self, design_id: uuid.UUID, user_id: uuid.UUID) -> None:
         self.design_id = design_id
         self.user_id = user_id

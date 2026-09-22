@@ -19,12 +19,11 @@ export function CertificatePreview({ theme }: CertificatePreviewProps) {
   return (
     <div className="flex justify-center">
       <div
-        className={`certificate-preview relative w-[min(100%,13.5rem)] overflow-hidden rounded-xl border shadow-lg sm:w-[15rem] ${
+        className={`certificate-preview relative w-[min(100%,13.5rem)] overflow-hidden rounded-xl border shadow-lg sm:aspect-[210/297] sm:w-[15rem] ${
           dark
             ? "border-glow-pink/40 bg-[#0b0718] text-white shadow-black/40"
             : "border-glow-violet/30 bg-[#f7f4ff] text-ink-900 shadow-slate-900/10"
         }`}
-        style={{ aspectRatio: "210 / 297" }}
       >
         <div
           className={`pointer-events-none absolute -top-8 -left-6 size-24 rounded-full blur-2xl ${
@@ -38,24 +37,26 @@ export function CertificatePreview({ theme }: CertificatePreviewProps) {
         />
 
         <div
-          className={`relative flex h-full flex-col px-3.5 py-3.5 ${
-            dark ? "border border-glow-violet/30 m-2 rounded-lg" : "border border-glow-violet/20 m-2 rounded-lg bg-white/40"
+          className={`relative flex h-full min-h-0 flex-col px-3 py-3 ${
+            dark
+              ? "m-1.5 rounded-lg border border-glow-violet/30"
+              : "m-1.5 rounded-lg border border-glow-violet/20 bg-white/40"
           }`}
         >
-          <p className="font-display text-center text-[0.95rem] leading-none tracking-tight">
+          <p className="font-display text-center text-[0.9rem] leading-none tracking-tight">
             Pixel<span className="text-gradient">gift</span>
           </p>
           <p
-            className={`mt-1.5 text-center text-[0.55rem] leading-tight ${
+            className={`mt-1 text-center text-[0.5rem] leading-tight ${
               dark ? "text-slate-400" : "text-slate-500"
             }`}
           >
             Сертификат на цифровой подарок
           </p>
-          <div className="mx-auto mt-1.5 h-px w-8 bg-glow-gold/80" />
+          <div className="mx-auto mt-1 h-px w-8 bg-glow-gold/80" />
 
           <p
-            className={`mt-2.5 text-center text-[0.65rem] font-semibold leading-snug ${
+            className={`mt-2 text-center text-[0.6rem] font-semibold leading-snug ${
               dark ? "text-slate-100" : "text-ink-900"
             }`}
           >
@@ -63,7 +64,7 @@ export function CertificatePreview({ theme }: CertificatePreviewProps) {
           </p>
 
           <div
-            className={`mt-2.5 rounded-lg px-2.5 py-2 ${
+            className={`mt-2 rounded-lg px-2 py-1.5 ${
               dark ? "bg-ink-700/80" : "border border-violet-100 bg-white"
             }`}
           >
@@ -74,18 +75,18 @@ export function CertificatePreview({ theme }: CertificatePreviewProps) {
             >
               Для
             </p>
-            <p className="text-[0.7rem] font-semibold leading-tight">
+            <p className="text-[0.65rem] font-semibold leading-tight">
               {MOCK.recipientName}
             </p>
             <p
-              className={`mt-1.5 text-[0.45rem] font-semibold tracking-wider uppercase ${
+              className={`mt-1 text-[0.45rem] font-semibold tracking-wider uppercase ${
                 dark ? "text-slate-500" : "text-slate-400"
               }`}
             >
               Откроется
             </p>
             <p
-              className={`text-[0.55rem] leading-tight ${
+              className={`text-[0.5rem] leading-tight ${
                 dark ? "text-glow-cyan" : "text-cyan-700"
               }`}
             >
@@ -94,7 +95,7 @@ export function CertificatePreview({ theme }: CertificatePreviewProps) {
           </div>
 
           <div
-            className={`mt-2 rounded-lg border px-2 py-1.5 text-center ${
+            className={`mt-1.5 rounded-lg border px-2 py-1.5 text-center ${
               dark
                 ? "border-glow-gold/50 bg-ink-800/90"
                 : "border-amber-300/70 bg-amber-50"
@@ -107,14 +108,14 @@ export function CertificatePreview({ theme }: CertificatePreviewProps) {
             >
               Пароль для открытия
             </p>
-            <p className="mt-0.5 font-display text-[0.8rem] tracking-widest">
+            <p className="mt-0.5 font-display text-[0.75rem] tracking-widest">
               {MOCK.password}
             </p>
           </div>
 
-          <div className="mt-auto flex flex-col items-center gap-1 pt-2.5">
+          <div className="mt-auto flex flex-col items-center gap-0.5 pt-2 pb-0.5">
             <div
-              className={`grid size-14 place-items-center rounded-md border bg-white ${
+              className={`grid size-12 place-items-center rounded-md border bg-white ${
                 dark ? "border-white/10" : "border-slate-200"
               }`}
             >
@@ -152,8 +153,8 @@ function QrPlaceholder({ seed }: { seed: string }) {
       className="grid gap-px"
       style={{
         gridTemplateColumns: `repeat(${cells}, minmax(0, 1fr))`,
-        width: "2.75rem",
-        height: "2.75rem",
+        width: "2.25rem",
+        height: "2.25rem",
       }}
       aria-hidden
     >

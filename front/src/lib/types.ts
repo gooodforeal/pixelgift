@@ -9,7 +9,8 @@ export type BoxItemType =
   | "voice"
   | "text"
   | "toy"
-  | "geopoint";
+  | "geopoint"
+  | "question";
 
 export interface BoxItem {
   id: string;

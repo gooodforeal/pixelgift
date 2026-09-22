@@ -8,7 +8,7 @@ import uuid
 from app.domain.entities.base import BaseEntity
 from app.domain.entities.box_items import BoxItem, BoxItemType, TOY_CODES
 from app.domain.exceptions.box_items import BoxItemInvalidError
-from app.domain.helpers.box_items import parse_geopoint_metadata
+from app.domain.helpers.box_items import parse_geopoint_metadata, parse_question_metadata
 
 from app.domain.exceptions.boxes import (
     BoxAlreadyArchivedError,
@@ -93,6 +93,15 @@ class Box(BaseEntity):
                 )
             try:
                 parse_geopoint_metadata(metadata)
+            except ValueError as exc:
+                raise BoxItemInvalidError(str(exc)) from exc
+        elif item_type == BoxItemType.QUESTION:
+            if media_file_id is not None:
+                raise BoxItemInvalidError(
+                    "Question item must not reference a media file"
+                )
+            try:
+                metadata = parse_question_metadata(metadata)
             except ValueError as exc:
                 raise BoxItemInvalidError(str(exc)) from exc
         elif item_type == BoxItemType.DRAWING:

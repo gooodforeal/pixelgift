@@ -297,6 +297,28 @@ export const api = {
       }),
     }),
 
+  addQuestionItem: (
+    boxId: string,
+    payload: {
+      question: string;
+      options: string[];
+      correct_index: number;
+    },
+    caption?: string | null,
+  ) =>
+    request<Box>(`/boxes/${boxId}/items`, {
+      method: "POST",
+      body: JSON.stringify({
+        item_type: "question",
+        caption: caption?.trim() || null,
+        metadata: {
+          question: payload.question,
+          options: payload.options,
+          correct_index: payload.correct_index,
+        },
+      }),
+    }),
+
   updateItem: (
     boxId: string,
     itemId: string,

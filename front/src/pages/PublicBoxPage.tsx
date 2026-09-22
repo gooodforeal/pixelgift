@@ -197,7 +197,7 @@ export function PublicBoxPage() {
 
   return (
     <div
-      className="public-box-page relative min-h-dvh overflow-hidden px-4 py-10 sm:px-6 sm:py-14"
+      className="public-box-page relative h-dvh overflow-hidden px-4 py-6 sm:px-6 sm:py-10"
       style={{ ...bgLayers, color: theme.text }}
     >
       {theme.background_image_url ? (
@@ -217,7 +217,7 @@ export function PublicBoxPage() {
         <ConfettiBurst colors={[theme.accent, "#ffffff", ...theme.gradient]} />
       )}
 
-      <div className="relative mx-auto flex min-h-[calc(100dvh-5rem)] max-w-3xl flex-col">
+      <div className="relative mx-auto flex h-full max-w-3xl flex-col overflow-hidden">
         {waitingForTimer && (
           <motion.section
             initial={{ opacity: 0, y: 24 }}
@@ -323,8 +323,8 @@ export function PublicBoxPage() {
 
         {!locked && step && (
           <>
-            {step.kind !== "intro" && (
-              <div className="mb-6">
+            {step.kind !== "intro" ? (
+              <div className="mb-4 shrink-0">
                 <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
                   <motion.div
                     className="h-full rounded-full"
@@ -338,9 +338,9 @@ export function PublicBoxPage() {
                   Шаг {stepIndex + 1} из {steps.length}
                 </p>
               </div>
-            )}
+            ) : null}
 
-            <div className="relative flex flex-1 flex-col justify-center">
+            <div className="relative min-h-0 w-full flex-1 overflow-hidden">
               <AnimatePresence mode="wait" custom={direction}>
                 <motion.div
                   key={`${step.kind}-${"item" in step ? step.item.id : step.kind}`}
@@ -350,42 +350,44 @@ export function PublicBoxPage() {
                   animate="center"
                   exit="exit"
                   transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                  className="w-full"
+                  className="public-box-slide absolute inset-0 flex w-full items-center justify-center"
                 >
-                  {step.kind === "intro" && (
-                    <IntroStep
-                      box={box}
-                      accent={theme.accent}
-                      palette={giftPalette}
-                      onOpen={goNext}
-                    />
-                  )}
+                  <div className="w-full">
+                    {step.kind === "intro" && (
+                      <IntroStep
+                        box={box}
+                        accent={theme.accent}
+                        palette={giftPalette}
+                        onOpen={goNext}
+                      />
+                    )}
 
-                  {step.kind === "letter" && (
-                    <LetterStep box={box} accent={theme.accent} />
-                  )}
+                    {step.kind === "letter" && (
+                      <LetterStep box={box} accent={theme.accent} />
+                    )}
 
-                  {step.kind === "item" && (
-                    <ItemStep
-                      box={box}
-                      item={step.item}
-                      index={step.index}
-                      total={step.total}
-                      accent={theme.accent}
-                      unlockToken={unlockToken}
-                      onSecretRevealed={() => setSecretRevealed(true)}
-                    />
-                  )}
+                    {step.kind === "item" && (
+                      <ItemStep
+                        box={box}
+                        item={step.item}
+                        index={step.index}
+                        total={step.total}
+                        accent={theme.accent}
+                        unlockToken={unlockToken}
+                        onSecretRevealed={() => setSecretRevealed(true)}
+                      />
+                    )}
 
-                  {step.kind === "finale" && (
-                    <FinaleStep box={box} accent={theme.accent} />
-                  )}
+                    {step.kind === "finale" && (
+                      <FinaleStep box={box} accent={theme.accent} />
+                    )}
+                  </div>
                 </motion.div>
               </AnimatePresence>
             </div>
 
-            {step.kind !== "intro" && (
-              <div className="mt-8 flex flex-col items-center gap-2 pb-2">
+            {step.kind !== "intro" ? (
+              <div className="mt-4 flex shrink-0 flex-col items-center gap-2 pb-1">
                 {!isLast ? (
                   <>
                     <motion.button
@@ -422,7 +424,7 @@ export function PublicBoxPage() {
                   </Link>
                 )}
               </div>
-            )}
+            ) : null}
           </>
         )}
       </div>
@@ -450,7 +452,7 @@ function IntroStep({
   };
 
   return (
-    <section className="glass px-6 py-16 text-center sm:px-12">
+    <section className="glass px-6 py-10 text-center sm:px-12 sm:py-14">
       <GiftBox3D
         palette={palette}
         opening={opening}
@@ -458,10 +460,10 @@ function IntroStep({
         className="mx-auto"
       />
 
-      <h1 className="font-display mt-8 text-3xl leading-tight sm:text-4xl">
+      <h1 className="font-display mt-6 text-3xl leading-tight sm:mt-8 sm:text-4xl">
         {box.recipient_name}, время открывать!
       </h1>
-      <p className="mt-4 text-sm opacity-75">Бокс уже разблокирован</p>
+      <p className="mt-3 text-sm opacity-75 sm:mt-4">Бокс уже разблокирован</p>
 
       <motion.button
         type="button"
@@ -469,7 +471,7 @@ function IntroStep({
         whileHover={opening ? undefined : { scale: 1.04 }}
         whileTap={opening ? undefined : { scale: 0.97 }}
         onClick={handleOpen}
-        className="btn mt-10 px-8 py-4 text-base font-bold disabled:opacity-70"
+        className="btn mt-8 px-8 py-4 text-base font-bold disabled:opacity-70 sm:mt-10"
         style={{
           background: accent,
           color: "#0b0718",
@@ -493,9 +495,9 @@ function LetterStep({
   return (
     <section className="glass w-full min-w-0 overflow-hidden px-6 py-12 text-center sm:px-12">
       <motion.div
-        initial={{ scale: 0.6, opacity: 0 }}
+        initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 180, damping: 14 }}
+        transition={{ type: "spring", stiffness: 220, damping: 18 }}
         className="mx-auto grid size-14 place-items-center rounded-full"
         style={{ background: `${accent}22`, color: accent }}
       >
@@ -558,7 +560,8 @@ function ItemStep({
       ? "size-[min(70vw,20rem)] sm:size-[min(58dvh,22rem)]"
       : item.item_type === "voice" ||
           item.item_type === "text" ||
-          item.item_type === "geopoint"
+          item.item_type === "geopoint" ||
+          item.item_type === "question"
         ? "w-full rounded-2xl"
         : secret
           ? "!h-auto !w-auto max-h-[min(58dvh,32rem)] max-w-full"

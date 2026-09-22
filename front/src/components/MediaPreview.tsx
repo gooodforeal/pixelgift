@@ -1,4 +1,5 @@
-import { MapPin } from "lucide-react";
+import { useState } from "react";
+import { Check, MapPin, X } from "lucide-react";
 
 import { CirclePlayer } from "./CirclePlayer";
 import type { BoxItemType } from "../lib/types";
@@ -8,6 +9,7 @@ import {
   osmMapUrl,
   type GeopointCoords,
 } from "../lib/geopoint";
+import { questionFromMetadata } from "../lib/question";
 import { getToyOption, toyImageUrl } from "../lib/toys";
 
 interface MediaPreviewProps {
@@ -160,6 +162,16 @@ export function MediaPreview({
     );
   }
 
+  if (type === "question") {
+    return (
+      <QuestionPreview
+        metadata={metadata}
+        interactive={interactive}
+        className={className}
+      />
+    );
+  }
+
   return (
     <img
       src={src}
@@ -167,5 +179,98 @@ export function MediaPreview({
       loading="lazy"
       className={`h-full w-full ${objectFit} ${className}`}
     />
+  );
+}
+
+function QuestionPreview({
+  metadata,
+  interactive,
+  className = "",
+}: {
+  metadata?: Record<string, unknown> | null;
+  interactive: boolean;
+  className?: string;
+}) {
+  const quiz = questionFromMetadata(metadata);
+  const [selected, setSelected] = useState<number | null>(null);
+
+  if (!quiz) {
+    return (
+      <div
+        className={`flex h-full min-h-[10rem] w-full items-center justify-center bg-gradient-to-br from-ink-800/80 to-ink-700/70 p-6 ${className}`}
+      >
+        <p className="text-sm text-slate-400">Вопрос не задан</p>
+      </div>
+    );
+  }
+
+  const answered = selected !== null;
+  const correct = answered && selected === quiz.correct_index;
+
+  return (
+    <div
+      className={`flex h-full min-h-[14rem] w-full flex-col justify-center gap-4 bg-gradient-to-br from-ink-800/90 to-ink-700/80 p-5 sm:p-7 ${className}`}
+    >
+      <p className="text-center text-base font-semibold leading-snug text-slate-100 sm:text-lg">
+        {quiz.question}
+      </p>
+      <div className="mx-auto flex w-full max-w-md flex-col gap-2">
+        {quiz.options.map((option, index) => {
+          const isSelected = selected === index;
+          const isCorrectOption = index === quiz.correct_index;
+          let stateClass =
+            "border-white/15 bg-white/[0.04] text-slate-200 hover:border-white/30 hover:bg-white/[0.08]";
+          if (answered) {
+            if (isCorrectOption) {
+              stateClass =
+                "border-emerald-400/50 bg-emerald-400/15 text-emerald-100";
+            } else if (isSelected) {
+              stateClass = "border-rose-400/45 bg-rose-400/15 text-rose-100";
+            } else {
+              stateClass = "border-white/10 bg-white/[0.02] text-slate-500";
+            }
+          } else if (isSelected) {
+            stateClass =
+              "border-glow-violet/50 bg-glow-violet/15 text-slate-100";
+          }
+
+          return (
+            <button
+              key={`${index}-${option}`}
+              type="button"
+              disabled={!interactive || answered}
+              onClick={() => setSelected(index)}
+              className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-medium transition disabled:cursor-default ${stateClass}`}
+            >
+              <span className="grid size-7 shrink-0 place-items-center rounded-full border border-current/30 text-xs font-bold">
+                {answered && isCorrectOption ? (
+                  <Check className="size-3.5" strokeWidth={3} />
+                ) : answered && isSelected ? (
+                  <X className="size-3.5" strokeWidth={3} />
+                ) : (
+                  index + 1
+                )}
+              </span>
+              <span className="min-w-0 flex-1">{option}</span>
+            </button>
+          );
+        })}
+      </div>
+      {answered ? (
+        <p
+          className={`text-center text-sm font-semibold ${
+            correct ? "text-emerald-300" : "text-rose-300"
+          }`}
+        >
+          {correct ? "Верно!" : "Неверно"}
+        </p>
+      ) : interactive ? (
+        <p className="text-center text-xs text-slate-500">Выберите ответ</p>
+      ) : (
+        <p className="text-center text-xs text-slate-500">
+          Правильный: {quiz.options[quiz.correct_index]}
+        </p>
+      )}
+    </div>
   );
 }

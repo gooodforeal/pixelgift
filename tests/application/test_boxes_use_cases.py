@@ -531,6 +531,35 @@ class TestAddBoxItemUseCase:
         assert updated.items[0].metadata["lng"] == 37.6173
         assert uow.committed is True
 
+    async def test_adds_question_item_without_media(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        box = await _seed_editable_box(
+            uow, owner_id=user_id, activates_at=activates_at
+        )
+
+        updated = await AddBoxItemUseCase(uow).execute(
+            AddBoxItemCommand(
+                box_id=box.id,
+                actor_id=user_id,
+                item_type="question",
+                metadata={
+                    "question": "Где мы встретились?",
+                    "options": ["Кафе", "Парк", "Кино"],
+                    "correct_index": 1,
+                },
+            )
+        )
+
+        assert len(updated.items) == 1
+        assert updated.items[0].media_file_id is None
+        assert updated.items[0].item_type == BoxItemType.QUESTION
+        assert updated.items[0].metadata["correct_index"] == 1
+        assert uow.committed is True
+
     async def test_adds_drawing_item_from_owned_image(
         self,
         activates_at: ActivatesAt,

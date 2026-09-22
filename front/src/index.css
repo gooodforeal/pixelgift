@@ -2225,6 +2225,19 @@ html[data-theme="light"] .public-box-page .glass-soft :where(.text-slate-400) {
   @apply !text-slate-400;
 }
 
+.public-box-slide {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.public-box-slide::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* Светлая тема: переопределения после утилит Tailwind */
 html[data-theme="light"] .theme-canvas :where(.text-slate-100, .text-slate-200) {
   @apply !text-slate-900;

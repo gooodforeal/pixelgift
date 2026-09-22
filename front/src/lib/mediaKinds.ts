@@ -16,6 +16,8 @@ export interface MediaKindOption {
   isToy?: boolean;
   /** Geopoint cards pick a location on the map. */
   isGeopoint?: boolean;
+  /** Question cards are a short quiz with one correct answer. */
+  isQuestion?: boolean;
 }
 
 export const MEDIA_KIND_OPTIONS: MediaKindOption[] = [
@@ -113,6 +115,16 @@ export const MEDIA_KIND_OPTIONS: MediaKindOption[] = [
     mimeTypes: [],
     isGeopoint: true,
   },
+  {
+    kind: "question",
+    label: "Вопрос",
+    hint: "Вопрос и варианты ответа",
+    shortHint: "Викторина",
+    accept: "",
+    extensions: [],
+    mimeTypes: [],
+    isQuestion: true,
+  },
 ];
 
 export function getMediaKindOption(kind: BoxItemType): MediaKindOption {
@@ -125,6 +137,7 @@ export function fileMatchesMediaKind(file: File, kind: BoxItemType): boolean {
     option.isText ||
     option.isToy ||
     option.isGeopoint ||
+    option.isQuestion ||
     kind === "drawing" ||
     kind === "circle"
   )

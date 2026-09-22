@@ -18,6 +18,14 @@ class BoxItemType(StrEnum):
     TEXT = "text"
     TOY = "toy"
     GEOPOINT = "geopoint"
+    QUESTION = "question"
+
+
+QUESTION_TEXT_MIN = 3
+QUESTION_TEXT_MAX = 50
+QUESTION_OPTIONS_MIN = 2
+QUESTION_OPTIONS_MAX = 4
+QUESTION_OPTION_MAX = 40
 
 
 TOY_CODES: frozenset[str] = frozenset(

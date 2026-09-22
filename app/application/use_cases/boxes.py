@@ -228,6 +228,18 @@ class AddBoxItemUseCase:
                     caption=command.caption,
                     metadata=command.metadata,
                 )
+            elif command.item_type == BoxItemType.QUESTION.value:
+                if command.media_file_id is not None:
+                    raise BoxItemInvalidError(
+                        "Question item must not reference a media file"
+                    )
+                box.add_item(
+                    media_file_id=None,
+                    item_type=BoxItemType.QUESTION,
+                    sort_order=command.sort_order,
+                    caption=command.caption,
+                    metadata=command.metadata,
+                )
             elif command.item_type == BoxItemType.DRAWING.value:
                 if command.media_file_id is None:
                     raise BoxItemInvalidError("Drawing item requires an image file")

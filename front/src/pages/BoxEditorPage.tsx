@@ -66,6 +66,7 @@ import {
   type GeopointCoords,
 } from "../lib/geopoint";
 import { getMediaKindOption } from "../lib/mediaKinds";
+import { questionFromMetadata } from "../lib/question";
 import type { Box, BoxItemType, BoxPayload } from "../lib/types";
 import { getToyOption, toyCodeFromMetadata, toyImageUrl } from "../lib/toys";
 
@@ -291,6 +292,19 @@ export function BoxEditorPage() {
     onSuccess: (updated) => {
       setBoxData(updated);
       toast("Геоточка добавлена в бокс");
+    },
+    onError: (error: Error) => toast(error.message, "error"),
+  });
+
+  const addQuestionItem = useMutation({
+    mutationFn: (payload: {
+      question: string;
+      options: string[];
+      correct_index: number;
+    }) => api.addQuestionItem(boxId!, payload),
+    onSuccess: (updated) => {
+      setBoxData(updated);
+      toast("Вопрос добавлен в бокс");
     },
     onError: (error: Error) => toast(error.message, "error"),
   });
@@ -767,6 +781,7 @@ export function BoxEditorPage() {
                   onAddGeopoint={(coords, caption) =>
                     addGeopointItem.mutate({ coords, caption })
                   }
+                  onAddQuestion={(payload) => addQuestionItem.mutate(payload)}
                   onRejected={(files, kind) => {
                     const option = getMediaKindOption(kind);
                     toast(
@@ -783,7 +798,8 @@ export function BoxEditorPage() {
                     addDrawingItem.isPending ||
                     addCircleItem.isPending ||
                     addToyItem.isPending ||
-                    addGeopointItem.isPending
+                    addGeopointItem.isPending ||
+                    addQuestionItem.isPending
                   }
                 />
                 {freeSlots === 0 && (
@@ -843,6 +859,18 @@ export function BoxEditorPage() {
                             </div>
                           );
                         })()
+                      ) : item.item_type === "question" ? (
+                        (() => {
+                          const quiz = questionFromMetadata(item.metadata);
+                          return (
+                            <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-glow-violet/25 to-glow-pink/15 p-2 text-center">
+                              <span className="text-lg leading-none">❓</span>
+                              <span className="line-clamp-3 text-[0.6rem] leading-snug text-slate-200">
+                                {quiz?.question ?? "Вопрос"}
+                              </span>
+                            </div>
+                          );
+                        })()
                       ) : item.media_file_id ? (
                         <MediaPreview
                           src={ownMediaUrl(item.media_file_id)}
@@ -866,11 +894,13 @@ export function BoxEditorPage() {
                                       ? "Подпись к игрушке"
                                       : item.item_type === "geopoint"
                                         ? "Подпись к точке"
-                                        : item.item_type === "drawing"
-                                          ? "Подпись к рисунку"
-                                          : item.item_type === "circle"
-                                            ? "Подпись к кружку"
-                                            : "Подпись к файлу"
+                                        : item.item_type === "question"
+                                          ? "Подпись к вопросу"
+                                          : item.item_type === "drawing"
+                                            ? "Подпись к рисунку"
+                                            : item.item_type === "circle"
+                                              ? "Подпись к кружку"
+                                              : "Подпись к файлу"
                                 }
                             defaultValue={item.caption ?? ""}
                             onBlur={(event) => {

@@ -71,7 +71,9 @@ class UpdateBoxRequest(BaseModel):
 
 class AddBoxItemRequest(BaseModel):
     media_file_id: uuid.UUID | None = None
-    item_type: Literal["text", "toy", "geopoint", "drawing", "circle"] | None = None
+    item_type: (
+        Literal["text", "toy", "geopoint", "question", "drawing", "circle"] | None
+    ) = None
     caption: str | None = Field(default=None, max_length=300)
     sort_order: int | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -102,6 +104,15 @@ class AddBoxItemRequest(BaseModel):
                 raise ValueError("metadata.lat must be between -90 and 90")
             if not (-180 <= float(lng) <= 180):
                 raise ValueError("metadata.lng must be between -180 and 180")
+        elif self.item_type == "question":
+            if self.media_file_id is not None:
+                raise ValueError("Question item must not include media_file_id")
+            from app.domain.helpers.box_items import parse_question_metadata
+
+            try:
+                self.metadata = parse_question_metadata(self.metadata)
+            except ValueError as exc:
+                raise ValueError(str(exc)) from exc
         elif self.item_type == "drawing":
             if self.media_file_id is None:
                 raise ValueError("Drawing item requires media_file_id")

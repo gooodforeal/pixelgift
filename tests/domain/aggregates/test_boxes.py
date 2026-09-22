@@ -224,6 +224,52 @@ class TestBoxAggregateItems:
                 metadata={"lat": 99.0, "lng": 37.0},
             )
 
+    def test_add_question_item(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+
+        item = box.add_item(
+            item_type=BoxItemType.QUESTION,
+            metadata={
+                "question": "Где мы встретились?",
+                "options": ["Кафе", "Парк", "Кино"],
+                "correct_index": 1,
+            },
+        )
+
+        assert item.media_file_id is None
+        assert item.item_type == BoxItemType.QUESTION
+        assert item.metadata["question"] == "Где мы встретились?"
+        assert item.metadata["options"] == ["Кафе", "Парк", "Кино"]
+        assert item.metadata["correct_index"] == 1
+
+    def test_add_question_item_rejects_short_text(self, activates_at: ActivatesAt):
+        box = _make_box(activates_at)
+
+        with pytest.raises(BoxItemInvalidError):
+            box.add_item(
+                item_type=BoxItemType.QUESTION,
+                metadata={
+                    "question": "Hi",
+                    "options": ["A", "B"],
+                    "correct_index": 0,
+                },
+            )
+
+    def test_add_question_item_rejects_bad_correct_index(
+        self, activates_at: ActivatesAt
+    ):
+        box = _make_box(activates_at)
+
+        with pytest.raises(BoxItemInvalidError):
+            box.add_item(
+                item_type=BoxItemType.QUESTION,
+                metadata={
+                    "question": "Где мы встретились?",
+                    "options": ["Кафе", "Парк"],
+                    "correct_index": 5,
+                },
+            )
+
     def test_add_item_rejects_duplicate_sort_order(self, activates_at: ActivatesAt):
         box = _make_box(activates_at)
         box.add_item(

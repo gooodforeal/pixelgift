@@ -146,6 +146,29 @@ class TestDispatchDueNotificationsUseCase:
         assert job is not None
         assert job.status == NotificationJobStatus.SENT
 
+    async def test_skips_telegram_when_notifications_disabled(self):
+        uow = InMemoryUnitOfWork()
+        owner = _owner(uuid.uuid4())
+        owner.notifications_enabled = False
+        box = _box(owner_id=owner.id)
+        await uow.users.add(owner)
+        await uow.boxes.add(box)
+        await uow.notification_jobs.add(
+            NotificationJob.create(
+                box_id=box.id,
+                template=NotificationTemplate.GIFT_READY,
+                scheduled_at=box.activates_at.value,
+            )
+        )
+
+        email = RecordingEmailSender()
+        telegram = RecordingTelegramNotifier()
+        sent = await DispatchDueNotificationsUseCase(uow, _service(email, telegram)).execute()
+
+        assert sent == 1
+        assert len(email.messages) == 1
+        assert telegram.messages == []
+
     async def test_does_not_resend_already_sent(self):
         uow = InMemoryUnitOfWork()
         owner = _owner(uuid.uuid4())

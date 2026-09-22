@@ -15,6 +15,7 @@ def user_to_model(entity: User) -> UserModel:
         photo_url=entity.photo_url.value if entity.photo_url is not None else None,
         is_active=entity.is_active,
         is_admin=entity.is_admin,
+        notifications_enabled=entity.notifications_enabled,
         last_seen_at=entity.last_seen_at,
         created_at=entity.created_at,
         updated_at=entity.updated_at,
@@ -32,6 +33,7 @@ def user_to_entity(model: UserModel) -> User:
         photo_url=Url(model.photo_url) if model.photo_url is not None else None,
         is_active=model.is_active,
         is_admin=model.is_admin,
+        notifications_enabled=model.notifications_enabled,
         last_seen_at=model.last_seen_at,
         created_at=model.created_at,
         updated_at=model.updated_at,
@@ -47,5 +49,6 @@ def apply_user(entity: User, model: UserModel) -> None:
     model.photo_url = entity.photo_url.value if entity.photo_url is not None else None
     model.is_active = entity.is_active
     model.is_admin = entity.is_admin
+    model.notifications_enabled = entity.notifications_enabled
     model.last_seen_at = entity.last_seen_at
     model.updated_at = entity.updated_at

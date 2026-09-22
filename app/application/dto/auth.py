@@ -39,6 +39,12 @@ class LogoutCommand:
 
 
 @dataclass(frozen=True, kw_only=True)
+class UpdateCurrentUserSettingsCommand:
+    user_id: uuid.UUID
+    notifications_enabled: bool | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
 class TelegramLoginStartResult:
     code: str
     bot_url: str

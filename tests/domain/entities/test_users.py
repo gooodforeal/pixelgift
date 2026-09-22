@@ -14,6 +14,7 @@ class TestUser:
         assert user.username is None
         assert user.is_active is True
         assert user.is_admin is False
+        assert user.notifications_enabled is True
 
     def test_create_with_optional_fields(self):
         seen = datetime(2026, 1, 1, tzinfo=timezone.utc)

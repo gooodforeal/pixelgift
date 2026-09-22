@@ -158,6 +158,7 @@ export interface CurrentUser {
   language_code: string | null;
   photo_url: string | null;
   is_admin: boolean;
+  notifications_enabled: boolean;
   created_at: string;
   last_seen_at: string | null;
 }

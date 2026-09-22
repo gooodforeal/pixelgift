@@ -133,6 +133,12 @@ export const api = {
 
   me: () => request<CurrentUser>("/auth/me"),
 
+  updateMe: (payload: { notifications_enabled: boolean }) =>
+    request<CurrentUser>("/auth/me", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
   designs: () => request<BoxDesign[]>("/designs"),
 
   rateDesign: (designId: string, stars: number) =>

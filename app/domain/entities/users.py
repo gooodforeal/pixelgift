@@ -17,3 +17,4 @@ class User(BaseEntity):
     is_active: bool = True
     last_seen_at: datetime | None = None
     is_admin: bool = False
+    notifications_enabled: bool = True

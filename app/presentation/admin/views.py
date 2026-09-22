@@ -32,6 +32,7 @@ class UserAdmin(ModelView, model=UserModel):
         UserModel.last_name,
         UserModel.is_active,
         UserModel.is_admin,
+        UserModel.notifications_enabled,
         UserModel.last_seen_at,
         UserModel.created_at,
     ]

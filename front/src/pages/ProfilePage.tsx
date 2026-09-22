@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   Archive,
+  Bell,
   CalendarDays,
   Gift,
   LogOut,
@@ -14,6 +15,7 @@ import {
 import { PageTransition } from "../components/PageTransition";
 import { Spinner } from "../components/Spinner";
 import { TelegramIcon } from "../components/TelegramIcon";
+import { ToggleSwitch } from "../components/ToggleSwitch";
 import { useAuth } from "../hooks/useAuth";
 import { api, API_URL } from "../lib/api";
 import { formatDateTime, pluralize } from "../lib/format";
@@ -41,11 +43,20 @@ function avatarUrl(user: CurrentUser): string | null {
 export function ProfilePage() {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const meQuery = useQuery({ queryKey: ["me"], queryFn: api.me });
   const boxesQuery = useQuery({
     queryKey: ["boxes", "summary"],
     queryFn: () => api.boxes({ page: 1, pageSize: 1 }),
+  });
+
+  const notificationsMutation = useMutation({
+    mutationFn: (notifications_enabled: boolean) =>
+      api.updateMe({ notifications_enabled }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<CurrentUser>(["me"], updated);
+    },
   });
 
   const user = meQuery.data;
@@ -234,6 +245,38 @@ export function ProfilePage() {
               </dd>
             </div>
           </dl>
+        </section>
+
+        <section className="glass mt-5 overflow-hidden p-5 sm:p-6">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[0.04] text-sky-300">
+              <Bell className="size-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-sans text-lg font-semibold">Уведомления</h2>
+              <p className="mt-1 text-sm text-slate-400">
+                Сообщения в Telegram о публикации, доставке и открытии ваших боксов.
+              </p>
+              <div className="mt-4">
+                <ToggleSwitch
+                  checked={user.notifications_enabled}
+                  disabled={notificationsMutation.isPending}
+                  label={
+                    user.notifications_enabled
+                      ? "Уведомления включены"
+                      : "Уведомления выключены"
+                  }
+                  onChange={(enabled) => notificationsMutation.mutate(enabled)}
+                />
+              </div>
+              {notificationsMutation.isError ? (
+                <p className="mt-3 text-sm text-rose-300" role="alert">
+                  Не удалось сохранить настройку:{" "}
+                  {(notificationsMutation.error as Error)?.message ?? "ошибка"}
+                </p>
+              ) : null}
+            </div>
+          </div>
         </section>
       </div>
     </PageTransition>

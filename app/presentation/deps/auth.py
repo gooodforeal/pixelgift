@@ -12,6 +12,7 @@ from app.application.use_cases.auth import (
     PollTelegramLoginStatusUseCase,
     RefreshAccessTokenUseCase,
     StartTelegramLoginUseCase,
+    UpdateCurrentUserSettingsUseCase,
 )
 from app.infrastructure.storage.s3_storage import S3ObjectStorage
 from app.infrastructure.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
@@ -43,6 +44,10 @@ def get_refresh_access_token_uc(
 
 def get_logout_uc() -> LogoutUseCase:
     return LogoutUseCase(SqlAlchemyUnitOfWork())
+
+
+def get_update_current_user_settings_uc() -> UpdateCurrentUserSettingsUseCase:
+    return UpdateCurrentUserSettingsUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_complete_telegram_login_uc(

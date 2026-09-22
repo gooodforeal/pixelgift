@@ -45,5 +45,10 @@ class CurrentUserResponse(BaseModel):
     language_code: str | None = None
     photo_url: str | None = None
     is_admin: bool = False
+    notifications_enabled: bool = True
     created_at: str
     last_seen_at: str | None = None
+
+
+class UpdateCurrentUserSettingsRequest(BaseModel):
+    notifications_enabled: bool | None = None

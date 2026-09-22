@@ -11,6 +11,7 @@ from app.application.dto.auth import (
     TelegramLoginStartResult,
     TelegramLoginStatusResult,
     TokenPairResult,
+    UpdateCurrentUserSettingsCommand,
 )
 from app.application.ports.storage.base import BaseObjectStorage
 from app.application.services.jwt import JwtService
@@ -32,6 +33,7 @@ from app.domain.exceptions.auth import (
     LoginChallengeNotFoundError,
     UserInactiveError,
 )
+from app.domain.exceptions.users import UserNotFoundError
 from app.domain.values.telegram_id import TelegramId
 from app.domain.values.url import Url
 from app.settings import Settings
@@ -339,3 +341,24 @@ class CompleteTelegramLoginUseCase:
             ok=True,
             reply_text="Вход выполнен. Вернитесь на сайт.",
         )
+
+
+class UpdateCurrentUserSettingsUseCase:
+    def __init__(self, uow: BaseUnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(self, command: UpdateCurrentUserSettingsCommand) -> User:
+        async with self._uow as uow:
+            user = await uow.users.get_by_id(command.user_id)
+            if user is None:
+                raise UserNotFoundError(command.user_id)
+            if not user.is_active:
+                raise UserInactiveError(command.user_id)
+
+            if command.notifications_enabled is not None:
+                user.notifications_enabled = command.notifications_enabled
+
+            await uow.users.update(user)
+            await uow.commit()
+            return user
+

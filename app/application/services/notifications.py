@@ -225,6 +225,13 @@ class NotificationService:
         owner: User,
         event: OwnerTelegramEvent,
     ) -> None:
+        if not owner.notifications_enabled:
+            logger.info(
+                "Skip Telegram notify for user %s (notifications disabled)",
+                owner.id,
+            )
+            return
+
         caption = render_owner_telegram_html(
             event, box=box, public_web_url=self._public_web_url
         )

@@ -11,6 +11,7 @@ from app.application.dto.auth import (
     PollTelegramLoginCommand,
     RefreshAccessTokenCommand,
     StartTelegramLoginCommand,
+    UpdateCurrentUserSettingsCommand,
 )
 from app.application.use_cases.auth import (
     CompleteTelegramLoginUseCase,
@@ -18,8 +19,10 @@ from app.application.use_cases.auth import (
     PollTelegramLoginStatusUseCase,
     RefreshAccessTokenUseCase,
     StartTelegramLoginUseCase,
+    UpdateCurrentUserSettingsUseCase,
 )
 from app.application.use_cases.queries import GetCurrentUserUseCase, GetUserAvatarUseCase
+from app.domain.entities.users import User
 from app.domain.exceptions.auth import (
     InvalidRefreshTokenError,
     LoginChallengeNotFoundError,
@@ -33,6 +36,7 @@ from app.presentation.deps.auth import (
     get_poll_telegram_login_uc,
     get_refresh_access_token_uc,
     get_start_telegram_login_uc,
+    get_update_current_user_settings_uc,
     verify_bot_api_secret,
 )
 from app.presentation.deps.common import get_settings
@@ -49,12 +53,28 @@ from app.presentation.schemas.auth import (
     CurrentUserResponse,
     TelegramLoginStartResponse,
     TelegramLoginStatusResponse,
+    UpdateCurrentUserSettingsRequest,
 )
 from app.settings import Settings
 
 router = APIRouter(tags=["auth"])
 
 _MAX_AVATAR_BYTES = 2 * 1024 * 1024
+
+
+def _current_user_response(user: User) -> CurrentUserResponse:
+    return CurrentUserResponse(
+        id=user.id,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        username=user.username,
+        language_code=user.language_code,
+        photo_url=f"/users/{user.id}/avatar" if user.photo_url else None,
+        is_admin=user.is_admin,
+        notifications_enabled=user.notifications_enabled,
+        created_at=user.created_at.isoformat(),
+        last_seen_at=user.last_seen_at.isoformat() if user.last_seen_at else None,
+    )
 
 
 @router.post("/auth/telegram/start", response_model=TelegramLoginStartResponse)
@@ -162,17 +182,33 @@ async def get_current_user(
     except UserInactiveError as exc:
         raise HTTPException(status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
 
-    return CurrentUserResponse(
-        id=user.id,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        username=user.username,
-        language_code=user.language_code,
-        photo_url=f"/users/{user.id}/avatar" if user.photo_url else None,
-        is_admin=user.is_admin,
-        created_at=user.created_at.isoformat(),
-        last_seen_at=user.last_seen_at.isoformat() if user.last_seen_at else None,
-    )
+    return _current_user_response(user)
+
+
+@router.patch("/auth/me", response_model=CurrentUserResponse)
+async def update_current_user_settings(
+    body: UpdateCurrentUserSettingsRequest,
+    user_id=Depends(get_current_user_id),
+    uc: UpdateCurrentUserSettingsUseCase = Depends(get_update_current_user_settings_uc),
+) -> CurrentUserResponse:
+    if body.notifications_enabled is None:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail="No settings to update",
+        )
+    try:
+        user = await uc.execute(
+            UpdateCurrentUserSettingsCommand(
+                user_id=user_id,
+                notifications_enabled=body.notifications_enabled,
+            )
+        )
+    except UserNotFoundError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except UserInactiveError as exc:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+
+    return _current_user_response(user)
 
 
 @router.get("/users/{user_id}/avatar")

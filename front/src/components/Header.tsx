@@ -14,6 +14,7 @@ import {
 
 import { useAuth } from "../hooks/useAuth";
 import { api } from "../lib/api";
+import { LogoMark } from "./Logo";
 import { UiThemeToggle } from "./UiThemeToggle";
 
 function RailLogo({ onNavigate }: { onNavigate?: () => void }) {
@@ -26,7 +27,7 @@ function RailLogo({ onNavigate }: { onNavigate?: () => void }) {
       onClick={onNavigate}
     >
       <span className="app-rail__logo-mark" aria-hidden>
-        🎁
+        <LogoMark className="app-rail__logo-gift" />
       </span>
       <span className="app-rail__brand">
         Pixel<span className="text-gradient">gift</span>

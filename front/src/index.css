@@ -381,14 +381,18 @@ html[data-theme="light"] .app-rail {
 }
 
 .app-rail__logo-mark {
-  @apply grid size-9 place-items-center rounded-full text-sm shadow-lg shadow-glow-violet/25
-    transition sm:size-10 sm:text-base;
+  @apply grid size-9 place-items-center overflow-hidden rounded-full shadow-lg shadow-glow-violet/25
+    transition sm:size-10;
   background: linear-gradient(
     135deg,
     var(--color-glow-pink),
     var(--color-glow-violet) 55%,
     var(--color-glow-cyan)
   );
+}
+
+.app-rail__logo-gift {
+  @apply size-[1.9rem] sm:size-[2.15rem];
 }
 
 .app-rail__brand {

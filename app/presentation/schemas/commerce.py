@@ -1,7 +1,7 @@
 from datetime import datetime
 import uuid
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.presentation.schemas.base import BaseResponseSchema
 
@@ -16,6 +16,8 @@ class ProductSchema(BaseModel):
     unit_price: int
     currency: str
     is_active: bool
+    sale_discount_percent: int | None = None
+    sale_unit_price: int | None = None
 
 
 class ProductsResponse(BaseResponseSchema[list[ProductSchema]]):
@@ -30,6 +32,8 @@ class CartItemSchema(BaseModel):
     currency: str
     quantity: int
     amount: int
+    compare_at_price: int | None = None
+    sale_discount_percent: int | None = None
 
 
 class CartSchema(BaseModel):
@@ -137,6 +141,16 @@ class CreateProductRequest(BaseModel):
     currency: str = Field(default="RUB", min_length=3, max_length=8)
     is_active: bool = True
     image_urls: list[str] = Field(default_factory=list, max_length=5)
+    sale_discount_percent: int | None = None
+
+    @field_validator("sale_discount_percent")
+    @classmethod
+    def validate_sale_discount(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value < 5 or value > 100 or value % 5 != 0:
+            raise ValueError("Sale discount must be 5–100 in steps of 5")
+        return value
 
 
 class UpdateProductRequest(BaseModel):
@@ -145,6 +159,16 @@ class UpdateProductRequest(BaseModel):
     unit_price: int | None = Field(default=None, ge=0)
     is_active: bool | None = None
     image_urls: list[str] | None = Field(default=None, max_length=5)
+    sale_discount_percent: int | None = None
+
+    @field_validator("sale_discount_percent")
+    @classmethod
+    def validate_sale_discount(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value < 5 or value > 100 or value % 5 != 0:
+            raise ValueError("Sale discount must be 5–100 in steps of 5")
+        return value
 
 
 class ProductResponse(BaseResponseSchema[ProductSchema]):

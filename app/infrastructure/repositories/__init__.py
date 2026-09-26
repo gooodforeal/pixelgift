@@ -15,6 +15,9 @@ from app.infrastructure.repositories.notification_jobs import (
 )
 from app.infrastructure.repositories.orders import SqlAlchemyOrdersRepository
 from app.infrastructure.repositories.products import SqlAlchemyProductsRepository
+from app.infrastructure.repositories.product_sales import (
+    SqlAlchemyProductSalesRepository,
+)
 from app.infrastructure.repositories.promo_codes import SqlAlchemyPromoCodesRepository
 from app.infrastructure.repositories.support_tickets import (
     SqlAlchemySupportTicketsRepository,
@@ -41,6 +44,7 @@ __all__ = [
     "SqlAlchemyNotificationJobsRepository",
     "SqlAlchemyOrdersRepository",
     "SqlAlchemyProductsRepository",
+    "SqlAlchemyProductSalesRepository",
     "SqlAlchemyPromoCodesRepository",
     "SqlAlchemySupportTicketsRepository",
     "SqlAlchemyTelegramLoginChallengesRepository",

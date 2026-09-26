@@ -48,6 +48,7 @@ class CreateProductCommand:
     currency: str = "RUB"
     is_active: bool = True
     image_urls: list[str] | None = None
+    sale_discount_percent: int | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -59,6 +60,8 @@ class UpdateProductCommand:
     unit_price: int | None = None
     is_active: bool | None = None
     image_urls: list[str] | None = None
+    sale_discount_percent: int | None = None
+    update_sale: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)

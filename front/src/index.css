@@ -518,12 +518,93 @@ html[data-theme="light"] .app-rail {
     px-4 py-3;
 }
 
+.cart-dropdown__title {
+  @apply font-sans text-sm font-semibold text-slate-100;
+}
+
+.cart-dropdown__empty {
+  @apply text-sm text-slate-400;
+}
+
+.cart-dropdown__item {
+  @apply rounded-xl border border-white/10 bg-ink-900/40 px-3 py-2.5;
+}
+
+.cart-dropdown__item-name {
+  @apply truncate text-sm font-medium text-slate-100;
+}
+
+.cart-dropdown__promo {
+  @apply mt-1.5 w-full rounded-xl border border-white/10 bg-ink-900/60 px-3 py-2
+    font-mono text-sm tracking-wider text-slate-100 outline-none
+    placeholder:normal-case placeholder:tracking-normal focus:border-glow-cyan/50;
+}
+
+.cart-dropdown__total {
+  @apply text-sm text-slate-300;
+}
+
+.cart-dropdown__total-value {
+  @apply font-semibold text-white;
+}
+
 .cart-dropdown__body {
   @apply min-h-0 flex-1 overflow-y-auto px-3 py-3;
 }
 
 html[data-theme="light"] .cart-dropdown {
   @apply border-slate-900/12 bg-white/95 shadow-slate-900/15;
+}
+
+html[data-theme="light"] .cart-dropdown__head {
+  border-color: rgb(15 23 42 / 0.1);
+}
+
+html[data-theme="light"] .cart-dropdown__title {
+  @apply text-slate-900;
+}
+
+html[data-theme="light"] .cart-dropdown__empty {
+  @apply text-slate-600;
+}
+
+html[data-theme="light"] .cart-dropdown__item {
+  @apply border-slate-900/10 bg-slate-100;
+}
+
+html[data-theme="light"] .cart-dropdown__item-name {
+  @apply text-slate-900;
+}
+
+html[data-theme="light"] .cart-dropdown__promo {
+  @apply border-slate-900/15 bg-slate-100 text-slate-900
+    placeholder:text-slate-500 focus:border-glow-violet/50 focus:bg-white;
+}
+
+html[data-theme="light"] .cart-dropdown__total {
+  @apply text-slate-600;
+}
+
+html[data-theme="light"] .cart-dropdown__total-value {
+  @apply text-slate-900;
+}
+
+html[data-theme="light"] .cart-dropdown .text-slate-100 {
+  color: rgb(15 23 42);
+}
+
+html[data-theme="light"] .cart-dropdown .text-slate-300,
+html[data-theme="light"] .cart-dropdown .text-slate-400,
+html[data-theme="light"] .cart-dropdown .text-slate-500 {
+  color: rgb(71 85 105);
+}
+
+html[data-theme="light"] .cart-dropdown .border-white\/10 {
+  border-color: rgb(15 23 42 / 0.1);
+}
+
+html[data-theme="light"] .cart-dropdown .text-rose-300 {
+  color: rgb(190 24 93);
 }
 
 .app-rail__link.is-active {
@@ -707,6 +788,80 @@ html[data-theme="light"] .field {
     focus:border-glow-violet/55 focus:bg-white focus:ring-glow-violet/20;
 }
 
+.ui-modal-backdrop {
+  @apply bg-ink-950/70;
+}
+
+.ui-modal__header,
+.ui-modal__footer {
+  @apply border-white/10;
+  border-bottom-width: 0;
+  border-top-width: 0;
+}
+
+.ui-modal__header {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+.ui-modal__footer {
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+
+.ui-modal__title {
+  @apply font-sans text-lg font-semibold text-slate-100;
+}
+
+.ui-modal__description {
+  @apply mt-1 text-sm text-slate-400;
+}
+
+.ui-modal__field-label {
+  @apply block text-sm text-slate-400;
+}
+
+.ui-modal__add-media {
+  @apply flex size-20 flex-col items-center justify-center gap-1 rounded-xl
+    border border-dashed border-white/15 text-slate-400 transition
+    hover:border-glow-cyan/40 hover:text-slate-200 disabled:opacity-50;
+}
+
+html[data-theme="light"] .ui-modal-backdrop {
+  @apply bg-slate-900/35;
+}
+
+html[data-theme="light"] .ui-modal__header,
+html[data-theme="light"] .ui-modal__footer {
+  border-color: rgb(15 23 42 / 0.1);
+}
+
+html[data-theme="light"] .ui-modal__title {
+  @apply text-slate-900;
+}
+
+html[data-theme="light"] .ui-modal__description,
+html[data-theme="light"] .ui-modal__field-label {
+  @apply text-slate-600;
+}
+
+html[data-theme="light"] .ui-modal__add-media {
+  @apply border-slate-900/20 text-slate-500 hover:border-glow-violet/45 hover:text-slate-800;
+}
+
+html[data-theme="light"] .ui-modal .text-slate-400 {
+  color: rgb(71 85 105);
+}
+
+html[data-theme="light"] .ui-modal .text-slate-500 {
+  color: rgb(100 116 139);
+}
+
+html[data-theme="light"] .ui-modal .border-white\/10,
+html[data-theme="light"] .ui-modal .border-white\/15 {
+  border-color: rgb(15 23 42 / 0.12);
+}
+
 html[data-theme="light"] .label {
   @apply text-slate-600;
 }
@@ -844,6 +999,25 @@ html[data-theme="light"] .site-footer__meta {
   color: rgb(254 202 202);
   background: rgb(244 63 94 / 0.12);
   border-color: rgb(244 63 94 / 0.22);
+}
+
+.sale-badge {
+  @apply inline-flex w-fit shrink-0 items-center rounded-md border border-rose-400/30
+    bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-bold leading-none tracking-wide
+    text-rose-200 uppercase;
+}
+
+html[data-theme="light"] .sale-badge {
+  @apply border-rose-500/25 bg-rose-500/10 text-rose-700;
+}
+
+html[data-theme="light"] .product-price,
+html[data-theme="light"] .product-price .text-white {
+  color: rgb(15 23 42);
+}
+
+html[data-theme="light"] .product-price .text-emerald-300 {
+  color: rgb(4 120 87);
 }
 
 html[data-theme="light"] .status-badge {

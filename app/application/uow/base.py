@@ -16,6 +16,7 @@ from app.domain.repository.design_ratings import BaseDesignRatingsRepository
 from app.domain.repository.media_files import BaseMediaFilesRepository
 from app.domain.repository.orders import BaseOrdersRepository
 from app.domain.repository.products import BaseProductsRepository
+from app.domain.repository.product_sales import BaseProductSalesRepository
 from app.domain.repository.promo_codes import BasePromoCodesRepository
 from app.domain.repository.telegram_login_challenges import (
     BaseTelegramLoginChallengesRepository,
@@ -42,6 +43,7 @@ class BaseUnitOfWork(ABC):
     telegram_login_challenges: BaseTelegramLoginChallengesRepository
     user_sessions: BaseUserSessionsRepository
     products: BaseProductsRepository
+    product_sales: BaseProductSalesRepository
     promo_codes: BasePromoCodesRepository
     carts: BaseCartsRepository
     orders: BaseOrdersRepository

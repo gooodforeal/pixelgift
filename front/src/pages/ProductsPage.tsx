@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { PageTransition } from "../components/PageTransition";
+import { ProductPrice } from "../components/ProductPrice";
 import { Spinner } from "../components/Spinner";
 import { useAuth } from "../hooks/useAuth";
 import { ApiError, api, toProxiedAssetUrl } from "../lib/api";
@@ -26,19 +27,6 @@ function resolveInitialProductsView(): ProductsView {
   if (typeof window === "undefined") return "grid";
   const stored = window.localStorage.getItem(PRODUCTS_VIEW_STORAGE_KEY);
   return stored === "list" || stored === "grid" ? stored : "grid";
-}
-
-function formatPrice(kopecks: number, currency: string): string {
-  const value = kopecks / 100;
-  try {
-    return new Intl.NumberFormat("ru-RU", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 0,
-    }).format(value);
-  } catch {
-    return `${value} ${currency}`;
-  }
 }
 
 function ProductThumb({
@@ -292,9 +280,13 @@ export function ProductsPage() {
                           {product.name}
                         </h2>
                       </div>
-                      <p className="shrink-0 text-base font-semibold text-white">
-                        {formatPrice(product.unit_price, product.currency)}
-                      </p>
+                      <ProductPrice
+                        className="shrink-0 text-base"
+                        unitPrice={product.unit_price}
+                        currency={product.currency}
+                        saleUnitPrice={product.sale_unit_price}
+                        saleDiscountPercent={product.sale_discount_percent}
+                      />
                     </div>
                     {product.description ? (
                       <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-400">
@@ -355,14 +347,22 @@ export function ProductsPage() {
                     ) : null}
                   </div>
 
-                  <p className="hidden shrink-0 text-sm font-semibold tabular-nums text-white sm:block">
-                    {formatPrice(product.unit_price, product.currency)}
-                  </p>
+                  <ProductPrice
+                    className="hidden shrink-0 text-sm sm:flex"
+                    unitPrice={product.unit_price}
+                    currency={product.currency}
+                    saleUnitPrice={product.sale_unit_price}
+                    saleDiscountPercent={product.sale_discount_percent}
+                  />
 
                   <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center">
-                    <p className="text-sm font-semibold tabular-nums text-white sm:hidden">
-                      {formatPrice(product.unit_price, product.currency)}
-                    </p>
+                    <ProductPrice
+                      className="text-sm sm:hidden"
+                      unitPrice={product.unit_price}
+                      currency={product.currency}
+                      saleUnitPrice={product.sale_unit_price}
+                      saleDiscountPercent={product.sale_discount_percent}
+                    />
                     <button
                       type="button"
                       className="btn-primary px-3 py-1.5 text-xs"

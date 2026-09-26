@@ -65,7 +65,7 @@ from app.presentation.schemas.commerce_mappers import (
     cart_view_to_schema,
     order_to_schema,
     orders_page_to_schema,
-    product_to_schema,
+    product_view_to_schema,
 )
 
 router = APIRouter(tags=["commerce"])
@@ -75,10 +75,10 @@ router = APIRouter(tags=["commerce"])
 async def list_products(
     uc: ListProductsUseCase = Depends(get_list_products_uc),
 ) -> ProductsResponse:
-    products = await uc.execute()
+    views = await uc.execute()
     return ProductsResponse(
         message="ok",
-        result=[product_to_schema(p) for p in products],
+        result=[product_view_to_schema(v) for v in views],
     )
 
 

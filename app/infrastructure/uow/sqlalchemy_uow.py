@@ -17,6 +17,7 @@ from app.infrastructure.repositories import (
     SqlAlchemyNotificationJobsRepository,
     SqlAlchemyOrdersRepository,
     SqlAlchemyProductsRepository,
+    SqlAlchemyProductSalesRepository,
     SqlAlchemyPromoCodesRepository,
     SqlAlchemySupportTicketsRepository,
     SqlAlchemyTelegramLoginChallengesRepository,
@@ -56,6 +57,7 @@ class SqlAlchemyUnitOfWork(BaseUnitOfWork):
         )
         self.user_sessions = SqlAlchemyUserSessionsRepository(self._session)
         self.products = SqlAlchemyProductsRepository(self._session)
+        self.product_sales = SqlAlchemyProductSalesRepository(self._session)
         self.promo_codes = SqlAlchemyPromoCodesRepository(self._session)
         self.carts = SqlAlchemyCartsRepository(self._session)
         self.orders = SqlAlchemyOrdersRepository(self._session)

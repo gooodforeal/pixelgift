@@ -23,6 +23,7 @@ from app.domain.entities.assistant_chat_threads import AssistantChatThread
 from app.domain.entities.carts import Cart
 from app.domain.entities.orders import Order
 from app.domain.entities.products import Product, ProductKind
+from app.domain.entities.product_sales import ProductSale
 from app.domain.entities.promo_codes import PromoCode
 from app.domain.entities.user_balance_logs import UserBalanceLog
 from app.domain.entities.user_balances import UserBalance
@@ -46,6 +47,7 @@ from app.domain.repository.media_files import BaseMediaFilesRepository
 from app.domain.repository.notification_jobs import BaseNotificationJobsRepository
 from app.domain.repository.orders import BaseOrdersRepository
 from app.domain.repository.products import BaseProductsRepository
+from app.domain.repository.product_sales import BaseProductSalesRepository
 from app.domain.repository.promo_codes import BasePromoCodesRepository
 from app.domain.repository.support_tickets import BaseSupportTicketsRepository
 from app.domain.repository.telegram_login_challenges import (
@@ -641,6 +643,46 @@ class InMemoryProductsRepository(BaseProductsRepository):
         return [self.items[i] for i in ids if i in self.items]
 
 
+class InMemoryProductSalesRepository(BaseProductSalesRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, ProductSale] = {}
+
+    async def add(self, entity: ProductSale) -> None:
+        self.items[entity.id] = entity
+
+    async def get_by_id(self, id_: uuid.UUID) -> Optional[ProductSale]:
+        return self.items.get(id_)
+
+    async def update(self, entity: ProductSale) -> ProductSale:
+        self.items[entity.id] = entity
+        return entity
+
+    async def delete(self, id_: uuid.UUID) -> None:
+        self.items.pop(id_, None)
+
+    async def get_by_product_id(self, product_id: uuid.UUID) -> ProductSale | None:
+        for sale in self.items.values():
+            if sale.product_id == product_id:
+                return sale
+        return None
+
+    async def list_by_product_ids(
+        self, product_ids: list[uuid.UUID]
+    ) -> list[ProductSale]:
+        ids = set(product_ids)
+        return [sale for sale in self.items.values() if sale.product_id in ids]
+
+    async def list_active_by_product_ids(
+        self, product_ids: list[uuid.UUID]
+    ) -> list[ProductSale]:
+        ids = set(product_ids)
+        return [
+            sale
+            for sale in self.items.values()
+            if sale.product_id in ids and sale.is_active
+        ]
+
+
 class InMemoryPromoCodesRepository(BasePromoCodesRepository):
     def __init__(self) -> None:
         self.items: dict[uuid.UUID, PromoCode] = {}
@@ -847,6 +889,7 @@ class InMemoryUnitOfWork(BaseUnitOfWork):
         self.telegram_login_challenges = InMemoryTelegramLoginChallengesRepository()
         self.user_sessions = InMemoryUserSessionsRepository()
         self.products = InMemoryProductsRepository()
+        self.product_sales = InMemoryProductSalesRepository()
         self.promo_codes = InMemoryPromoCodesRepository()
         self.carts = InMemoryCartsRepository()
         self.orders = InMemoryOrdersRepository()

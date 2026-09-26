@@ -1,8 +1,14 @@
 from __future__ import annotations
 
-from app.application.dto.commerce_views import BalanceLogView, BalanceView, CartView
+from app.application.dto.commerce_views import (
+    BalanceLogView,
+    BalanceView,
+    CartView,
+    ProductView,
+)
 from app.domain.entities.orders import Order
 from app.domain.entities.products import Product
+from app.domain.entities.product_sales import ProductSale
 from app.presentation.schemas.commerce import (
     BalanceLogSchema,
     BalanceLogsPageSchema,
@@ -16,7 +22,17 @@ from app.presentation.schemas.commerce import (
 )
 
 
-def product_to_schema(product: Product) -> ProductSchema:
+def _active_sale(sale: ProductSale | None) -> ProductSale | None:
+    if sale is None or not sale.is_active:
+        return None
+    return sale
+
+
+def product_to_schema(
+    product: Product,
+    sale: ProductSale | None = None,
+) -> ProductSchema:
+    active = _active_sale(sale)
     return ProductSchema(
         id=product.id,
         sku=product.sku,
@@ -27,10 +43,17 @@ def product_to_schema(product: Product) -> ProductSchema:
         unit_price=product.unit_price,
         currency=product.currency,
         is_active=product.is_active,
+        sale_discount_percent=active.discount_percent if active else None,
+        sale_unit_price=active.apply(product.unit_price) if active else None,
     )
 
 
+def product_view_to_schema(view: ProductView) -> ProductSchema:
+    return product_to_schema(view.product, view.sale)
+
+
 def cart_view_to_schema(view: CartView) -> CartSchema:
+    sales = view.sales_by_product_id or {}
     items: list[CartItemSchema] = []
     total = 0
     currency = "RUB"
@@ -38,7 +61,9 @@ def cart_view_to_schema(view: CartView) -> CartSchema:
         product = view.products_by_id.get(item.product_id)
         if product is None:
             continue
-        amount = product.unit_price * item.quantity
+        sale = _active_sale(sales.get(product.id))
+        unit_price = sale.apply(product.unit_price) if sale else product.unit_price
+        amount = unit_price * item.quantity
         total += amount
         currency = product.currency
         items.append(
@@ -46,10 +71,12 @@ def cart_view_to_schema(view: CartView) -> CartSchema:
                 product_id=product.id,
                 sku=product.sku,
                 name=product.name,
-                unit_price=product.unit_price,
+                unit_price=unit_price,
                 currency=product.currency,
                 quantity=item.quantity,
                 amount=amount,
+                compare_at_price=product.unit_price if sale else None,
+                sale_discount_percent=sale.discount_percent if sale else None,
             )
         )
     return CartSchema(

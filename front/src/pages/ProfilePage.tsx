@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   Archive,
+  ArrowLeftRight,
   Bell,
   CalendarDays,
   CreditCard,
@@ -393,7 +394,10 @@ export function ProfilePage() {
         </section>
 
         <section className="glass mt-5 overflow-hidden p-5 sm:p-6">
-          <h2 className="font-sans text-lg font-semibold">Изменения балансов</h2>
+          <h2 className="inline-flex items-center gap-2 font-sans text-lg font-semibold">
+            <ArrowLeftRight className="size-5 text-glow-gold" />
+            Изменения балансов
+          </h2>
           <p className="mt-1 text-sm text-slate-400">
             Начисления и списания по товарам.
           </p>

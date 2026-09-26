@@ -490,6 +490,7 @@ export const api = {
     currency?: string;
     is_active?: boolean;
     image_urls?: string[];
+    sale_discount_percent?: number | null;
   }) =>
     request<Product>("/admin/products", {
       method: "POST",
@@ -504,6 +505,7 @@ export const api = {
       unit_price?: number;
       is_active?: boolean;
       image_urls?: string[];
+      sale_discount_percent?: number | null;
     },
   ) =>
     request<Product>(`/admin/products/${productId}`, {

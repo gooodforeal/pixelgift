@@ -55,7 +55,7 @@ export function Modal({
             key="admin-modal-backdrop"
             type="button"
             aria-label="Закрыть"
-            className="fixed inset-0 z-[120] border-0 bg-ink-950/70 p-0 backdrop-blur-[2px]"
+            className="ui-modal-backdrop fixed inset-0 z-[120] border-0 p-0 backdrop-blur-[2px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -73,21 +73,15 @@ export function Modal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: 8 }}
               transition={{ duration: 0.2 }}
-              className={`glass pointer-events-auto flex max-h-[min(88dvh,40rem)] ${widthClass} flex-col overflow-hidden !rounded-2xl shadow-2xl`}
+              className={`ui-modal glass pointer-events-auto flex max-h-[min(88dvh,40rem)] ${widthClass} flex-col overflow-hidden !rounded-2xl shadow-2xl`}
             >
-              <header className="flex shrink-0 items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
+              <header className="ui-modal__header flex shrink-0 items-start justify-between gap-3 px-5 py-4">
                 <div className="min-w-0">
-                  <h2
-                    id={titleId}
-                    className="font-sans text-lg font-semibold text-slate-100"
-                  >
+                  <h2 id={titleId} className="ui-modal__title">
                     {title}
                   </h2>
                   {description ? (
-                    <p
-                      id={descriptionId}
-                      className="mt-1 text-sm text-slate-400"
-                    >
+                    <p id={descriptionId} className="ui-modal__description">
                       {description}
                     </p>
                   ) : null}
@@ -105,7 +99,7 @@ export function Modal({
                 {children}
               </div>
               {footer ? (
-                <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-white/10 px-5 py-4">
+                <footer className="ui-modal__footer flex shrink-0 flex-wrap items-center justify-end gap-2 px-5 py-4">
                   {footer}
                 </footer>
               ) : null}

@@ -21,7 +21,7 @@ from app.presentation.schemas.commerce import (
     ProductsResponse,
     UpdateProductRequest,
 )
-from app.presentation.schemas.commerce_mappers import product_to_schema
+from app.presentation.schemas.commerce_mappers import product_view_to_schema
 
 router = APIRouter(prefix="/admin/products", tags=["admin-products"])
 
@@ -31,10 +31,10 @@ async def list_all_products(
     _: User = Depends(require_admin),
     uc: ListAllProductsUseCase = Depends(get_list_all_products_uc),
 ) -> ProductsResponse:
-    products = await uc.execute()
+    views = await uc.execute()
     return ProductsResponse(
         message="ok",
-        result=[product_to_schema(p) for p in products],
+        result=[product_view_to_schema(v) for v in views],
     )
 
 
@@ -48,7 +48,7 @@ async def create_product(
     admin: User = Depends(require_admin),
     uc: CreateProductUseCase = Depends(get_create_product_uc),
 ) -> ProductResponse:
-    product = await uc.execute(
+    view = await uc.execute(
         CreateProductCommand(
             actor_id=admin.id,
             sku=body.sku,
@@ -59,9 +59,10 @@ async def create_product(
             currency=body.currency,
             is_active=body.is_active,
             image_urls=body.image_urls,
+            sale_discount_percent=body.sale_discount_percent,
         )
     )
-    return ProductResponse(message="ok", result=product_to_schema(product))
+    return ProductResponse(message="ok", result=product_view_to_schema(view))
 
 
 @router.patch("/{product_id}", response_model=ProductResponse)
@@ -71,7 +72,8 @@ async def update_product(
     admin: User = Depends(require_admin),
     uc: UpdateProductUseCase = Depends(get_update_product_uc),
 ) -> ProductResponse:
-    product = await uc.execute(
+    update_sale = "sale_discount_percent" in body.model_fields_set
+    view = await uc.execute(
         UpdateProductCommand(
             actor_id=admin.id,
             product_id=product_id,
@@ -80,6 +82,8 @@ async def update_product(
             unit_price=body.unit_price,
             is_active=body.is_active,
             image_urls=body.image_urls,
+            sale_discount_percent=body.sale_discount_percent,
+            update_sale=update_sale,
         )
     )
-    return ProductResponse(message="ok", result=product_to_schema(product))
+    return ProductResponse(message="ok", result=product_view_to_schema(view))

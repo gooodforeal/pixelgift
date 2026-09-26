@@ -10,6 +10,7 @@ from app.infrastructure.models.base import Base, TimestampMixin
 if TYPE_CHECKING:
     from app.infrastructure.models.carts import CartItemModel
     from app.infrastructure.models.orders import OrderItemModel
+    from app.infrastructure.models.product_sales import ProductSaleModel
     from app.infrastructure.models.user_balances import UserBalanceModel
 
 
@@ -33,3 +34,8 @@ class ProductModel(TimestampMixin, Base):
     cart_items: Mapped[list["CartItemModel"]] = relationship(back_populates="product")
     order_items: Mapped[list["OrderItemModel"]] = relationship(back_populates="product")
     balances: Mapped[list["UserBalanceModel"]] = relationship(back_populates="product")
+    sale: Mapped["ProductSaleModel | None"] = relationship(
+        back_populates="product",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )

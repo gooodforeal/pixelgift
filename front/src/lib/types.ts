@@ -221,6 +221,8 @@ export interface Product {
   unit_price: number;
   currency: string;
   is_active: boolean;
+  sale_discount_percent?: number | null;
+  sale_unit_price?: number | null;
 }
 
 export interface CartItem {
@@ -231,6 +233,8 @@ export interface CartItem {
   currency: string;
   quantity: number;
   amount: number;
+  compare_at_price?: number | null;
+  sale_discount_percent?: number | null;
 }
 
 export interface Cart {

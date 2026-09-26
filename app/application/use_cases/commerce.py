@@ -23,12 +23,14 @@ from app.application.dto.commerce_views import (
     CartView,
     CheckoutResult,
     OrdersPage,
+    ProductView,
 )
 from app.application.ports.payments.base import BasePaymentProvider
 from app.application.uow.base import BaseUnitOfWork
 from app.domain.entities.carts import Cart
 from app.domain.entities.orders import Order, OrderItem, OrderStatus
 from app.domain.entities.products import Product, ProductKind
+from app.domain.entities.product_sales import ProductSale
 from app.domain.entities.promo_codes import PromoCode
 from app.domain.entities.user_balance_logs import BalanceLogReason
 from app.domain.entities.user_balances import UserBalance
@@ -53,6 +55,73 @@ async def _products_map(
 ) -> dict[uuid.UUID, Product]:
     products = await uow.products.list_by_ids(product_ids)
     return {p.id: p for p in products}
+
+
+async def _sales_map(
+    uow: BaseUnitOfWork,
+    product_ids: list[uuid.UUID],
+    *,
+    active_only: bool = True,
+) -> dict[uuid.UUID, ProductSale]:
+    if active_only:
+        sales = await uow.product_sales.list_active_by_product_ids(product_ids)
+    else:
+        sales = await uow.product_sales.list_by_product_ids(product_ids)
+    return {sale.product_id: sale for sale in sales}
+
+
+async def _product_views(
+    uow: BaseUnitOfWork,
+    products: list[Product],
+    *,
+    active_sales_only: bool = True,
+) -> list[ProductView]:
+    sales = await _sales_map(
+        uow,
+        [p.id for p in products],
+        active_only=active_sales_only,
+    )
+    return [
+        ProductView(product=product, sale=sales.get(product.id))
+        for product in products
+    ]
+
+
+async def _cart_view(uow: BaseUnitOfWork, cart: Cart) -> CartView:
+    product_ids = [item.product_id for item in cart.items]
+    products = await _products_map(uow, product_ids)
+    sales = await _sales_map(uow, product_ids, active_only=True)
+    return CartView(cart=cart, products_by_id=products, sales_by_product_id=sales)
+
+
+async def _upsert_product_sale(
+    uow: BaseUnitOfWork,
+    *,
+    product_id: uuid.UUID,
+    discount_percent: int | None,
+) -> ProductSale | None:
+    existing = await uow.product_sales.get_by_product_id(product_id)
+    if discount_percent is None:
+        if existing is not None:
+            await uow.product_sales.delete(existing.id)
+        return None
+
+    discount = ProductSale.validate_discount_percent(discount_percent)
+    now = datetime.now(dt_timezone.utc)
+    if existing is None:
+        sale = ProductSale(
+            product_id=product_id,
+            discount_percent=discount,
+            is_active=True,
+        )
+        await uow.product_sales.add(sale)
+        return sale
+
+    existing.discount_percent = discount
+    existing.is_active = True
+    existing.updated_at = now
+    await uow.product_sales.update(existing)
+    return existing
 
 
 async def _credit_balance(
@@ -155,9 +224,10 @@ class ListProductsUseCase:
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
-    async def execute(self) -> list[Product]:
+    async def execute(self) -> list[ProductView]:
         async with self._uow as uow:
-            return await uow.products.list_active()
+            products = await uow.products.list_active()
+            return await _product_views(uow, products, active_sales_only=True)
 
 
 class GetCartUseCase:
@@ -171,10 +241,7 @@ class GetCartUseCase:
                 cart = Cart(user_id=actor_id)
                 await uow.carts.add(cart)
                 await uow.commit()
-            products = await _products_map(
-                uow, [item.product_id for item in cart.items]
-            )
-            return CartView(cart=cart, products_by_id=products)
+            return await _cart_view(uow, cart)
 
 
 class AddCartItemUseCase:
@@ -200,10 +267,7 @@ class AddCartItemUseCase:
             else:
                 await uow.carts.update(cart)
             await uow.commit()
-            products = await _products_map(
-                uow, [item.product_id for item in cart.items]
-            )
-            return CartView(cart=cart, products_by_id=products)
+            return await _cart_view(uow, cart)
 
 
 class UpdateCartItemUseCase:
@@ -220,10 +284,7 @@ class UpdateCartItemUseCase:
             )
             await uow.carts.update(cart)
             await uow.commit()
-            products = await _products_map(
-                uow, [item.product_id for item in cart.items]
-            )
-            return CartView(cart=cart, products_by_id=products)
+            return await _cart_view(uow, cart)
 
 
 class RemoveCartItemUseCase:
@@ -238,10 +299,7 @@ class RemoveCartItemUseCase:
             cart.remove_item(product_id=command.product_id)
             await uow.carts.update(cart)
             await uow.commit()
-            products = await _products_map(
-                uow, [item.product_id for item in cart.items]
-            )
-            return CartView(cart=cart, products_by_id=products)
+            return await _cart_view(uow, cart)
 
 
 class CheckoutCartUseCase:
@@ -264,6 +322,9 @@ class CheckoutCartUseCase:
             products = await _products_map(
                 uow, [item.product_id for item in cart.items]
             )
+            sales = await _sales_map(
+                uow, [item.product_id for item in cart.items], active_only=True
+            )
             promo = await _resolve_promo(uow, command.promo_code)
 
             order = Order(
@@ -281,14 +342,18 @@ class CheckoutCartUseCase:
                     sku = product.sku if product else str(cart_item.product_id)
                     raise ProductNotAvailableError(sku)
                 order.currency = product.currency
-                line_amount = product.unit_price * cart_item.quantity
+                sale = sales.get(product.id)
+                unit_price = (
+                    sale.apply(product.unit_price) if sale is not None else product.unit_price
+                )
+                line_amount = unit_price * cart_item.quantity
                 total += line_amount
                 order_items.append(
                     OrderItem(
                         order_id=order.id,
                         product_id=product.id,
                         quantity=cart_item.quantity,
-                        unit_price=product.unit_price,
+                        unit_price=unit_price,
                         amount=line_amount,
                     )
                 )
@@ -385,16 +450,17 @@ class ListAllProductsUseCase:
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
-    async def execute(self) -> list[Product]:
+    async def execute(self) -> list[ProductView]:
         async with self._uow as uow:
-            return await uow.products.list_all()
+            products = await uow.products.list_all()
+            return await _product_views(uow, products, active_sales_only=False)
 
 
 class CreateProductUseCase:
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
-    async def execute(self, command: CreateProductCommand) -> Product:
+    async def execute(self, command: CreateProductCommand) -> ProductView:
         sku = command.sku.strip().lower()
         name = command.name.strip()
         description = command.description.strip()
@@ -428,15 +494,20 @@ class CreateProductUseCase:
                 is_active=command.is_active,
             )
             await uow.products.add(product)
+            sale = await _upsert_product_sale(
+                uow,
+                product_id=product.id,
+                discount_percent=command.sale_discount_percent,
+            )
             await uow.commit()
-            return product
+            return ProductView(product=product, sale=sale)
 
 
 class UpdateProductUseCase:
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
-    async def execute(self, command: UpdateProductCommand) -> Product:
+    async def execute(self, command: UpdateProductCommand) -> ProductView:
         async with self._uow as uow:
             product = await uow.products.get_by_id(command.product_id)
             if product is None:
@@ -458,8 +529,16 @@ class UpdateProductUseCase:
                 product.image_urls = Product.validate_image_urls(command.image_urls)
             product.updated_at = datetime.now(dt_timezone.utc)
             await uow.products.update(product)
+
+            sale = await uow.product_sales.get_by_product_id(product.id)
+            if command.update_sale:
+                sale = await _upsert_product_sale(
+                    uow,
+                    product_id=product.id,
+                    discount_percent=command.sale_discount_percent,
+                )
             await uow.commit()
-            return product
+            return ProductView(product=product, sale=sale)
 
 
 class GetOrderUseCase:

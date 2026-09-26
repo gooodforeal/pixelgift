@@ -21,8 +21,7 @@ import type { PromoCode } from "../lib/types";
 
 const DISCOUNT_OPTIONS = Array.from({ length: 20 }, (_, i) => (i + 1) * 5);
 
-const FIELD =
-  "mt-1.5 w-full rounded-xl border border-white/10 bg-ink-900/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-glow-cyan/50";
+const FIELD = "field mt-1.5 !rounded-xl px-3 py-2";
 
 function defaultExpiresLocal(): string {
   const d = new Date();
@@ -250,7 +249,7 @@ export function AdminPromoCodesPage() {
             if (canSubmit) createMutation.mutate();
           }}
         >
-          <label className="block text-sm text-slate-400">
+          <label className="ui-modal__field-label">
             Код
             <input
               type="text"
@@ -264,7 +263,7 @@ export function AdminPromoCodesPage() {
               autoFocus
             />
           </label>
-          <label className="block text-sm text-slate-400">
+          <label className="ui-modal__field-label">
             Скидка
             <select
               value={discount}
@@ -279,7 +278,7 @@ export function AdminPromoCodesPage() {
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-400">
+          <label className="ui-modal__field-label">
             Действует до
             <input
               type="datetime-local"

@@ -150,9 +150,7 @@ export function CartDropdown({
             className="cart-dropdown absolute top-full right-0 z-[60] mt-2"
           >
             <div className="cart-dropdown__head">
-              <p className="font-sans text-sm font-semibold text-slate-100">
-                Корзина
-              </p>
+              <p className="cart-dropdown__title">Корзина</p>
               {cartCount > 0 ? (
                 <span className="text-xs text-slate-500 tabular-nums">
                   {cartCount} шт.
@@ -169,7 +167,7 @@ export function CartDropdown({
                 </p>
               ) : !cart?.items.length ? (
                 <div className="px-1 py-5 text-center">
-                  <p className="text-sm text-slate-400">Корзина пуста</p>
+                  <p className="cart-dropdown__empty">Корзина пуста</p>
                   <Link
                     to="/products"
                     className="btn-ghost mt-3 inline-flex text-xs"
@@ -184,16 +182,34 @@ export function CartDropdown({
                     {cart.items.map((item) => (
                       <li
                         key={item.product_id}
-                        className="rounded-xl border border-white/10 bg-ink-900/40 px-3 py-2.5"
+                        className="cart-dropdown__item"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-slate-100">
+                            <p className="cart-dropdown__item-name">
                               {item.name}
                             </p>
-                            <p className="mt-0.5 text-[11px] text-slate-500">
-                              {formatPrice(item.unit_price, item.currency)}
-                            </p>
+                            {item.compare_at_price != null &&
+                            item.sale_discount_percent != null ? (
+                              <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                                <span className="sale-badge">
+                                  −{item.sale_discount_percent}%
+                                </span>
+                                <span className="text-[11px] text-slate-500 line-through">
+                                  {formatPrice(
+                                    item.compare_at_price,
+                                    item.currency,
+                                  )}
+                                </span>
+                                <span className="text-[11px] font-medium text-emerald-300">
+                                  {formatPrice(item.unit_price, item.currency)}
+                                </span>
+                              </div>
+                            ) : (
+                              <p className="mt-0.5 text-[11px] text-slate-500">
+                                {formatPrice(item.unit_price, item.currency)}
+                              </p>
+                            )}
                           </div>
                           <button
                             type="button"
@@ -219,7 +235,7 @@ export function CartDropdown({
                           >
                             <Minus className="size-3.5" />
                           </button>
-                          <span className="w-5 text-center text-sm tabular-nums">
+                          <span className="w-5 text-center text-sm tabular-nums text-slate-100">
                             {item.quantity}
                           </span>
                           <button
@@ -251,16 +267,16 @@ export function CartDropdown({
                         }
                         maxLength={20}
                         placeholder="введите промокод"
-                        className="mt-1.5 w-full rounded-xl border border-white/10 bg-ink-900/60 px-3 py-2 font-mono text-sm tracking-wider text-slate-100 outline-none placeholder:normal-case placeholder:tracking-normal focus:border-glow-cyan/50"
+                        className="cart-dropdown__promo"
                         disabled={busy}
                         autoComplete="off"
                         spellCheck={false}
                       />
                     </label>
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm text-slate-300">
+                      <p className="cart-dropdown__total">
                         Итого:{" "}
-                        <span className="font-semibold text-white">
+                        <span className="cart-dropdown__total-value">
                           {formatPrice(cart.total_amount, cart.currency)}
                         </span>
                       </p>

@@ -11,6 +11,7 @@ from app.infrastructure.models.media_files import MediaFileModel
 from app.infrastructure.models.notification_jobs import NotificationJobModel
 from app.infrastructure.models.orders import OrderItemModel, OrderModel
 from app.infrastructure.models.products import ProductModel
+from app.infrastructure.models.product_sales import ProductSaleModel
 from app.infrastructure.models.promo_codes import PromoCodeModel
 from app.infrastructure.models.support_tickets import (
     SupportTicketAttachmentModel,
@@ -40,6 +41,7 @@ __all__ = [
     "OrderItemModel",
     "OrderModel",
     "ProductModel",
+    "ProductSaleModel",
     "PromoCodeModel",
     "SupportTicketAttachmentModel",
     "SupportTicketModel",

@@ -38,8 +38,9 @@ function formatPrice(kopecks: number, currency: string): string {
   }
 }
 
-const FIELD =
-  "mt-1.5 w-full rounded-xl border border-white/10 bg-ink-900/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-glow-cyan/50";
+const FIELD = "field mt-1.5 !rounded-xl px-3 py-2";
+
+const SALE_DISCOUNT_OPTIONS = Array.from({ length: 20 }, (_, i) => (i + 1) * 5);
 
 type ProductForm = {
   sku: string;
@@ -47,6 +48,7 @@ type ProductForm = {
   description: string;
   priceRub: string;
   imageUrls: string[];
+  saleDiscountPercent: number | null;
 };
 
 const emptyCreateForm = (): ProductForm => ({
@@ -55,6 +57,7 @@ const emptyCreateForm = (): ProductForm => ({
   description: "",
   priceRub: "99",
   imageUrls: [],
+  saleDiscountPercent: null,
 });
 
 type ModalState =
@@ -78,7 +81,7 @@ function ImageUrlsEditor({
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <div className="sm:col-span-2">
-      <p className="text-sm text-slate-400">
+      <p className="ui-modal__field-label">
         Фото{" "}
         <span className="text-slate-500">
           ({urls.length}/{MAX_IMAGES})
@@ -109,7 +112,7 @@ function ImageUrlsEditor({
         {urls.length < MAX_IMAGES ? (
           <button
             type="button"
-            className="flex size-20 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-white/15 text-slate-400 transition hover:border-glow-cyan/40 hover:text-slate-200 disabled:opacity-50"
+            className="ui-modal__add-media"
             disabled={disabled || uploading}
             onClick={() => inputRef.current?.click()}
           >
@@ -163,6 +166,7 @@ export function AdminProductsPage() {
         currency: "RUB",
         is_active: true,
         image_urls: form.imageUrls,
+        sale_discount_percent: form.saleDiscountPercent,
       });
     },
     onSuccess: (product) => {
@@ -188,6 +192,7 @@ export function AdminProductsPage() {
         unit_price?: number;
         is_active?: boolean;
         image_urls?: string[];
+        sale_discount_percent?: number | null;
       };
     }) => api.updateAdminProduct(id, payload),
     onSuccess: (_product, variables) => {
@@ -363,11 +368,29 @@ export function AdminProductsPage() {
                           )}
                           <span>{product.is_active ? "Активен" : "Скрыт"}</span>
                         </span>
+                        {product.sale_discount_percent ? (
+                          <span className="sale-badge">
+                            −{product.sale_discount_percent}%
+                          </span>
+                        ) : null}
                       </div>
                       <p className="mt-1 truncate text-xs text-slate-400 sm:text-sm">
                         <span className="font-mono">{product.sku}</span>
                         {" · "}
-                        {formatPrice(product.unit_price, product.currency)}
+                        {product.sale_unit_price != null ? (
+                          <>
+                            <span className="line-through opacity-70">
+                              {formatPrice(product.unit_price, product.currency)}
+                            </span>
+                            {" → "}
+                            {formatPrice(
+                              product.sale_unit_price,
+                              product.currency,
+                            )}
+                          </>
+                        ) : (
+                          formatPrice(product.unit_price, product.currency)
+                        )}
                         {product.description
                           ? ` · ${product.description}`
                           : ""}
@@ -400,6 +423,8 @@ export function AdminProductsPage() {
                                   description: product.description ?? "",
                                   priceRub: String(product.unit_price / 100),
                                   imageUrls: [...(product.image_urls ?? [])],
+                                  saleDiscountPercent:
+                                    product.sale_discount_percent ?? null,
                                 },
                               }),
                           },
@@ -476,12 +501,13 @@ export function AdminProductsPage() {
                   description: modal.form.description.trim(),
                   unit_price: Math.round(rubles * 100),
                   image_urls: modal.form.imageUrls,
+                  sale_discount_percent: modal.form.saleDiscountPercent,
                 },
               });
             }}
           >
             {modal?.mode === "create" ? (
-              <label className="block text-sm text-slate-400">
+              <label className="ui-modal__field-label">
                 SKU
                 <input
                   type="text"
@@ -499,7 +525,7 @@ export function AdminProductsPage() {
               </label>
             ) : null}
             <label
-              className={`block text-sm text-slate-400 ${
+              className={`ui-modal__field-label ${
                 modal?.mode === "edit" ? "sm:col-span-2" : ""
               }`}
             >
@@ -514,7 +540,7 @@ export function AdminProductsPage() {
                 autoFocus={modal?.mode === "edit"}
               />
             </label>
-            <label className="block text-sm text-slate-400 sm:col-span-2">
+            <label className="ui-modal__field-label sm:col-span-2">
               Описание
               <textarea
                 value={form.description}
@@ -532,7 +558,7 @@ export function AdminProductsPage() {
               onChange={(imageUrls) => patchForm({ imageUrls })}
               onUpload={(file) => void uploadImage(file)}
             />
-            <label className="block text-sm text-slate-400">
+            <label className="ui-modal__field-label">
               Цена, ₽
               <input
                 type="number"
@@ -542,6 +568,27 @@ export function AdminProductsPage() {
                 onChange={(e) => patchForm({ priceRub: e.target.value })}
                 className={FIELD}
               />
+            </label>
+            <label className="ui-modal__field-label">
+              Акция
+              <select
+                value={form.saleDiscountPercent ?? ""}
+                onChange={(e) =>
+                  patchForm({
+                    saleDiscountPercent:
+                      e.target.value === "" ? null : Number(e.target.value),
+                  })
+                }
+                className={FIELD}
+              >
+                <option value="">Без акции</option>
+                {SALE_DISCOUNT_OPTIONS.map((value) => (
+                  <option key={value} value={value}>
+                    −{value}%
+                    {value === 100 ? " (бесплатно)" : ""}
+                  </option>
+                ))}
+              </select>
             </label>
           </form>
         ) : null}

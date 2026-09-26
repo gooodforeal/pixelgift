@@ -11,6 +11,7 @@ from app.application.dto.commerce import (
     GetOrderCommand,
     HandleYookassaWebhookCommand,
     ListBalanceLogsCommand,
+    ListOrdersCommand,
     RemoveCartItemCommand,
     UpdateCartItemCommand,
     UpdateProductCommand,
@@ -21,6 +22,7 @@ from app.application.dto.commerce_views import (
     BalanceView,
     CartView,
     CheckoutResult,
+    OrdersPage,
 )
 from app.application.ports.payments.base import BasePaymentProvider
 from app.application.uow.base import BaseUnitOfWork
@@ -513,6 +515,24 @@ class ListUserBalanceLogsUseCase:
                 if log.product_id in products
             ]
             return BalanceLogsPage(
+                items=items, total=total, page=page, page_size=page_size
+            )
+
+
+class ListUserOrdersUseCase:
+    def __init__(self, uow: BaseUnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(self, command: ListOrdersCommand) -> OrdersPage:
+        page = max(1, command.page)
+        page_size = min(100, max(1, command.page_size))
+        offset = (page - 1) * page_size
+        async with self._uow as uow:
+            total = await uow.orders.count_by_user_id(command.actor_id)
+            items = await uow.orders.list_by_user_id(
+                command.actor_id, limit=page_size, offset=offset
+            )
+            return OrdersPage(
                 items=items, total=total, page=page, page_size=page_size
             )
 

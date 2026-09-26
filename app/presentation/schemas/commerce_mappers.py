@@ -11,6 +11,7 @@ from app.presentation.schemas.commerce import (
     CartSchema,
     OrderItemSchema,
     OrderSchema,
+    OrdersPageSchema,
     ProductSchema,
 )
 
@@ -115,6 +116,21 @@ def balance_logs_page_to_schema(
 ) -> BalanceLogsPageSchema:
     return BalanceLogsPageSchema(
         items=[balance_log_view_to_schema(item) for item in items],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
+
+
+def orders_page_to_schema(
+    *,
+    items: list[Order],
+    total: int,
+    page: int,
+    page_size: int,
+) -> OrdersPageSchema:
+    return OrdersPageSchema(
+        items=[order_to_schema(item) for item in items],
         total=total,
         page=page,
         page_size=page_size,

@@ -93,6 +93,17 @@ class OrderResponse(BaseResponseSchema[OrderSchema]):
     pass
 
 
+class OrdersPageSchema(BaseModel):
+    items: list[OrderSchema]
+    total: int
+    page: int
+    page_size: int
+
+
+class OrdersResponse(BaseResponseSchema[OrdersPageSchema]):
+    pass
+
+
 class PromoCodeSchema(BaseModel):
     id: uuid.UUID
     code: str

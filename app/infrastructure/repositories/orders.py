@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -78,3 +78,28 @@ class SqlAlchemyOrdersRepository(BaseOrdersRepository):
             .limit(limit)
         )
         return [order_to_entity(m) for m in result.scalars().all()]
+
+    async def list_by_user_id(
+        self,
+        user_id: uuid.UUID,
+        *,
+        limit: int,
+        offset: int = 0,
+    ) -> list[Order]:
+        result = await self._session.execute(
+            select(OrderModel)
+            .where(OrderModel.user_id == user_id)
+            .options(selectinload(OrderModel.items))
+            .order_by(OrderModel.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        return [order_to_entity(m) for m in result.scalars().all()]
+
+    async def count_by_user_id(self, user_id: uuid.UUID) -> int:
+        result = await self._session.execute(
+            select(func.count())
+            .select_from(OrderModel)
+            .where(OrderModel.user_id == user_id)
+        )
+        return int(result.scalar_one())

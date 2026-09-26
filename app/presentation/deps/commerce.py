@@ -15,6 +15,7 @@ from app.application.use_cases.commerce import (
     ListPromoCodesUseCase,
     ListUserBalanceLogsUseCase,
     ListUserBalancesUseCase,
+    ListUserOrdersUseCase,
     RemoveCartItemUseCase,
     SyncPendingOrdersUseCase,
     UpdateCartItemUseCase,
@@ -66,6 +67,10 @@ def get_list_balances_uc() -> ListUserBalancesUseCase:
 
 def get_list_balance_logs_uc() -> ListUserBalanceLogsUseCase:
     return ListUserBalanceLogsUseCase(SqlAlchemyUnitOfWork())
+
+
+def get_list_orders_uc() -> ListUserOrdersUseCase:
+    return ListUserOrdersUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_yookassa_webhook_uc(

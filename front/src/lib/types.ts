@@ -249,6 +249,35 @@ export interface CheckoutResult {
   amount_before_discount?: number | null;
 }
 
+export type OrderStatus = "pending" | "succeeded" | "canceled";
+
+export interface OrderItem {
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  amount: number;
+}
+
+export interface Order {
+  id: string;
+  status: OrderStatus;
+  amount: number;
+  currency: string;
+  confirmation_url: string | null;
+  paid_at: string | null;
+  discount_percent?: number | null;
+  amount_before_discount?: number | null;
+  items: OrderItem[];
+  created_at: string;
+}
+
+export interface PaginatedOrders {
+  items: Order[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export interface PromoCode {
   id: string;
   code: string;

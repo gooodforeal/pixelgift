@@ -15,6 +15,7 @@ import type {
   MediaFile,
   PaginatedBalanceLogs,
   PaginatedBoxes,
+  PaginatedOrders,
   PaginatedSupportTickets,
   Product,
   PromoCode,
@@ -512,6 +513,14 @@ export const api = {
 
   syncPendingOrders: () =>
     request<{ synced: number }>("/orders/sync", { method: "POST" }),
+
+  orders: (params?: { page?: number; pageSize?: number }) => {
+    const search = new URLSearchParams();
+    if (params?.page != null) search.set("page", String(params.page));
+    if (params?.pageSize != null) search.set("page_size", String(params.pageSize));
+    const query = search.toString();
+    return request<PaginatedOrders>(`/orders${query ? `?${query}` : ""}`);
+  },
 
   balances: () => request<UserProductBalance[]>("/balances"),
 

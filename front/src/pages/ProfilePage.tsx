@@ -6,6 +6,7 @@ import {
   Archive,
   Bell,
   CalendarDays,
+  CreditCard,
   Gift,
   LogOut,
   PencilLine,
@@ -22,7 +23,7 @@ import { ToggleSwitch } from "../components/ToggleSwitch";
 import { useAuth } from "../hooks/useAuth";
 import { api, API_URL } from "../lib/api";
 import { formatDateTime, pluralize } from "../lib/format";
-import type { CurrentUser } from "../lib/types";
+import type { CurrentUser, OrderStatus } from "../lib/types";
 
 function displayName(user: CurrentUser): string {
   const parts = [user.first_name, user.last_name].filter(Boolean);
@@ -43,11 +44,46 @@ function avatarUrl(user: CurrentUser): string | null {
   return `${API_URL}${user.photo_url.startsWith("/") ? "" : "/"}${user.photo_url}`;
 }
 
+function formatMoney(kopecks: number, currency: string): string {
+  const value = kopecks / 100;
+  try {
+    return new Intl.NumberFormat("ru-RU", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(value);
+  } catch {
+    return `${value} ${currency}`;
+  }
+}
+
+const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
+  pending: "Ожидает оплаты",
+  succeeded: "Оплачен",
+  canceled: "Отменён",
+};
+
+function PaymentStatusBadge({ status }: { status: OrderStatus }) {
+  return (
+    <span className={`status-badge status-badge--${status}`}>
+      {ORDER_STATUS_LABEL[status]}
+    </span>
+  );
+}
+
+const BALANCE_REASON_LABEL: Record<string, string> = {
+  purchase: "Покупка",
+  consume: "Списание",
+  refund: "Возврат",
+  admin: "Админ",
+};
+
 export function ProfilePage() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [logsPage, setLogsPage] = useState(1);
+  const [ordersPage, setOrdersPage] = useState(1);
 
   const syncOrdersQuery = useQuery({
     queryKey: ["orders", "sync"],
@@ -56,6 +92,7 @@ export function ProfilePage() {
       if (result.synced > 0) {
         await queryClient.invalidateQueries({ queryKey: ["balances"] });
         await queryClient.invalidateQueries({ queryKey: ["balance-logs"] });
+        await queryClient.invalidateQueries({ queryKey: ["orders", "list"] });
       }
       return result;
     },
@@ -76,6 +113,11 @@ export function ProfilePage() {
   const logsQuery = useQuery({
     queryKey: ["balance-logs", logsPage],
     queryFn: () => api.balanceLogs({ page: logsPage, pageSize: 10 }),
+    enabled: syncOrdersQuery.isFetched,
+  });
+  const ordersQuery = useQuery({
+    queryKey: ["orders", "list", ordersPage],
+    queryFn: () => api.orders({ page: ordersPage, pageSize: 10 }),
     enabled: syncOrdersQuery.isFetched,
   });
 
@@ -332,15 +374,16 @@ export function ProfilePage() {
               Пока пусто. Купите боксы, чтобы публиковать подарки.
             </p>
           ) : (
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            <ul className="mt-4 divide-y divide-white/5 rounded-2xl border border-white/10">
               {balancesQuery.data!.map((item) => (
                 <li
                   key={item.product_id}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"
+                  className="flex items-center justify-between gap-4 px-4 py-3"
                 >
-                  <p className="text-sm font-medium text-slate-100">{item.name}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">{item.sku}</p>
-                  <p className="mt-2 font-sans text-2xl font-semibold tabular-nums">
+                  <p className="min-w-0 truncate text-sm font-medium text-slate-100">
+                    {item.name}
+                  </p>
+                  <p className="shrink-0 font-sans text-lg font-semibold tabular-nums text-slate-100">
                     {item.balance}
                   </p>
                 </li>
@@ -350,14 +393,14 @@ export function ProfilePage() {
         </section>
 
         <section className="glass mt-5 overflow-hidden p-5 sm:p-6">
-          <h2 className="font-sans text-lg font-semibold">Журнал транзакций</h2>
+          <h2 className="font-sans text-lg font-semibold">Изменения балансов</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Покупки, списания при публикации и другие движения баланса.
+            Начисления и списания по товарам.
           </p>
           {logsQuery.isPending ? (
             <p className="mt-4 text-sm text-slate-500">Загружаем…</p>
           ) : logsQuery.isError ? (
-            <p className="mt-4 text-sm text-rose-300">Не удалось загрузить журнал</p>
+            <p className="mt-4 text-sm text-rose-300">Не удалось загрузить изменения</p>
           ) : !(logsQuery.data?.items.length ?? 0) ? (
             <p className="mt-4 text-sm text-slate-400">Записей пока нет.</p>
           ) : (
@@ -387,7 +430,9 @@ export function ProfilePage() {
                         >
                           {row.delta > 0 ? `+${row.delta}` : row.delta}
                         </td>
-                        <td className="py-2.5 pr-3 text-slate-400">{row.reason}</td>
+                        <td className="py-2.5 pr-3 text-slate-400">
+                          {BALANCE_REASON_LABEL[row.reason] ?? row.reason}
+                        </td>
                         <td className="py-2.5 tabular-nums text-slate-200">
                           {row.balance_after}
                         </td>
@@ -416,6 +461,106 @@ export function ProfilePage() {
                       logsPage * logsQuery.data!.page_size >= logsQuery.data!.total
                     }
                     onClick={() => setLogsPage((p) => p + 1)}
+                  >
+                    Вперёд
+                  </button>
+                </div>
+              ) : null}
+            </>
+          )}
+        </section>
+
+        <section className="glass mt-5 overflow-hidden p-5 sm:p-6">
+          <h2 className="inline-flex items-center gap-2 font-sans text-lg font-semibold">
+            <CreditCard className="size-5 text-glow-violet" />
+            Платежи
+          </h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Заказы и оплата через ЮKassa.
+          </p>
+          {ordersQuery.isPending ? (
+            <p className="mt-4 text-sm text-slate-500">Загружаем…</p>
+          ) : ordersQuery.isError ? (
+            <p className="mt-4 text-sm text-rose-300">Не удалось загрузить платежи</p>
+          ) : !(ordersQuery.data?.items.length ?? 0) ? (
+            <p className="mt-4 text-sm text-slate-400">Платежей пока нет.</p>
+          ) : (
+            <>
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full min-w-[36rem] text-left text-sm">
+                  <thead className="text-xs tracking-wide text-slate-500 uppercase">
+                    <tr>
+                      <th className="pb-2 font-medium">Дата</th>
+                      <th className="pb-2 font-medium">Сумма</th>
+                      <th className="pb-2 font-medium">Позиции</th>
+                      <th className="pb-2 font-medium">Статус</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {ordersQuery.data!.items.map((order) => {
+                      const itemsCount = order.items.reduce(
+                        (sum, item) => sum + item.quantity,
+                        0,
+                      );
+                      return (
+                        <tr key={order.id}>
+                          <td className="py-2.5 pr-3 text-slate-400 whitespace-nowrap">
+                            {formatDateTime(order.created_at)}
+                          </td>
+                          <td className="py-2.5 pr-3">
+                            <span className="tabular-nums text-slate-100">
+                              {formatMoney(order.amount, order.currency)}
+                            </span>
+                            {order.discount_percent ? (
+                              <span className="mt-0.5 block text-xs text-emerald-300/90">
+                                −{order.discount_percent}%
+                                {order.amount_before_discount != null
+                                  ? ` с ${formatMoney(
+                                      order.amount_before_discount,
+                                      order.currency,
+                                    )}`
+                                  : ""}
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className="py-2.5 pr-3 text-slate-400">
+                            {itemsCount}{" "}
+                            {pluralize(itemsCount, [
+                              "позиция",
+                              "позиции",
+                              "позиций",
+                            ])}
+                          </td>
+                          <td className="py-2.5">
+                            <PaymentStatusBadge status={order.status} />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {ordersQuery.data!.total > ordersQuery.data!.page_size ? (
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    className="btn-ghost text-xs"
+                    disabled={ordersPage <= 1}
+                    onClick={() => setOrdersPage((p) => Math.max(1, p - 1))}
+                  >
+                    Назад
+                  </button>
+                  <span className="text-xs text-slate-500">
+                    Стр. {ordersQuery.data!.page} · всего {ordersQuery.data!.total}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-ghost text-xs"
+                    disabled={
+                      ordersPage * ordersQuery.data!.page_size >=
+                      ordersQuery.data!.total
+                    }
+                    onClick={() => setOrdersPage((p) => p + 1)}
                   >
                     Вперёд
                   </button>

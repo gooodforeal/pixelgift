@@ -127,10 +127,6 @@ export function AdminPromoCodesPage() {
             <h1 className="mt-3 font-sans text-2xl font-semibold tracking-tight sm:text-3xl">
               Промокоды
             </h1>
-            <p className="mt-2 max-w-xl text-sm text-slate-400">
-              Код 4–20 символов (A–Z, 0–9), скидка кратна 5%. 100% — бесплатный
-              заказ.
-            </p>
           </div>
           <button
             type="button"
@@ -229,7 +225,6 @@ export function AdminPromoCodesPage() {
       <Modal
         open={modalOpen}
         title="Новый промокод"
-        description="Код сохраняется в верхнем регистре."
         onClose={closeModal}
         footer={
           <>

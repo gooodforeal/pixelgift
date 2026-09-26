@@ -740,6 +740,20 @@ class InMemoryOrdersRepository(BaseOrdersRepository):
         orders.sort(key=lambda o: o.created_at, reverse=True)
         return orders[:limit]
 
+    async def list_by_user_id(
+        self,
+        user_id: uuid.UUID,
+        *,
+        limit: int,
+        offset: int = 0,
+    ) -> list[Order]:
+        orders = [order for order in self.items.values() if order.user_id == user_id]
+        orders.sort(key=lambda o: o.created_at, reverse=True)
+        return orders[offset : offset + limit]
+
+    async def count_by_user_id(self, user_id: uuid.UUID) -> int:
+        return sum(1 for order in self.items.values() if order.user_id == user_id)
+
 
 class InMemoryUserBalancesRepository(BaseUserBalancesRepository):
     def __init__(self) -> None:

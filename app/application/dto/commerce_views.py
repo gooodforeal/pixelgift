@@ -36,6 +36,14 @@ class BalanceLogsPage:
 
 
 @dataclass(frozen=True, kw_only=True)
+class OrdersPage:
+    items: list[Order]
+    total: int
+    page: int
+    page_size: int
+
+
+@dataclass(frozen=True, kw_only=True)
 class CheckoutResult:
     order: Order
     confirmation_url: str | None

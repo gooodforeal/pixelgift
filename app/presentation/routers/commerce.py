@@ -11,6 +11,7 @@ from app.application.dto.commerce import (
     GetOrderCommand,
     HandleYookassaWebhookCommand,
     ListBalanceLogsCommand,
+    ListOrdersCommand,
     RemoveCartItemCommand,
     UpdateCartItemCommand,
 )
@@ -23,6 +24,7 @@ from app.application.use_cases.commerce import (
     ListProductsUseCase,
     ListUserBalanceLogsUseCase,
     ListUserBalancesUseCase,
+    ListUserOrdersUseCase,
     RemoveCartItemUseCase,
     SyncPendingOrdersUseCase,
     UpdateCartItemUseCase,
@@ -34,6 +36,7 @@ from app.presentation.deps.commerce import (
     get_get_order_uc,
     get_list_balance_logs_uc,
     get_list_balances_uc,
+    get_list_orders_uc,
     get_list_products_uc,
     get_remove_cart_item_uc,
     get_sync_pending_orders_uc,
@@ -50,6 +53,7 @@ from app.presentation.schemas.commerce import (
     CheckoutResponse,
     CheckoutResultSchema,
     OrderResponse,
+    OrdersResponse,
     ProductsResponse,
     SyncPendingOrdersResponse,
     SyncPendingOrdersSchema,
@@ -60,6 +64,7 @@ from app.presentation.schemas.commerce_mappers import (
     balance_view_to_schema,
     cart_view_to_schema,
     order_to_schema,
+    orders_page_to_schema,
     product_to_schema,
 )
 
@@ -161,6 +166,27 @@ async def sync_pending_orders(
     return SyncPendingOrdersResponse(
         message="ok",
         result=SyncPendingOrdersSchema(synced=synced),
+    )
+
+
+@router.get("/orders", response_model=OrdersResponse)
+async def list_orders(
+    actor_id: uuid.UUID = Depends(get_current_user_id),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    uc: ListUserOrdersUseCase = Depends(get_list_orders_uc),
+) -> OrdersResponse:
+    result = await uc.execute(
+        ListOrdersCommand(actor_id=actor_id, page=page, page_size=page_size)
+    )
+    return OrdersResponse(
+        message="ok",
+        result=orders_page_to_schema(
+            items=result.items,
+            total=result.total,
+            page=result.page,
+            page_size=result.page_size,
+        ),
     )
 
 

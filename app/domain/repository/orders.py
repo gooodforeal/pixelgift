@@ -18,3 +18,15 @@ class BaseOrdersRepository(BaseRepository[Order], ABC):
     async def list_pending_by_user_id(
         self, user_id: uuid.UUID, *, limit: int = 20
     ) -> list[Order]: ...
+
+    @abstractmethod
+    async def list_by_user_id(
+        self,
+        user_id: uuid.UUID,
+        *,
+        limit: int,
+        offset: int = 0,
+    ) -> list[Order]: ...
+
+    @abstractmethod
+    async def count_by_user_id(self, user_id: uuid.UUID) -> int: ...

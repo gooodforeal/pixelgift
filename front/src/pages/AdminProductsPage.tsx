@@ -295,9 +295,6 @@ export function AdminProductsPage() {
             <h1 className="mt-3 font-sans text-2xl font-semibold tracking-tight sm:text-3xl">
               Товары
             </h1>
-            <p className="mt-2 max-w-xl text-sm text-slate-400">
-              Название, описание, до {MAX_IMAGES} фото, цена и активность.
-            </p>
           </div>
           <button
             type="button"
@@ -436,9 +433,7 @@ export function AdminProductsPage() {
         open={modal != null}
         title={modal?.mode === "edit" ? "Изменить товар" : "Новый товар"}
         description={
-          modal?.mode === "edit"
-            ? `SKU: ${modal.form.sku}`
-            : "SKU после создания изменить нельзя."
+          modal?.mode === "edit" ? `SKU: ${modal.form.sku}` : undefined
         }
         onClose={closeModal}
         size="lg"

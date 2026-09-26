@@ -64,9 +64,6 @@ export function AdminPanelPage() {
         <h1 className="mt-3 font-sans text-2xl font-semibold tracking-tight sm:text-3xl">
           Панель
         </h1>
-        <p className="mt-2 max-w-xl text-sm text-slate-400">
-          Управление продуктом. Сюда будут добавляться новые разделы.
-        </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SECTIONS.map((section, index) => {

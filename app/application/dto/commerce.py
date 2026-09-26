@@ -75,6 +75,13 @@ class ListBalanceLogsCommand:
 
 
 @dataclass(frozen=True, kw_only=True)
+class ListOrdersCommand:
+    actor_id: uuid.UUID
+    page: int = 1
+    page_size: int = 20
+
+
+@dataclass(frozen=True, kw_only=True)
 class HandleYookassaWebhookCommand:
     event: str
     object_payload: dict

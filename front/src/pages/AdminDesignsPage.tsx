@@ -61,9 +61,6 @@ export function AdminDesignsPage() {
             <h1 className="mt-3 font-sans text-2xl font-semibold tracking-tight sm:text-3xl">
               Дизайны коробок
             </h1>
-            <p className="mt-2 max-w-xl text-sm text-slate-400">
-              Создавайте темы, палитры и превью. Неактивные скрыты из выбора у пользователей.
-            </p>
           </div>
           <Link to="/app/panel/designs/new" className="btn-primary">
             <Plus className="size-4" />

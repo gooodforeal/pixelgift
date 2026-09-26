@@ -68,6 +68,12 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = 60
     llm_assistant_max_messages: int = 20
 
+    # YooKassa (test/live keys via env)
+    yookassa_shop_id: str = ""
+    yookassa_secret_key: str = ""
+    yookassa_return_url: str = "http://localhost:8080/app/profile"
+    yookassa_timeout_seconds: float = 30
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

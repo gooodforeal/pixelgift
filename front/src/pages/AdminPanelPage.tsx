@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BarChart3, Database, Headphones, Palette, Shield } from "lucide-react";
+import { BarChart3, Database, Headphones, Package, Palette, Shield, Ticket } from "lucide-react";
 
 import { PageTransition } from "../components/PageTransition";
 
@@ -19,6 +19,18 @@ const SECTIONS: PanelSection[] = [
     title: "Дизайны",
     description: "Темы коробок, палитры, обложки и активность.",
     icon: Palette,
+  },
+  {
+    to: "/app/panel/products",
+    title: "Товары",
+    description: "Каталог: название, описание, цена и видимость.",
+    icon: Package,
+  },
+  {
+    to: "/app/panel/promo-codes",
+    title: "Промокоды",
+    description: "Скидки на оплату, срок действия и счётчик использований.",
+    icon: Ticket,
   },
   {
     to: "/app/panel/support",

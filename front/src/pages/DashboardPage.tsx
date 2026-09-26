@@ -323,6 +323,14 @@ export function DashboardPage() {
     window.localStorage.setItem(BOXES_VIEW_STORAGE_KEY, next);
   };
 
+  const balancesQuery = useQuery({
+    queryKey: ["balances"],
+    queryFn: api.balances,
+  });
+  const boxCredits =
+    balancesQuery.data?.find((b) => b.sku === "box_credit")?.balance ?? 0;
+  const canCreateBox = boxCredits > 0;
+
   const designsById = new Map<string, BoxDesign>(
     (designsQuery.data ?? []).map((design) => [design.id, design]),
   );
@@ -358,10 +366,17 @@ export function DashboardPage() {
           {showBoxes ? (
             <BoxesViewToggle value={view} onChange={setBoxesView} />
           ) : null}
-          <Link to="/app/boxes/new" className="btn-primary">
-            <Plus className="size-4" />
-            Новый бокс
-          </Link>
+          {canCreateBox ? (
+            <Link to="/app/boxes/new" className="btn-primary">
+              <Plus className="size-4" />
+              Новый бокс
+            </Link>
+          ) : (
+            <Link to="/products" className="btn-primary">
+              <Plus className="size-4" />
+              Купить боксы
+            </Link>
+          )}
         </div>
       </div>
 
@@ -380,13 +395,21 @@ export function DashboardPage() {
           </span>
           <h2 className="mt-6 font-sans text-2xl font-semibold">Пока пусто</h2>
           <p className="mt-3 max-w-sm text-sm text-slate-400">
-            Соберите первый бокс: выберите оформление, добавьте фото и голосовые, задайте
-            дату открытия.
+            {canCreateBox
+              ? "Соберите первый бокс: выберите оформление, добавьте фото и голосовые, задайте дату открытия."
+              : "Чтобы создать бокс, сначала купите кредиты в корзине."}
           </p>
-          <Link to="/app/boxes/new" className="btn-primary mt-8">
-            <Gift className="size-4" />
-            Собрать первый бокс
-          </Link>
+          {canCreateBox ? (
+            <Link to="/app/boxes/new" className="btn-primary mt-8">
+              <Gift className="size-4" />
+              Собрать первый бокс
+            </Link>
+          ) : (
+            <Link to="/products" className="btn-primary mt-8">
+              <Gift className="size-4" />
+              Купить боксы
+            </Link>
+          )}
         </div>
       )}
 

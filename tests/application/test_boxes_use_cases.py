@@ -47,6 +47,7 @@ from app.domain.exceptions.boxes import (
     BoxWithoutItemsError,
     PublicSlugAlreadyTakenError,
 )
+from app.domain.exceptions.commerce import InsufficientBalanceError
 from app.domain.exceptions.media_files import (
     MediaFileAccessDeniedError,
     MediaFileNotFoundError,
@@ -62,7 +63,7 @@ from app.domain.values.box_title import BoxTitle
 from app.domain.values.box_unlock_password import BoxUnlockPassword
 from app.domain.values.public_slug import PublicSlug
 from app.domain.values.url import Url
-from tests.application.fakes import InMemoryUnitOfWork
+from tests.application.fakes import InMemoryUnitOfWork, grant_box_credits
 from tests.application.test_notifications import RecordingTaskQueue
 
 
@@ -103,6 +104,7 @@ class TestCreateBoxUseCase:
         user_id: uuid.UUID,
     ):
         uow = InMemoryUnitOfWork()
+        await grant_box_credits(uow, user_id=user_id, quantity=5)
         design = _design()
         await uow.box_designs.add(design)
 
@@ -120,6 +122,8 @@ class TestCreateBoxUseCase:
         assert box.public_slug.value
         assert uow.committed is True
         assert await uow.boxes.get_by_id(box.id) is box
+        balances = await uow.user_balances.list_by_user_id(user_id)
+        assert balances[0].balance == 4
 
     async def test_uses_provided_slug(
         self,
@@ -127,6 +131,7 @@ class TestCreateBoxUseCase:
         user_id: uuid.UUID,
     ):
         uow = InMemoryUnitOfWork()
+        await grant_box_credits(uow, user_id=user_id, quantity=5)
         design = _design()
         await uow.box_designs.add(design)
         slug = PublicSlug("gift-for-masha")
@@ -148,6 +153,7 @@ class TestCreateBoxUseCase:
         user_id: uuid.UUID,
     ):
         uow = InMemoryUnitOfWork()
+        await grant_box_credits(uow, user_id=user_id, quantity=5)
         design = _design()
         await uow.box_designs.add(design)
         slug = PublicSlug("taken-slug")
@@ -171,12 +177,31 @@ class TestCreateBoxUseCase:
                 )
             )
 
+    async def test_rejects_without_balance(
+        self,
+        activates_at: ActivatesAt,
+        user_id: uuid.UUID,
+    ):
+        uow = InMemoryUnitOfWork()
+        design = _design()
+        await uow.box_designs.add(design)
+
+        with pytest.raises(InsufficientBalanceError):
+            await CreateBoxUseCase(uow).execute(
+                _create_command(
+                    owner_id=user_id,
+                    design_id=design.id,
+                    activates_at=activates_at,
+                )
+            )
+
     async def test_rejects_missing_design(
         self,
         activates_at: ActivatesAt,
         user_id: uuid.UUID,
     ):
         uow = InMemoryUnitOfWork()
+        await grant_box_credits(uow, user_id=user_id, quantity=5)
 
         with pytest.raises(BoxDesignNotAvailableError):
             await CreateBoxUseCase(uow).execute(
@@ -193,6 +218,7 @@ class TestCreateBoxUseCase:
         user_id: uuid.UUID,
     ):
         uow = InMemoryUnitOfWork()
+        await grant_box_credits(uow, user_id=user_id, quantity=5)
         design = _design(is_active=False)
         await uow.box_designs.add(design)
 
@@ -215,6 +241,7 @@ class TestUpdateBoxUseCase:
         activates_at: ActivatesAt,
         status: BoxStatus = BoxStatus.DRAFT,
     ) -> tuple[Box, BoxDesign]:
+        await grant_box_credits(uow, user_id=owner_id, quantity=10)
         design = _design()
         await uow.box_designs.add(design)
         box = await CreateBoxUseCase(uow).execute(
@@ -434,6 +461,7 @@ async def _seed_editable_box(
     owner_id: uuid.UUID,
     activates_at: ActivatesAt,
 ) -> Box:
+    await grant_box_credits(uow, user_id=owner_id, quantity=10)
     design = _design()
     await uow.box_designs.add(design)
     box = await CreateBoxUseCase(uow).execute(

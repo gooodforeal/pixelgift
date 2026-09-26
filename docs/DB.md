@@ -13,12 +13,21 @@ PostgreSQL. Идентификаторы сущностей — `UUID`.
 | `boxes` | Виртуальный бокс, ссылка, активация, превью |
 | `media_files` | Метаданные файлов в object storage |
 | `box_items` | Элементы контента внутри бокса |
+| `products` | Каталог товаров (`box_credit` и др.): название, описание, цена |
+| `carts` / `cart_items` | Корзина пользователя |
+| `orders` / `order_items` | Заказы и позиции для ЮKassa |
+| `promo_codes` | Промокоды (скидка %, TTL, usage_count) |
+| `user_balances` | Остатки кредитов по товарам |
+| `user_balance_logs` | Журнал движений баланса |
 
 Связи:
 
-- `users` → `boxes`, `media_files`, `user_sessions`, `telegram_login_challenges`
+- `users` → `boxes`, `media_files`, `user_sessions`, `telegram_login_challenges`, `carts`, `orders`, `user_balances`, `user_balance_logs`, `promo_codes` (created_by)
 - `box_designs` → `boxes`
 - `boxes` → `box_items` → `media_files`
+- `products` → `cart_items`, `order_items`, `user_balances`, `user_balance_logs`
+- `carts` → `cart_items`
+- `orders` → `order_items`, опционально `promo_codes`
 
 Публичный просмотр бокса по `public_slug` **не требует** записи в `users`.
 
@@ -184,6 +193,42 @@ PostgreSQL. Идентификаторы сущностей — `UUID`.
 | `created_at` | `TIMESTAMPTZ` | NOT NULL | |
 
 **Индексы:** `UNIQUE (box_id, sort_order)`.
+
+---
+
+## `products`
+
+Каталог продаваемых единиц. Seed: `sku=box_credit`, `kind=credit`, цена в копейках.
+
+| Колонка | Тип | Ограничения | Описание |
+|---------|-----|-------------|----------|
+| `id` | `UUID` | PK | |
+| `sku` | `VARCHAR(64)` | NOT NULL, UNIQUE | Код товара |
+| `name` | `VARCHAR(128)` | NOT NULL | |
+| `description` | `TEXT` | NOT NULL | Описание для витрины |
+| `image_urls` | `JSONB` | NOT NULL | Массив URL фото (0–5) |
+| `kind` | `VARCHAR(32)` | NOT NULL | `credit` и др. |
+| `unit_price` | `INTEGER` | NOT NULL | Цена в копейках |
+| `currency` | `VARCHAR(8)` | NOT NULL | `RUB` |
+| `is_active` | `BOOLEAN` | NOT NULL | |
+
+## `carts` / `cart_items`
+
+Одна корзина на пользователя (`carts.user_id` UNIQUE). Позиции: UNIQUE (`cart_id`, `product_id`), `quantity ≥ 1`.
+
+## `orders` / `order_items`
+
+Заказ после checkout: статус `pending` / `succeeded` / `canceled`, сумма, `provider=yookassa`, `provider_payment_id`, `idempotency_key`, `confirmation_url`, `paid_at`. Опционально: `promo_code_id`, `discount_percent`, `amount_before_discount`. Позиции хранят снимок `unit_price` / `amount`. При 100% промокоде заказ сразу `succeeded` без ЮKassa.
+
+## `promo_codes`
+
+Код 4–20 (`A–Z0–9`, UNIQUE), `discount_percent` (5–100, кратно 5), `expires_at`, `usage_count`, `is_active`, `created_by_user_id`.
+
+## `user_balances` / `user_balance_logs`
+
+Остаток по `(user_id, product_id)`. Журнал: `delta`, `balance_after`, `reason` (`purchase` / `consume` / …), `reference_type` + `reference_id` (unique вместе с reason). Индекс `(user_id, created_at)` для пагинации.
+
+Поток: корзина → checkout (±промокод) → ЮKassa → webhook `succeeded` → `+quantity` на баланс (+`usage_count`); `POST /boxes` (создание) → `-1` `box_credit`.
 
 ---
 

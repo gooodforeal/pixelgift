@@ -211,6 +211,81 @@ export interface PaginatedSupportTickets {
   page_size: number;
 }
 
+export interface Product {
+  id: string;
+  sku: string;
+  name: string;
+  description?: string;
+  image_urls?: string[];
+  kind: string;
+  unit_price: number;
+  currency: string;
+  is_active: boolean;
+}
+
+export interface CartItem {
+  product_id: string;
+  sku: string;
+  name: string;
+  unit_price: number;
+  currency: string;
+  quantity: number;
+  amount: number;
+}
+
+export interface Cart {
+  id: string;
+  items: CartItem[];
+  total_amount: number;
+  currency: string;
+}
+
+export interface CheckoutResult {
+  order_id: string;
+  confirmation_url: string | null;
+  amount: number;
+  currency: string;
+  discount_percent?: number | null;
+  amount_before_discount?: number | null;
+}
+
+export interface PromoCode {
+  id: string;
+  code: string;
+  discount_percent: number;
+  expires_at: string;
+  usage_count: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface UserProductBalance {
+  product_id: string;
+  sku: string;
+  name: string;
+  balance: number;
+}
+
+export interface BalanceLog {
+  id: string;
+  product_id: string;
+  sku: string;
+  name: string;
+  delta: number;
+  balance_after: number;
+  reason: string;
+  reference_type: string;
+  reference_id: string;
+  created_at: string;
+}
+
+export interface PaginatedBalanceLogs {
+  items: BalanceLog[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export type BoxWizardAssistantStep =
   | "design"
   | "details"

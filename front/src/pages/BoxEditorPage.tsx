@@ -38,7 +38,7 @@ import { Spinner } from "../components/Spinner";
 import { StatusBadge } from "../components/StatusBadge";
 import { ToggleSwitch } from "../components/ToggleSwitch";
 import { useToast } from "../components/Toast";
-import { api, ownMediaUrl } from "../lib/api";
+import { api, ApiError, ownMediaUrl } from "../lib/api";
 import {
   isSecretPhotoType,
   secretFromMetadata,
@@ -216,10 +216,18 @@ export function BoxEditorPage() {
     onSuccess: (created) => {
       clearAssistantThreadId();
       setBoxData(created);
+      void queryClient.invalidateQueries({ queryKey: ["balances"] });
+      void queryClient.invalidateQueries({ queryKey: ["balance-logs"] });
       toast("Черновик создан — добавьте медиа");
       navigate(`/app/boxes/${created.id}?step=content`, { replace: true });
     },
-    onError: (error: Error) => toast(error.message, "error"),
+    onError: (error: Error) => {
+      if (error instanceof ApiError && error.status === 402) {
+        toast("Недостаточно боксов на балансе — купите в корзине", "error");
+        return;
+      }
+      toast(error.message, "error");
+    },
   });
 
   const saveBox = useMutation({
@@ -513,6 +521,18 @@ export function BoxEditorPage() {
         </div>
         {box && <StatusBadge status={box.status} />}
       </div>
+
+      {isNew &&
+      createBox.isError &&
+      createBox.error instanceof ApiError &&
+      createBox.error.status === 402 ? (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-rose-400/25 bg-rose-400/10 px-5 py-4 text-sm text-rose-100">
+          <p>Недостаточно боксов на балансе. Купите кредиты, чтобы создать черновик.</p>
+          <Link to="/products" className="btn-ghost text-xs">
+            Купить
+          </Link>
+        </div>
+      ) : null}
 
       <BoxWizardProgress
         current={step}

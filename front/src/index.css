@@ -484,6 +484,37 @@ html[data-theme="light"] .app-rail {
     text-slate-400 sm:text-xs;
 }
 
+.app-rail__badge {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.45rem;
+  z-index: 2;
+  min-width: 1.1rem;
+  @apply grid h-4 place-items-center rounded-full bg-rose-500 px-1
+    text-[0.625rem] font-bold leading-none text-white shadow-sm
+    shadow-rose-500/40;
+}
+
+.cart-dropdown {
+  width: min(22rem, calc(100vw - 1.5rem));
+  max-height: min(70dvh, 32rem);
+  @apply flex flex-col overflow-hidden rounded-2xl border border-white/12
+    bg-ink-950/95 shadow-2xl shadow-black/50 backdrop-blur-xl;
+}
+
+.cart-dropdown__head {
+  @apply flex shrink-0 items-center justify-between gap-2 border-b border-white/10
+    px-4 py-3;
+}
+
+.cart-dropdown__body {
+  @apply min-h-0 flex-1 overflow-y-auto px-3 py-3;
+}
+
+html[data-theme="light"] .cart-dropdown {
+  @apply border-slate-900/12 bg-white/95 shadow-slate-900/15;
+}
+
 .app-rail__link.is-active {
   @apply hover:bg-transparent;
 }

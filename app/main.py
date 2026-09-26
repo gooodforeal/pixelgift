@@ -13,10 +13,13 @@ from app.presentation.lifespan import lifespan
 from app.presentation.middleware import setup_middleware
 from app.presentation.routers import (
     admin_designs,
+    admin_products,
+    admin_promo_codes,
     admin_support,
     assistant,
     auth,
     boxes,
+    commerce,
     designs,
     docs,
     health,
@@ -45,10 +48,13 @@ app.include_router(docs.router)
 app.include_router(auth.router)
 app.include_router(designs.router)
 app.include_router(admin_designs.router)
+app.include_router(admin_products.router)
+app.include_router(admin_promo_codes.router)
 app.include_router(admin_support.router)
 app.include_router(boxes.router)
 app.include_router(media.router)
 app.include_router(public.router)
 app.include_router(support.router)
 app.include_router(assistant.router)
+app.include_router(commerce.router)
 setup_admin(app)

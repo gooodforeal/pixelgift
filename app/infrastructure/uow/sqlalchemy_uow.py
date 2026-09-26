@@ -10,12 +10,18 @@ from app.infrastructure.repositories import (
     SqlAlchemyAssistantChatThreadsRepository,
     SqlAlchemyBoxDesignsRepository,
     SqlAlchemyBoxesRepository,
+    SqlAlchemyCartsRepository,
     SqlAlchemyDesignAssetsRepository,
     SqlAlchemyDesignRatingsRepository,
     SqlAlchemyMediaFilesRepository,
     SqlAlchemyNotificationJobsRepository,
+    SqlAlchemyOrdersRepository,
+    SqlAlchemyProductsRepository,
+    SqlAlchemyPromoCodesRepository,
     SqlAlchemySupportTicketsRepository,
     SqlAlchemyTelegramLoginChallengesRepository,
+    SqlAlchemyUserBalanceLogsRepository,
+    SqlAlchemyUserBalancesRepository,
     SqlAlchemyUserSessionsRepository,
     SqlAlchemyUsersRepository,
 )
@@ -49,6 +55,12 @@ class SqlAlchemyUnitOfWork(BaseUnitOfWork):
             self._session
         )
         self.user_sessions = SqlAlchemyUserSessionsRepository(self._session)
+        self.products = SqlAlchemyProductsRepository(self._session)
+        self.promo_codes = SqlAlchemyPromoCodesRepository(self._session)
+        self.carts = SqlAlchemyCartsRepository(self._session)
+        self.orders = SqlAlchemyOrdersRepository(self._session)
+        self.user_balances = SqlAlchemyUserBalancesRepository(self._session)
+        self.user_balance_logs = SqlAlchemyUserBalanceLogsRepository(self._session)
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:

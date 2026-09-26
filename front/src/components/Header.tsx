@@ -7,7 +7,9 @@ import {
   Headset,
   LogIn,
   Menu,
+  Package,
   Shield,
+  ShoppingCart,
   UserRound,
   X,
 } from "lucide-react";
@@ -15,6 +17,7 @@ import {
 import { useAuth } from "../hooks/useAuth";
 import { api } from "../lib/api";
 import { pluralize } from "../lib/format";
+import { CartDropdown } from "./CartDropdown";
 import { LogoMark } from "./Logo";
 import { UiThemeToggle } from "./UiThemeToggle";
 
@@ -127,16 +130,26 @@ export function Header() {
   const location = useLocation();
   const path = location.pathname;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const menuId = useId();
   const meQuery = useQuery({
     queryKey: ["me"],
     queryFn: api.me,
     enabled: isAuthenticated,
   });
+  const cartQuery = useQuery({
+    queryKey: ["cart"],
+    queryFn: api.cart,
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  });
   const isAdmin = Boolean(meQuery.data?.is_admin);
+  const cartCount =
+    cartQuery.data?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
 
   const isBoxes = path === "/app" || path.startsWith("/app/boxes");
   const isProfile = path.startsWith("/app/profile");
+  const isProducts = path.startsWith("/products");
   const isAdminArea = path.startsWith("/app/panel");
   const isSupport = path.startsWith("/support");
   const isLogin = path.startsWith("/login");
@@ -145,6 +158,7 @@ export function Header() {
 
   useEffect(() => {
     setMenuOpen(false);
+    setCartOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -176,6 +190,14 @@ export function Header() {
                 <RailLink to="/app" label="Боксы" active={isBoxes} withLabel>
                   <Gift className="size-5" strokeWidth={2} />
                 </RailLink>
+                <RailLink
+                  to="/products"
+                  label="Товары"
+                  active={isProducts}
+                  withLabel
+                >
+                  <Package className="size-5" strokeWidth={2} />
+                </RailLink>
                 {isAdmin ? (
                   <RailLink
                     to="/app/panel"
@@ -188,9 +210,19 @@ export function Header() {
                 ) : null}
               </>
             ) : (
-              <RailLink to="/login" label="Войти" active={isLogin} withLabel>
-                <LogIn className="size-5" strokeWidth={2} />
-              </RailLink>
+              <>
+                <RailLink
+                  to="/products"
+                  label="Товары"
+                  active={isProducts}
+                  withLabel
+                >
+                  <Package className="size-5" strokeWidth={2} />
+                </RailLink>
+                <RailLink to="/login" label="Войти" active={isLogin} withLabel>
+                  <LogIn className="size-5" strokeWidth={2} />
+                </RailLink>
+              </>
             )}
             <RailLink to="/support" label="Поддержка" active={isSupport} withLabel>
               <Headset className="size-5" strokeWidth={2} />
@@ -199,9 +231,16 @@ export function Header() {
 
           <div className="app-rail__footer">
             {isAuthenticated ? (
-              <RailLink to="/app/profile" label="Профиль" active={isProfile}>
-                <UserRound className="size-5" strokeWidth={2} />
-              </RailLink>
+              <>
+                <CartDropdown
+                  open={cartOpen}
+                  onOpenChange={setCartOpen}
+                  cartCount={cartCount}
+                />
+                <RailLink to="/app/profile" label="Профиль" active={isProfile}>
+                  <UserRound className="size-5" strokeWidth={2} />
+                </RailLink>
+              </>
             ) : null}
             <UiThemeToggle className="app-rail__theme" />
             <button
@@ -257,6 +296,34 @@ export function Header() {
                 >
                   <Gift className="size-5" strokeWidth={2} />
                 </MenuLink>
+                <MenuLink
+                  to="/products"
+                  label="Товары"
+                  active={isProducts}
+                  onNavigate={closeMenu}
+                >
+                  <Package className="size-5" strokeWidth={2} />
+                </MenuLink>
+                <button
+                  type="button"
+                  className="app-rail-menu__link"
+                  onClick={() => {
+                    closeMenu();
+                    setCartOpen(true);
+                  }}
+                >
+                  <span className="app-rail-menu__icon relative inline-flex">
+                    <ShoppingCart className="size-5" strokeWidth={2} />
+                    {cartCount > 0 ? (
+                      <span className="app-rail__badge" aria-hidden>
+                        {cartCount > 99 ? "99+" : cartCount}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span>
+                    {cartCount > 0 ? `Корзина · ${cartCount}` : "Корзина"}
+                  </span>
+                </button>
                 {isAdmin ? (
                   <MenuLink
                     to="/app/panel"
@@ -277,14 +344,24 @@ export function Header() {
                 </MenuLink>
               </>
             ) : (
-              <MenuLink
-                to="/login"
-                label="Войти"
-                active={isLogin}
-                onNavigate={closeMenu}
-              >
-                <LogIn className="size-5" strokeWidth={2} />
-              </MenuLink>
+              <>
+                <MenuLink
+                  to="/products"
+                  label="Товары"
+                  active={isProducts}
+                  onNavigate={closeMenu}
+                >
+                  <Package className="size-5" strokeWidth={2} />
+                </MenuLink>
+                <MenuLink
+                  to="/login"
+                  label="Войти"
+                  active={isLogin}
+                  onNavigate={closeMenu}
+                >
+                  <LogIn className="size-5" strokeWidth={2} />
+                </MenuLink>
+              </>
             )}
             <MenuLink
               to="/support"

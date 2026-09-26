@@ -7,12 +7,17 @@ import type {
   BoxDesign,
   BoxItemType,
   BoxPayload,
+  Cart,
+  CheckoutResult,
   CurrentUser,
   DesignAssetUpload,
   DesignRating,
   MediaFile,
+  PaginatedBalanceLogs,
   PaginatedBoxes,
   PaginatedSupportTickets,
+  Product,
+  PromoCode,
   PublicBox,
   SupportTicket,
   SupportTicketStatus,
@@ -20,6 +25,7 @@ import type {
   TelegramLoginStatus,
   ThemeConfig,
   UnlockPublicBoxResult,
+  UserProductBalance,
 } from "./types";
 import { isAuthed, setAuthed } from "./auth";
 
@@ -434,6 +440,90 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ status }),
     }),
+
+  products: () => request<Product[]>("/products"),
+
+  cart: () => request<Cart>("/cart"),
+
+  addCartItem: (payload: { sku: string; quantity: number }) =>
+    request<Cart>("/cart/items", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  updateCartItem: (productId: string, quantity: number) =>
+    request<Cart>(`/cart/items/${productId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ quantity }),
+    }),
+
+  removeCartItem: (productId: string) =>
+    request<Cart>(`/cart/items/${productId}`, { method: "DELETE" }),
+
+  checkoutCart: (payload?: { promo_code?: string | null }) =>
+    request<CheckoutResult>("/cart/checkout", {
+      method: "POST",
+      body: JSON.stringify(payload ?? {}),
+    }),
+
+  adminPromoCodes: () => request<PromoCode[]>("/admin/promo-codes"),
+
+  createAdminPromoCode: (payload: {
+    code: string;
+    discount_percent: number;
+    expires_at: string;
+  }) =>
+    request<PromoCode>("/admin/promo-codes", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  adminProducts: () => request<Product[]>("/admin/products"),
+
+  createAdminProduct: (payload: {
+    sku: string;
+    name: string;
+    description?: string;
+    unit_price: number;
+    kind?: string;
+    currency?: string;
+    is_active?: boolean;
+    image_urls?: string[];
+  }) =>
+    request<Product>("/admin/products", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  updateAdminProduct: (
+    productId: string,
+    payload: {
+      name?: string;
+      description?: string;
+      unit_price?: number;
+      is_active?: boolean;
+      image_urls?: string[];
+    },
+  ) =>
+    request<Product>(`/admin/products/${productId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
+  syncPendingOrders: () =>
+    request<{ synced: number }>("/orders/sync", { method: "POST" }),
+
+  balances: () => request<UserProductBalance[]>("/balances"),
+
+  balanceLogs: (params?: { page?: number; pageSize?: number }) => {
+    const search = new URLSearchParams();
+    if (params?.page != null) search.set("page", String(params.page));
+    if (params?.pageSize != null) search.set("page_size", String(params.pageSize));
+    const query = search.toString();
+    return request<PaginatedBalanceLogs>(
+      `/balance-logs${query ? `?${query}` : ""}`,
+    );
+  },
 };
 
 /** Owner-side media URL — auth via HttpOnly access cookie (same-origin). */

@@ -20,7 +20,14 @@ from app.domain.entities.telegram_login_challenges import TelegramLoginChallenge
 from app.domain.entities.user_sessions import UserSession
 from app.domain.entities.assistant_chat_messages import AssistantChatMessage
 from app.domain.entities.assistant_chat_threads import AssistantChatThread
+from app.domain.entities.carts import Cart
+from app.domain.entities.orders import Order
+from app.domain.entities.products import Product, ProductKind
+from app.domain.entities.promo_codes import PromoCode
+from app.domain.entities.user_balance_logs import UserBalanceLog
+from app.domain.entities.user_balances import UserBalance
 from app.domain.entities.users import User
+from app.domain.exceptions.commerce import BOX_CREDIT_SKU
 from app.domain.repository.assistant_chat_messages import (
     BaseAssistantChatMessagesRepository,
 )
@@ -29,6 +36,7 @@ from app.domain.repository.assistant_chat_threads import (
 )
 from app.domain.repository.box_designs import BaseBoxDesignsRepository
 from app.domain.repository.boxes import BaseBoxesRepository
+from app.domain.repository.carts import BaseCartsRepository
 from app.domain.repository.design_assets import BaseDesignAssetsRepository
 from app.domain.repository.design_ratings import (
     BaseDesignRatingsRepository,
@@ -36,13 +44,58 @@ from app.domain.repository.design_ratings import (
 )
 from app.domain.repository.media_files import BaseMediaFilesRepository
 from app.domain.repository.notification_jobs import BaseNotificationJobsRepository
+from app.domain.repository.orders import BaseOrdersRepository
+from app.domain.repository.products import BaseProductsRepository
+from app.domain.repository.promo_codes import BasePromoCodesRepository
 from app.domain.repository.support_tickets import BaseSupportTicketsRepository
 from app.domain.repository.telegram_login_challenges import (
     BaseTelegramLoginChallengesRepository,
 )
+from app.domain.repository.user_balance_logs import BaseUserBalanceLogsRepository
+from app.domain.repository.user_balances import BaseUserBalancesRepository
 from app.domain.repository.user_sessions import BaseUserSessionsRepository
 from app.domain.repository.users import BaseUsersRepository
 from app.domain.values.public_slug import PublicSlug
+
+BOX_CREDIT_PRODUCT_ID = uuid.UUID("a1b2c3d4-e5f6-4789-a012-3456789abcde")
+
+
+def seed_box_credit_product(uow: "InMemoryUnitOfWork") -> Product:
+    existing = uow.products.items.get(BOX_CREDIT_PRODUCT_ID)
+    if existing is not None:
+        return existing
+    product = Product(
+        id=BOX_CREDIT_PRODUCT_ID,
+        sku=BOX_CREDIT_SKU,
+        name="Бокс",
+        description=(
+            "Кредит на создание одного виртуального бокса-подарка. "
+            "После оплаты кредит появится на балансе и спишется при создании бокса."
+        ),
+        image_urls=[],
+        kind=ProductKind.CREDIT,
+        unit_price=9900,
+        currency="RUB",
+        is_active=True,
+    )
+    uow.products.items[product.id] = product
+    return product
+
+
+async def grant_box_credits(
+    uow: "InMemoryUnitOfWork", *, user_id: uuid.UUID, quantity: int = 10
+) -> UserBalance:
+    product = seed_box_credit_product(uow)
+    balance = await uow.user_balances.get_by_user_and_product(
+        user_id=user_id, product_id=product.id
+    )
+    if balance is None:
+        balance = UserBalance(user_id=user_id, product_id=product.id, balance=quantity)
+        await uow.user_balances.add(balance)
+    else:
+        balance.balance = quantity
+        await uow.user_balances.update(balance)
+    return balance
 
 
 class FakeLlmClient(BaseLlmClient):
@@ -548,6 +601,223 @@ class InMemoryAssistantChatMessagesRepository(BaseAssistantChatMessagesRepositor
         return excess
 
 
+class InMemoryProductsRepository(BaseProductsRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, Product] = {}
+
+    async def add(self, entity: Product) -> None:
+        self.items[entity.id] = entity
+
+    async def get_by_id(self, id_: uuid.UUID) -> Optional[Product]:
+        return self.items.get(id_)
+
+    async def update(self, entity: Product) -> Product:
+        self.items[entity.id] = entity
+        return entity
+
+    async def delete(self, id_: uuid.UUID) -> None:
+        self.items.pop(id_, None)
+
+    async def get_by_sku(self, sku: str) -> Product | None:
+        for product in self.items.values():
+            if product.sku == sku:
+                return product
+        return None
+
+    async def list_active(self) -> list[Product]:
+        return sorted(
+            [p for p in self.items.values() if p.is_active],
+            key=lambda p: p.name,
+        )
+
+    async def list_all(self) -> list[Product]:
+        return sorted(
+            self.items.values(),
+            key=lambda p: p.created_at,
+            reverse=True,
+        )
+
+    async def list_by_ids(self, ids: list[uuid.UUID]) -> list[Product]:
+        return [self.items[i] for i in ids if i in self.items]
+
+
+class InMemoryPromoCodesRepository(BasePromoCodesRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, PromoCode] = {}
+
+    async def add(self, entity: PromoCode) -> None:
+        self.items[entity.id] = entity
+
+    async def get_by_id(self, id_: uuid.UUID) -> Optional[PromoCode]:
+        return self.items.get(id_)
+
+    async def update(self, entity: PromoCode) -> PromoCode:
+        self.items[entity.id] = entity
+        return entity
+
+    async def delete(self, id_: uuid.UUID) -> None:
+        self.items.pop(id_, None)
+
+    async def get_by_code(self, code: str) -> PromoCode | None:
+        for promo in self.items.values():
+            if promo.code == code:
+                return promo
+        return None
+
+    async def list_all(self) -> list[PromoCode]:
+        return sorted(
+            self.items.values(),
+            key=lambda p: p.created_at,
+            reverse=True,
+        )
+
+
+class InMemoryCartsRepository(BaseCartsRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, Cart] = {}
+
+    async def add(self, entity: Cart) -> None:
+        self.items[entity.id] = entity
+
+    async def get_by_id(self, id_: uuid.UUID) -> Optional[Cart]:
+        return self.items.get(id_)
+
+    async def update(self, entity: Cart) -> Cart:
+        self.items[entity.id] = entity
+        return entity
+
+    async def delete(self, id_: uuid.UUID) -> None:
+        self.items.pop(id_, None)
+
+    async def get_by_user_id(self, user_id: uuid.UUID) -> Cart | None:
+        for cart in self.items.values():
+            if cart.user_id == user_id:
+                return cart
+        return None
+
+
+class InMemoryOrdersRepository(BaseOrdersRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, Order] = {}
+
+    async def add(self, entity: Order) -> None:
+        self.items[entity.id] = entity
+
+    async def get_by_id(self, id_: uuid.UUID) -> Optional[Order]:
+        return self.items.get(id_)
+
+    async def update(self, entity: Order) -> Order:
+        self.items[entity.id] = entity
+        return entity
+
+    async def delete(self, id_: uuid.UUID) -> None:
+        self.items.pop(id_, None)
+
+    async def get_by_provider_payment_id(
+        self, provider_payment_id: str
+    ) -> Order | None:
+        for order in self.items.values():
+            if order.provider_payment_id == provider_payment_id:
+                return order
+        return None
+
+    async def get_by_idempotency_key(self, idempotency_key: str) -> Order | None:
+        for order in self.items.values():
+            if order.idempotency_key == idempotency_key:
+                return order
+        return None
+
+    async def list_pending_by_user_id(
+        self, user_id: uuid.UUID, *, limit: int = 20
+    ) -> list[Order]:
+        from app.domain.entities.orders import OrderStatus
+
+        orders = [
+            order
+            for order in self.items.values()
+            if order.user_id == user_id and order.status == OrderStatus.PENDING
+        ]
+        orders.sort(key=lambda o: o.created_at, reverse=True)
+        return orders[:limit]
+
+
+class InMemoryUserBalancesRepository(BaseUserBalancesRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, UserBalance] = {}
+
+    async def add(self, entity: UserBalance) -> None:
+        self.items[entity.id] = entity
+
+    async def get_by_id(self, id_: uuid.UUID) -> Optional[UserBalance]:
+        return self.items.get(id_)
+
+    async def update(self, entity: UserBalance) -> UserBalance:
+        self.items[entity.id] = entity
+        return entity
+
+    async def delete(self, id_: uuid.UUID) -> None:
+        self.items.pop(id_, None)
+
+    async def get_by_user_and_product(
+        self, *, user_id: uuid.UUID, product_id: uuid.UUID
+    ) -> UserBalance | None:
+        for balance in self.items.values():
+            if balance.user_id == user_id and balance.product_id == product_id:
+                return balance
+        return None
+
+    async def list_by_user_id(self, user_id: uuid.UUID) -> list[UserBalance]:
+        return [b for b in self.items.values() if b.user_id == user_id]
+
+
+class InMemoryUserBalanceLogsRepository(BaseUserBalanceLogsRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, UserBalanceLog] = {}
+
+    async def add(self, entity: UserBalanceLog) -> None:
+        self.items[entity.id] = entity
+
+    async def get_by_id(self, id_: uuid.UUID) -> Optional[UserBalanceLog]:
+        return self.items.get(id_)
+
+    async def update(self, entity: UserBalanceLog) -> UserBalanceLog:
+        self.items[entity.id] = entity
+        return entity
+
+    async def delete(self, id_: uuid.UUID) -> None:
+        self.items.pop(id_, None)
+
+    async def get_by_reason_reference(
+        self,
+        *,
+        reason: str,
+        reference_type: str,
+        reference_id: uuid.UUID,
+    ) -> UserBalanceLog | None:
+        for log in self.items.values():
+            if (
+                log.reason.value == reason
+                and log.reference_type == reference_type
+                and log.reference_id == reference_id
+            ):
+                return log
+        return None
+
+    async def list_by_user_id(
+        self,
+        user_id: uuid.UUID,
+        *,
+        limit: int,
+        offset: int = 0,
+    ) -> list[UserBalanceLog]:
+        logs = [log for log in self.items.values() if log.user_id == user_id]
+        logs.sort(key=lambda log: log.created_at, reverse=True)
+        return logs[offset : offset + limit]
+
+    async def count_by_user_id(self, user_id: uuid.UUID) -> int:
+        return sum(1 for log in self.items.values() if log.user_id == user_id)
+
+
 class InMemoryUnitOfWork(BaseUnitOfWork):
     def __init__(self) -> None:
         self.boxes = InMemoryBoxesRepository()
@@ -562,8 +832,15 @@ class InMemoryUnitOfWork(BaseUnitOfWork):
         self.users = InMemoryUsersRepository()
         self.telegram_login_challenges = InMemoryTelegramLoginChallengesRepository()
         self.user_sessions = InMemoryUserSessionsRepository()
+        self.products = InMemoryProductsRepository()
+        self.promo_codes = InMemoryPromoCodesRepository()
+        self.carts = InMemoryCartsRepository()
+        self.orders = InMemoryOrdersRepository()
+        self.user_balances = InMemoryUserBalancesRepository()
+        self.user_balance_logs = InMemoryUserBalanceLogsRepository()
         self.committed = False
         self.rolled_back = False
+        seed_box_credit_product(self)
 
     async def commit(self) -> None:
         self.committed = True

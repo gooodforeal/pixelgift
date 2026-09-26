@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
@@ -8,8 +9,10 @@ import {
   Gift,
   LogOut,
   PencilLine,
+  ShoppingCart,
   Sparkles,
   UserRound,
+  Wallet,
 } from "lucide-react";
 
 import { PageTransition } from "../components/PageTransition";
@@ -44,11 +47,36 @@ export function ProfilePage() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [logsPage, setLogsPage] = useState(1);
+
+  const syncOrdersQuery = useQuery({
+    queryKey: ["orders", "sync"],
+    queryFn: async () => {
+      const result = await api.syncPendingOrders();
+      if (result.synced > 0) {
+        await queryClient.invalidateQueries({ queryKey: ["balances"] });
+        await queryClient.invalidateQueries({ queryKey: ["balance-logs"] });
+      }
+      return result;
+    },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
 
   const meQuery = useQuery({ queryKey: ["me"], queryFn: api.me });
   const boxesQuery = useQuery({
     queryKey: ["boxes", "summary"],
     queryFn: () => api.boxes({ page: 1, pageSize: 1 }),
+  });
+  const balancesQuery = useQuery({
+    queryKey: ["balances"],
+    queryFn: api.balances,
+    enabled: syncOrdersQuery.isFetched,
+  });
+  const logsQuery = useQuery({
+    queryKey: ["balance-logs", logsPage],
+    queryFn: () => api.balanceLogs({ page: logsPage, pageSize: 10 }),
+    enabled: syncOrdersQuery.isFetched,
   });
 
   const notificationsMutation = useMutation({
@@ -277,6 +305,124 @@ export function ProfilePage() {
               ) : null}
             </div>
           </div>
+        </section>
+
+        <section className="glass mt-5 overflow-hidden p-5 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="inline-flex items-center gap-2 font-sans text-lg font-semibold">
+                <Wallet className="size-5 text-glow-cyan" />
+                Доступные балансы
+              </h2>
+              <p className="mt-1 text-sm text-slate-400">
+                Остатки по купленным товарам. 1 кредит = 1 новый бокс.
+              </p>
+            </div>
+            <Link to="/products" className="btn-primary text-xs sm:text-sm">
+              <ShoppingCart className="size-4" />
+              Купить
+            </Link>
+          </div>
+          {balancesQuery.isPending ? (
+            <p className="mt-4 text-sm text-slate-500">Загружаем…</p>
+          ) : balancesQuery.isError ? (
+            <p className="mt-4 text-sm text-rose-300">Не удалось загрузить балансы</p>
+          ) : !(balancesQuery.data?.length ?? 0) ? (
+            <p className="mt-4 text-sm text-slate-400">
+              Пока пусто. Купите боксы, чтобы публиковать подарки.
+            </p>
+          ) : (
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+              {balancesQuery.data!.map((item) => (
+                <li
+                  key={item.product_id}
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"
+                >
+                  <p className="text-sm font-medium text-slate-100">{item.name}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{item.sku}</p>
+                  <p className="mt-2 font-sans text-2xl font-semibold tabular-nums">
+                    {item.balance}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="glass mt-5 overflow-hidden p-5 sm:p-6">
+          <h2 className="font-sans text-lg font-semibold">Журнал транзакций</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Покупки, списания при публикации и другие движения баланса.
+          </p>
+          {logsQuery.isPending ? (
+            <p className="mt-4 text-sm text-slate-500">Загружаем…</p>
+          ) : logsQuery.isError ? (
+            <p className="mt-4 text-sm text-rose-300">Не удалось загрузить журнал</p>
+          ) : !(logsQuery.data?.items.length ?? 0) ? (
+            <p className="mt-4 text-sm text-slate-400">Записей пока нет.</p>
+          ) : (
+            <>
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full min-w-[32rem] text-left text-sm">
+                  <thead className="text-xs tracking-wide text-slate-500 uppercase">
+                    <tr>
+                      <th className="pb-2 font-medium">Дата</th>
+                      <th className="pb-2 font-medium">Товар</th>
+                      <th className="pb-2 font-medium">Δ</th>
+                      <th className="pb-2 font-medium">Тип</th>
+                      <th className="pb-2 font-medium">После</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {logsQuery.data!.items.map((row) => (
+                      <tr key={row.id}>
+                        <td className="py-2.5 pr-3 text-slate-400 whitespace-nowrap">
+                          {formatDateTime(row.created_at)}
+                        </td>
+                        <td className="py-2.5 pr-3 text-slate-200">{row.name}</td>
+                        <td
+                          className={`py-2.5 pr-3 tabular-nums ${
+                            row.delta > 0 ? "text-emerald-300" : "text-rose-300"
+                          }`}
+                        >
+                          {row.delta > 0 ? `+${row.delta}` : row.delta}
+                        </td>
+                        <td className="py-2.5 pr-3 text-slate-400">{row.reason}</td>
+                        <td className="py-2.5 tabular-nums text-slate-200">
+                          {row.balance_after}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {logsQuery.data!.total > logsQuery.data!.page_size ? (
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    className="btn-ghost text-xs"
+                    disabled={logsPage <= 1}
+                    onClick={() => setLogsPage((p) => Math.max(1, p - 1))}
+                  >
+                    Назад
+                  </button>
+                  <span className="text-xs text-slate-500">
+                    Стр. {logsQuery.data!.page} · всего {logsQuery.data!.total}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-ghost text-xs"
+                    disabled={
+                      logsPage * logsQuery.data!.page_size >= logsQuery.data!.total
+                    }
+                    onClick={() => setLogsPage((p) => p + 1)}
+                  >
+                    Вперёд
+                  </button>
+                </div>
+              ) : null}
+            </>
+          )}
         </section>
       </div>
     </PageTransition>

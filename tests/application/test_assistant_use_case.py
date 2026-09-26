@@ -37,7 +37,7 @@ from app.domain.values.box_recipient_name import BoxRecipientName
 from app.domain.values.box_title import BoxTitle
 from app.domain.values.box_unlock_password import BoxUnlockPassword
 from app.domain.values.url import Url
-from tests.application.fakes import FakeLlmClient, InMemoryUnitOfWork
+from tests.application.fakes import FakeLlmClient, InMemoryUnitOfWork, grant_box_credits
 
 
 def _design() -> BoxDesign:
@@ -56,6 +56,7 @@ async def _create_box(
     activates_at: ActivatesAt,
     assistant_thread_id: uuid.UUID | None = None,
 ):
+    await grant_box_credits(uow, user_id=owner_id, quantity=10)
     design = _design()
     await uow.box_designs.add(design)
     return await CreateBoxUseCase(uow).execute(

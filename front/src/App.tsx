@@ -11,12 +11,15 @@ import { api, bootstrapAuth } from "./lib/api";
 import { AdminDesignEditorPage } from "./pages/AdminDesignEditorPage";
 import { AdminDesignsPage } from "./pages/AdminDesignsPage";
 import { AdminPanelPage } from "./pages/AdminPanelPage";
+import { AdminProductsPage } from "./pages/AdminProductsPage";
+import { AdminPromoCodesPage } from "./pages/AdminPromoCodesPage";
 import { AdminSupportPage } from "./pages/AdminSupportPage";
 import { BoxEditorPage } from "./pages/BoxEditorPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { ProductsPage } from "./pages/ProductsPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { PublicBoxPage } from "./pages/PublicBoxPage";
 import { SupportPage } from "./pages/SupportPage";
@@ -131,6 +134,18 @@ export function App() {
             }
           />
           <Route
+            path="/products"
+            element={
+              <AppShell>
+                <ProductsPage />
+              </AppShell>
+            }
+          />
+          <Route
+            path="/app/cart"
+            element={<Navigate to="/products" replace />}
+          />
+          <Route
             path="/app/boxes/new"
             element={
               <RequireAuth>
@@ -165,6 +180,30 @@ export function App() {
                 <RequireAdmin>
                   <AppShell>
                     <AdminPanelPage />
+                  </AppShell>
+                </RequireAdmin>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/app/panel/products"
+            element={
+              <RequireAuth>
+                <RequireAdmin>
+                  <AppShell>
+                    <AdminProductsPage />
+                  </AppShell>
+                </RequireAdmin>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/app/panel/promo-codes"
+            element={
+              <RequireAuth>
+                <RequireAdmin>
+                  <AppShell>
+                    <AdminPromoCodesPage />
                   </AppShell>
                 </RequireAdmin>
               </RequireAuth>

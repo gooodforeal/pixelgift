@@ -25,6 +25,7 @@ from app.domain.entities.assistant_chat_threads import AssistantChatThread
 from app.domain.entities.box_items import BoxItemType
 from app.domain.entities.media_files import MediaKind
 from app.domain.entities.notification_jobs import NotificationTemplate
+from app.domain.entities.user_balance_logs import BalanceLogReason
 from app.domain.exceptions.box_items import BoxItemInvalidError
 from app.domain.exceptions.boxes import (
     BoxAccessDeniedError,
@@ -32,6 +33,11 @@ from app.domain.exceptions.boxes import (
     BoxNotEditableError,
     BoxNotFoundError,
     PublicSlugAlreadyTakenError,
+)
+from app.domain.exceptions.commerce import (
+    BOX_CREDIT_SKU,
+    InsufficientBalanceError,
+    ProductNotFoundError,
 )
 from app.domain.exceptions.media_files import (
     MediaFileAccessDeniedError,
@@ -93,6 +99,42 @@ async def _get_editable_box(
     return box
 
 
+async def _consume_box_credit(
+    uow: BaseUnitOfWork,
+    *,
+    user_id: uuid.UUID,
+    box_id: uuid.UUID,
+) -> None:
+    existing = await uow.user_balance_logs.get_by_reason_reference(
+        reason=BalanceLogReason.CONSUME.value,
+        reference_type="box",
+        reference_id=box_id,
+    )
+    if existing is not None:
+        return
+
+    product = await uow.products.get_by_sku(BOX_CREDIT_SKU)
+    if product is None:
+        raise ProductNotFoundError(sku=BOX_CREDIT_SKU)
+    balance = await uow.user_balances.get_by_user_and_product(
+        user_id=user_id, product_id=product.id
+    )
+    available = balance.balance if balance is not None else 0
+    if balance is None or available < 1:
+        raise InsufficientBalanceError(
+            sku=BOX_CREDIT_SKU, required=1, available=available
+        )
+    log = balance.debit(
+        delta=1,
+        reason=BalanceLogReason.CONSUME,
+        reference_type="box",
+        reference_id=box_id,
+        sku=BOX_CREDIT_SKU,
+    )
+    await uow.user_balances.update(balance)
+    await uow.user_balance_logs.add(log)
+
+
 class CreateBoxUseCase:
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
@@ -116,6 +158,9 @@ class CreateBoxUseCase:
                 message=command.message,
                 preview_title=command.preview_title,
                 preview_image_url=command.preview_image_url,
+            )
+            await _consume_box_credit(
+                uow, user_id=command.owner_id, box_id=box.id
             )
             await uow.boxes.add(box)
             if command.assistant_thread_id is not None:

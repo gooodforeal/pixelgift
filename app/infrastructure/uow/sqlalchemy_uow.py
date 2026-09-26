@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.application.uow.base import BaseUnitOfWork
 from app.infrastructure.database import get_session_factory
 from app.infrastructure.repositories import (
+    SqlAlchemyAssistantChatMessagesRepository,
+    SqlAlchemyAssistantChatThreadsRepository,
     SqlAlchemyBoxDesignsRepository,
     SqlAlchemyBoxesRepository,
     SqlAlchemyDesignAssetsRepository,
@@ -37,6 +39,12 @@ class SqlAlchemyUnitOfWork(BaseUnitOfWork):
         self.media_files = SqlAlchemyMediaFilesRepository(self._session)
         self.notification_jobs = SqlAlchemyNotificationJobsRepository(self._session)
         self.support_tickets = SqlAlchemySupportTicketsRepository(self._session)
+        self.assistant_chat_threads = SqlAlchemyAssistantChatThreadsRepository(
+            self._session
+        )
+        self.assistant_chat_messages = SqlAlchemyAssistantChatMessagesRepository(
+            self._session
+        )
         self.telegram_login_challenges = SqlAlchemyTelegramLoginChallengesRepository(
             self._session
         )

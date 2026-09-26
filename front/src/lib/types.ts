@@ -176,6 +176,7 @@ export interface BoxPayload {
   message?: string | null;
   preview_title?: string | null;
   preview_image_url?: string | null;
+  assistant_thread_id?: string | null;
 }
 
 export interface UnlockPublicBoxResult {
@@ -208,4 +209,47 @@ export interface PaginatedSupportTickets {
   total: number;
   page: number;
   page_size: number;
+}
+
+export type BoxWizardAssistantStep =
+  | "design"
+  | "details"
+  | "content"
+  | "publish"
+  | "certificate";
+
+export interface AssistantHistoryMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface BoxEditorFormSnapshot {
+  design_id?: string | null;
+  title?: string | null;
+  recipient_name?: string | null;
+  recipient_email?: string | null;
+  unlock_password_set?: boolean | null;
+  activates_at?: string | null;
+  timezone?: string | null;
+  message?: string | null;
+  preview_title?: string | null;
+}
+
+export interface BoxAssistantChatPayload {
+  message: string;
+  step: BoxWizardAssistantStep;
+  thread_id?: string | null;
+  box_id?: string | null;
+  form?: BoxEditorFormSnapshot | null;
+}
+
+export interface BoxAssistantChatResult {
+  reply: string;
+  thread_id: string;
+  context: Record<string, unknown>;
+}
+
+export interface BoxAssistantHistoryResult {
+  thread_id: string;
+  messages: AssistantHistoryMessage[];
 }

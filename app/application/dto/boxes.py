@@ -29,6 +29,7 @@ class CreateBoxCommand:
     message: BoxMessage | None = None
     preview_title: BoxPreviewTitle | None = None
     preview_image_url: Url | None = None
+    assistant_thread_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True, kw_only=True)

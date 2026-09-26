@@ -1,7 +1,9 @@
 from datetime import datetime
+from collections.abc import Sequence
 from typing import Optional
 import uuid
 
+from app.application.ports.llm.base import BaseLlmClient, LlmMessage
 from app.application.uow.base import BaseUnitOfWork
 from app.domain.aggregates.boxes import Box, BoxStatus
 from app.domain.entities.box_designs import BoxDesign
@@ -16,7 +18,15 @@ from app.domain.entities.notification_jobs import (
 from app.domain.entities.support_tickets import SupportTicket, SupportTicketStatus
 from app.domain.entities.telegram_login_challenges import TelegramLoginChallenge
 from app.domain.entities.user_sessions import UserSession
+from app.domain.entities.assistant_chat_messages import AssistantChatMessage
+from app.domain.entities.assistant_chat_threads import AssistantChatThread
 from app.domain.entities.users import User
+from app.domain.repository.assistant_chat_messages import (
+    BaseAssistantChatMessagesRepository,
+)
+from app.domain.repository.assistant_chat_threads import (
+    BaseAssistantChatThreadsRepository,
+)
 from app.domain.repository.box_designs import BaseBoxDesignsRepository
 from app.domain.repository.boxes import BaseBoxesRepository
 from app.domain.repository.design_assets import BaseDesignAssetsRepository
@@ -33,6 +43,24 @@ from app.domain.repository.telegram_login_challenges import (
 from app.domain.repository.user_sessions import BaseUserSessionsRepository
 from app.domain.repository.users import BaseUsersRepository
 from app.domain.values.public_slug import PublicSlug
+
+
+class FakeLlmClient(BaseLlmClient):
+    def __init__(self, reply: str = "ok") -> None:
+        self.reply = reply
+        self.calls: list[dict[str, object]] = []
+        self.error: Exception | None = None
+
+    async def complete(
+        self,
+        *,
+        messages: Sequence[LlmMessage],
+        system: str,
+    ) -> str:
+        self.calls.append({"messages": list(messages), "system": system})
+        if self.error is not None:
+            raise self.error
+        return self.reply
 
 
 class InMemoryBoxesRepository(BaseBoxesRepository):
@@ -434,6 +462,92 @@ class InMemorySupportTicketsRepository(BaseSupportTicketsRepository):
         return len(tickets)
 
 
+class InMemoryAssistantChatThreadsRepository(BaseAssistantChatThreadsRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, AssistantChatThread] = {}
+
+    async def add(self, entity: AssistantChatThread) -> None:
+        self.items[entity.id] = entity
+
+    async def get_by_id(self, thread_id: uuid.UUID) -> AssistantChatThread | None:
+        return self.items.get(thread_id)
+
+    async def get_by_box_id(self, box_id: uuid.UUID) -> AssistantChatThread | None:
+        for item in self.items.values():
+            if item.box_id == box_id:
+                return item
+        return None
+
+    async def bind_box(
+        self,
+        *,
+        thread_id: uuid.UUID,
+        user_id: uuid.UUID,
+        box_id: uuid.UUID,
+    ) -> AssistantChatThread | None:
+        thread = self.items.get(thread_id)
+        if thread is None or thread.user_id != user_id or thread.box_id is not None:
+            return thread
+        thread.box_id = box_id
+        return thread
+
+
+class InMemoryAssistantChatMessagesRepository(BaseAssistantChatMessagesRepository):
+    def __init__(self) -> None:
+        self.items: dict[uuid.UUID, AssistantChatMessage] = {}
+
+    def _thread_messages(
+        self,
+        *,
+        thread_id: uuid.UUID,
+        include_hidden: bool = False,
+    ) -> list[AssistantChatMessage]:
+        messages = [
+            item
+            for item in self.items.values()
+            if item.thread_id == thread_id
+            and (include_hidden or item.hidden_at is None)
+        ]
+        messages.sort(key=lambda item: item.created_at)
+        return messages
+
+    async def add(self, entity: AssistantChatMessage) -> None:
+        self.items[entity.id] = entity
+
+    async def list_for_thread(
+        self,
+        *,
+        thread_id: uuid.UUID,
+        limit: int,
+    ) -> list[AssistantChatMessage]:
+        if limit <= 0:
+            return []
+        messages = self._thread_messages(thread_id=thread_id)
+        if len(messages) > limit:
+            messages = messages[-limit:]
+        return messages
+
+    async def count_for_thread(self, *, thread_id: uuid.UUID) -> int:
+        return len(self._thread_messages(thread_id=thread_id))
+
+    async def hide_oldest_beyond(
+        self,
+        *,
+        thread_id: uuid.UUID,
+        keep: int,
+    ) -> int:
+        from datetime import datetime, timezone
+
+        messages = self._thread_messages(thread_id=thread_id)
+        excess = len(messages) - max(keep, 0)
+        if excess <= 0:
+            return 0
+        now = datetime.now(timezone.utc)
+        for item in messages[:excess]:
+            item.hidden_at = now
+        return excess
+
+
 class InMemoryUnitOfWork(BaseUnitOfWork):
     def __init__(self) -> None:
         self.boxes = InMemoryBoxesRepository()
@@ -443,6 +557,8 @@ class InMemoryUnitOfWork(BaseUnitOfWork):
         self.media_files = InMemoryMediaFilesRepository()
         self.notification_jobs = InMemoryNotificationJobsRepository()
         self.support_tickets = InMemorySupportTicketsRepository()
+        self.assistant_chat_threads = InMemoryAssistantChatThreadsRepository()
+        self.assistant_chat_messages = InMemoryAssistantChatMessagesRepository()
         self.users = InMemoryUsersRepository()
         self.telegram_login_challenges = InMemoryTelegramLoginChallengesRepository()
         self.user_sessions = InMemoryUserSessionsRepository()

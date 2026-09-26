@@ -21,6 +21,7 @@ from app.application.use_cases.notifications import (
     sync_gift_ready_job,
 )
 from app.domain.aggregates.boxes import Box, BoxStatus
+from app.domain.entities.assistant_chat_threads import AssistantChatThread
 from app.domain.entities.box_items import BoxItemType
 from app.domain.entities.media_files import MediaKind
 from app.domain.entities.notification_jobs import NotificationTemplate
@@ -117,6 +118,24 @@ class CreateBoxUseCase:
                 preview_image_url=command.preview_image_url,
             )
             await uow.boxes.add(box)
+            if command.assistant_thread_id is not None:
+                thread = await uow.assistant_chat_threads.get_by_id(
+                    command.assistant_thread_id
+                )
+                if thread is None:
+                    await uow.assistant_chat_threads.add(
+                        AssistantChatThread(
+                            id=command.assistant_thread_id,
+                            user_id=command.owner_id,
+                            box_id=box.id,
+                        )
+                    )
+                elif thread.user_id == command.owner_id and thread.box_id is None:
+                    await uow.assistant_chat_threads.bind_box(
+                        thread_id=thread.id,
+                        user_id=command.owner_id,
+                        box_id=box.id,
+                    )
             await uow.commit()
             return box
 

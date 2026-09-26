@@ -1,6 +1,9 @@
 import type {
   AdminBoxDesign,
   Box,
+  BoxAssistantChatPayload,
+  BoxAssistantChatResult,
+  BoxAssistantHistoryResult,
   BoxDesign,
   BoxItemType,
   BoxPayload,
@@ -206,6 +209,25 @@ export const api = {
   },
 
   box: (boxId: string) => request<Box>(`/boxes/${boxId}`),
+
+  boxAssistantChat: (payload: BoxAssistantChatPayload) =>
+    request<BoxAssistantChatResult>("/assistant/box-editor", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  boxAssistantHistory: (params?: {
+    boxId?: string | null;
+    threadId?: string | null;
+  }) => {
+    const search = new URLSearchParams();
+    if (params?.boxId) search.set("box_id", params.boxId);
+    if (params?.threadId) search.set("thread_id", params.threadId);
+    const query = search.toString();
+    return request<BoxAssistantHistoryResult>(
+      `/assistant/box-editor/history${query ? `?${query}` : ""}`,
+    );
+  },
 
   downloadGiftCertificate: async (
     boxId: string,

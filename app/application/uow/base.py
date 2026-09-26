@@ -2,6 +2,12 @@ from abc import ABC, abstractmethod
 from types import TracebackType
 from typing import Self
 
+from app.domain.repository.assistant_chat_messages import (
+    BaseAssistantChatMessagesRepository,
+)
+from app.domain.repository.assistant_chat_threads import (
+    BaseAssistantChatThreadsRepository,
+)
 from app.domain.repository.boxes import BaseBoxesRepository
 from app.domain.repository.box_designs import BaseBoxDesignsRepository
 from app.domain.repository.design_assets import BaseDesignAssetsRepository
@@ -25,6 +31,8 @@ class BaseUnitOfWork(ABC):
     media_files: BaseMediaFilesRepository
     notification_jobs: BaseNotificationJobsRepository
     support_tickets: BaseSupportTicketsRepository
+    assistant_chat_threads: BaseAssistantChatThreadsRepository
+    assistant_chat_messages: BaseAssistantChatMessagesRepository
     telegram_login_challenges: BaseTelegramLoginChallengesRepository
     user_sessions: BaseUserSessionsRepository
 

@@ -1,5 +1,9 @@
 """FastAPI dependencies, split by entity."""
 
+from app.presentation.deps.assistant import (
+    get_chat_box_assistant_uc,
+    get_list_box_assistant_history_uc,
+)
 from app.presentation.deps.auth import (
     get_complete_telegram_login_uc,
     get_current_user_id,
@@ -28,6 +32,7 @@ from app.presentation.deps.boxes import (
 from app.presentation.deps.common import (
     PaginationParams,
     get_jwt_service,
+    get_llm_client,
     get_settings,
     get_storage,
     get_task_queue,
@@ -55,6 +60,7 @@ __all__ = [
     "PaginationParams",
     "get_add_box_item_uc",
     "get_archive_box_uc",
+    "get_chat_box_assistant_uc",
     "get_complete_telegram_login_uc",
     "get_create_box_uc",
     "get_create_design_uc",
@@ -65,8 +71,10 @@ __all__ = [
     "get_get_design_uc",
     "get_jwt_service",
     "get_list_all_designs_uc",
+    "get_list_box_assistant_history_uc",
     "get_list_boxes_uc",
     "get_list_designs_uc",
+    "get_llm_client",
     "get_logout_uc",
     "get_optional_current_user_id",
     "get_own_media_content_uc",

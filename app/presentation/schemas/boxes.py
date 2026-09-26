@@ -64,6 +64,7 @@ class CreateBoxRequest(BaseModel):
     message: str | None = Field(default=None, max_length=300)
     preview_title: str | None = Field(default=None, max_length=30)
     preview_image_url: str | None = None
+    assistant_thread_id: uuid.UUID | None = None
 
 
 class UpdateBoxRequest(BaseModel):

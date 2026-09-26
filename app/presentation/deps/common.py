@@ -7,6 +7,7 @@ from functools import lru_cache
 from fastapi import Depends, Query
 
 from app.application.services.jwt import JwtService
+from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
 from app.infrastructure.storage.s3_storage import S3ObjectStorage
 from app.infrastructure.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from app.infrastructure.worker.task_queue import TaskiqTaskQueue
@@ -30,6 +31,10 @@ def get_storage(cfg: Settings = Depends(get_settings)) -> S3ObjectStorage:
         bucket=cfg.minio_bucket,
         region=cfg.minio_region,
     )
+
+
+def get_llm_client(cfg: Settings = Depends(get_settings)) -> OpenAICompatibleLlmClient:
+    return OpenAICompatibleLlmClient(cfg)
 
 
 def uow_factory() -> Callable[[], SqlAlchemyUnitOfWork]:

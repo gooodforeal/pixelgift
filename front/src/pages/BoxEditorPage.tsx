@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,6 +25,7 @@ import {
   isBoxWizardStepId,
   type BoxWizardStepId,
 } from "../components/BoxWizardProgress";
+import { BoxAssistantChat } from "../components/BoxAssistantChat";
 import {
   CertificatePreview,
   type CertificateTheme,
@@ -68,6 +69,10 @@ import {
 import { getMediaKindOption } from "../lib/mediaKinds";
 import { questionFromMetadata } from "../lib/question";
 import type { Box, BoxItemType, BoxPayload } from "../lib/types";
+import {
+  clearAssistantThreadId,
+  getOrCreateAssistantThreadId,
+} from "../lib/assistantThread";
 import { getToyOption, toyCodeFromMetadata, toyImageUrl } from "../lib/toys";
 
 interface FormState {
@@ -137,6 +142,9 @@ export function BoxEditorPage() {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [uploadKind, setUploadKind] = useState<BoxItemType>("image");
   const [secretPhoto, setSecretPhoto] = useState(false);
+  const assistantThreadIdRef = useRef(
+    isNew ? getOrCreateAssistantThreadId() : null,
+  );
 
   const stepParam = searchParams.get("step");
   const step: BoxWizardStepId =
@@ -200,8 +208,13 @@ export function BoxEditorPage() {
   };
 
   const createBox = useMutation({
-    mutationFn: () => api.createBox(toPayload(form)),
+    mutationFn: () =>
+      api.createBox({
+        ...toPayload(form),
+        assistant_thread_id: assistantThreadIdRef.current,
+      }),
     onSuccess: (created) => {
+      clearAssistantThreadId();
       setBoxData(created);
       toast("Черновик создан — добавьте медиа");
       navigate(`/app/boxes/${created.id}?step=content`, { replace: true });
@@ -1155,6 +1168,14 @@ export function BoxEditorPage() {
           )}
         </div>
       </section>
+
+      <BoxAssistantChat
+        box={box}
+        step={step}
+        threadId={isNew ? assistantThreadIdRef.current : null}
+        form={form}
+        timezone={box?.timezone}
+      />
     </PageTransition>
   );
 }

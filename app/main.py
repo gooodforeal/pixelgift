@@ -14,6 +14,7 @@ from app.presentation.middleware import setup_middleware
 from app.presentation.routers import (
     admin_designs,
     admin_support,
+    assistant,
     auth,
     boxes,
     designs,
@@ -49,4 +50,5 @@ app.include_router(boxes.router)
 app.include_router(media.router)
 app.include_router(public.router)
 app.include_router(support.router)
+app.include_router(assistant.router)
 setup_admin(app)

@@ -1,3 +1,9 @@
+from app.infrastructure.repositories.assistant_chat_messages import (
+    SqlAlchemyAssistantChatMessagesRepository,
+)
+from app.infrastructure.repositories.assistant_chat_threads import (
+    SqlAlchemyAssistantChatThreadsRepository,
+)
 from app.infrastructure.repositories.box_designs import SqlAlchemyBoxDesignsRepository
 from app.infrastructure.repositories.boxes import SqlAlchemyBoxesRepository
 from app.infrastructure.repositories.design_assets import SqlAlchemyDesignAssetsRepository
@@ -16,6 +22,8 @@ from app.infrastructure.repositories.user_sessions import SqlAlchemyUserSessions
 from app.infrastructure.repositories.users import SqlAlchemyUsersRepository
 
 __all__ = [
+    "SqlAlchemyAssistantChatMessagesRepository",
+    "SqlAlchemyAssistantChatThreadsRepository",
     "SqlAlchemyBoxDesignsRepository",
     "SqlAlchemyBoxesRepository",
     "SqlAlchemyDesignAssetsRepository",

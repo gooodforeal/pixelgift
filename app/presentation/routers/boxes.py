@@ -104,6 +104,7 @@ async def create_box(
             preview_image_url=(
                 Url(body.preview_image_url) if body.preview_image_url else None
             ),
+            assistant_thread_id=body.assistant_thread_id,
         )
     )
     return BoxResponse(message="Success", result=box_to_response(box))

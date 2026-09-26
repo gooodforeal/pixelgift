@@ -1,6 +1,7 @@
 from app.presentation.routers import (
     admin_designs,
     admin_support,
+    assistant,
     auth,
     boxes,
     designs,
@@ -14,6 +15,7 @@ from app.presentation.routers import (
 __all__ = [
     "admin_designs",
     "admin_support",
+    "assistant",
     "auth",
     "boxes",
     "designs",

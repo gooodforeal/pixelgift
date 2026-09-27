@@ -28,6 +28,7 @@ class CartItemSchema(BaseModel):
     product_id: uuid.UUID
     sku: str
     name: str
+    image_urls: list[str] = Field(default_factory=list)
     unit_price: int
     currency: str
     quantity: int

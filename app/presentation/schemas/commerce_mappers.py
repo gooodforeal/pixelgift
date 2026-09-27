@@ -71,6 +71,7 @@ def cart_view_to_schema(view: CartView) -> CartSchema:
                 product_id=product.id,
                 sku=product.sku,
                 name=product.name,
+                image_urls=list(product.image_urls),
                 unit_price=unit_price,
                 currency=product.currency,
                 quantity=item.quantity,

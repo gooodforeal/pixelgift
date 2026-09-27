@@ -229,6 +229,7 @@ export interface CartItem {
   product_id: string;
   sku: string;
   name: string;
+  image_urls?: string[];
   unit_price: number;
   currency: string;
   quantity: number;

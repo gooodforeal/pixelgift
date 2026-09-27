@@ -4,7 +4,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Gift,
-  Headset,
   LogIn,
   Menu,
   Package,
@@ -151,7 +150,6 @@ export function Header() {
   const isProfile = path.startsWith("/app/profile");
   const isProducts = path.startsWith("/products");
   const isAdminArea = path.startsWith("/app/panel");
-  const isSupport = path.startsWith("/support");
   const isLogin = path.startsWith("/login");
 
   const closeMenu = () => setMenuOpen(false);
@@ -224,9 +222,6 @@ export function Header() {
                 </RailLink>
               </>
             )}
-            <RailLink to="/support" label="Поддержка" active={isSupport} withLabel>
-              <Headset className="size-5" strokeWidth={2} />
-            </RailLink>
           </nav>
 
           <div className="app-rail__footer">
@@ -363,14 +358,6 @@ export function Header() {
                 </MenuLink>
               </>
             )}
-            <MenuLink
-              to="/support"
-              label="Поддержка"
-              active={isSupport}
-              onNavigate={closeMenu}
-            >
-              <Headset className="size-5" strokeWidth={2} />
-            </MenuLink>
           </nav>
         </div>
       ) : null}

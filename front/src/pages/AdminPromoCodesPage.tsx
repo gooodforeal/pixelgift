@@ -9,6 +9,8 @@ import {
   Copy,
   Percent,
   Plus,
+  Power,
+  PowerOff,
   Ticket,
 } from "lucide-react";
 
@@ -25,6 +27,20 @@ const DISCOUNT_OPTIONS = Array.from({ length: 20 }, (_, i) => (i + 1) * 5);
 const PROMO_PAGE_SIZE = 10;
 
 const FIELD = "field mt-1.5 !rounded-xl px-3 py-2";
+
+const PROMO_STATUS_LABEL: Record<PromoCode["status"], string> = {
+  active: "Активен",
+  inactive: "Неактивен",
+  expired: "Истёк",
+  exhausted: "Исчерпан",
+};
+
+const PROMO_STATUS_BADGE: Record<PromoCode["status"], string> = {
+  active: "status-badge--active",
+  inactive: "status-badge--archived",
+  expired: "status-badge--canceled",
+  exhausted: "status-badge--pending",
+};
 
 function defaultExpiresLocal(): string {
   const d = new Date();
@@ -86,6 +102,17 @@ function PromoPagination({
   );
 }
 
+function usageLabel(promo: PromoCode): string {
+  if (promo.max_usages == null) {
+    return `${promo.usage_count} ${pluralize(promo.usage_count, [
+      "использование",
+      "использования",
+      "использований",
+    ])}`;
+  }
+  return `${promo.usage_count} / ${promo.max_usages}`;
+}
+
 export function AdminPromoCodesPage() {
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -94,6 +121,7 @@ export function AdminPromoCodesPage() {
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState(20);
   const [expiresAt, setExpiresAt] = useState(defaultExpiresLocal);
+  const [maxUsages, setMaxUsages] = useState("");
 
   const promoQuery = useQuery({
     queryKey: ["admin-promo-codes", page, PROMO_PAGE_SIZE],
@@ -104,6 +132,7 @@ export function AdminPromoCodesPage() {
     setCode("");
     setDiscount(20);
     setExpiresAt(defaultExpiresLocal());
+    setMaxUsages("");
   };
 
   const closeModal = () => {
@@ -112,12 +141,17 @@ export function AdminPromoCodesPage() {
   };
 
   const createMutation = useMutation({
-    mutationFn: () =>
-      api.createAdminPromoCode({
+    mutationFn: () => {
+      const trimmedLimit = maxUsages.trim();
+      const parsedLimit =
+        trimmedLimit === "" ? null : Number.parseInt(trimmedLimit, 10);
+      return api.createAdminPromoCode({
         code: code.trim().toUpperCase(),
         discount_percent: discount,
         expires_at: new Date(expiresAt).toISOString(),
-      }),
+        max_usages: parsedLimit,
+      });
+    },
     onSuccess: (promo) => {
       void queryClient.invalidateQueries({ queryKey: ["admin-promo-codes"] });
       setPage(1);
@@ -126,6 +160,23 @@ export function AdminPromoCodesPage() {
     },
     onError: (error) => {
       toast((error as ApiError).message ?? "Не удалось создать", "error");
+    },
+  });
+
+  const activeMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      api.setAdminPromoCodeActive(id, isActive),
+    onSuccess: (promo) => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-promo-codes"] });
+      toast(
+        promo.is_active
+          ? `Промокод ${promo.code} активирован`
+          : `Промокод ${promo.code} деактивирован`,
+        "success",
+      );
+    },
+    onError: (error) => {
+      toast((error as ApiError).message ?? "Не удалось обновить", "error");
     },
   });
 
@@ -145,14 +196,19 @@ export function AdminPromoCodesPage() {
 
   const canSubmit = useMemo(() => {
     const normalized = code.trim().toUpperCase();
+    const trimmedLimit = maxUsages.trim();
+    const limitOk =
+      trimmedLimit === "" ||
+      (/^\d+$/.test(trimmedLimit) && Number.parseInt(trimmedLimit, 10) >= 1);
     return (
       normalized.length >= 4 &&
       normalized.length <= 20 &&
       /^[A-Z0-9]+$/.test(normalized) &&
       Boolean(expiresAt) &&
+      limitOk &&
       !createMutation.isPending
     );
-  }, [code, expiresAt, createMutation.isPending]);
+  }, [code, expiresAt, maxUsages, createMutation.isPending]);
 
   const copyCode = async (value: string) => {
     try {
@@ -243,6 +299,11 @@ export function AdminPromoCodesPage() {
                       <h2 className="truncate font-mono text-sm font-semibold tracking-wider sm:text-base">
                         {promo.code}
                       </h2>
+                      <span
+                        className={`status-badge ${PROMO_STATUS_BADGE[promo.status]}`}
+                      >
+                        {PROMO_STATUS_LABEL[promo.status]}
+                      </span>
                       <span className="status-badge status-badge--active">
                         <Percent
                           className="status-badge__icon"
@@ -252,17 +313,11 @@ export function AdminPromoCodesPage() {
                       </span>
                       <span className="chip px-2 py-0.5">
                         <Ticket className="size-3.5" />
-                        {promo.usage_count}{" "}
-                        {pluralize(promo.usage_count, [
-                          "использование",
-                          "использования",
-                          "использований",
-                        ])}
+                        {usageLabel(promo)}
                       </span>
                     </div>
                     <p className="mt-1 truncate text-xs text-slate-400 sm:text-sm">
                       до {formatDateTime(promo.expires_at)}
-                      {!promo.is_active ? " · неактивен" : ""}
                     </p>
                   </div>
 
@@ -284,6 +339,28 @@ export function AdminPromoCodesPage() {
                           icon: <Copy className="size-3.5" />,
                           onClick: () => void copyCode(promo.code),
                         },
+                        promo.is_active
+                          ? {
+                              key: "deactivate",
+                              label: "Деактивировать",
+                              icon: <PowerOff className="size-3.5" />,
+                              onClick: () =>
+                                activeMutation.mutate({
+                                  id: promo.id,
+                                  isActive: false,
+                                }),
+                              danger: true,
+                            }
+                          : {
+                              key: "activate",
+                              label: "Активировать",
+                              icon: <Power className="size-3.5" />,
+                              onClick: () =>
+                                activeMutation.mutate({
+                                  id: promo.id,
+                                  isActive: true,
+                                }),
+                            },
                       ]}
                     />
                   </div>
@@ -369,6 +446,21 @@ export function AdminPromoCodesPage() {
               onChange={(e) => setExpiresAt(e.target.value)}
               className={FIELD}
             />
+          </label>
+          <label className="ui-modal__field-label">
+            Лимит использований
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={maxUsages}
+              onChange={(e) => setMaxUsages(e.target.value)}
+              placeholder="Без лимита"
+              className={FIELD}
+            />
+            <span className="mt-1 block text-xs font-normal text-slate-400">
+              Оставьте пустым, если ограничение не нужно
+            </span>
           </label>
         </form>
       </Modal>

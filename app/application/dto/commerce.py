@@ -35,6 +35,14 @@ class CreatePromoCodeCommand:
     code: str
     discount_percent: int
     expires_at: datetime
+    max_usages: int | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class SetPromoCodeActiveCommand:
+    actor_id: uuid.UUID
+    promo_id: uuid.UUID
+    is_active: bool
 
 
 @dataclass(frozen=True, kw_only=True)

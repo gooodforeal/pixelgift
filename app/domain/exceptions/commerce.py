@@ -150,4 +150,18 @@ class PromoCodeInactiveError(BaseException):
         super().__init__(f"Promo code is inactive: {code!r}")
 
 
+class PromoCodeExhaustedError(BaseException):
+    status_code = 409
+
+    def __init__(self, code: str) -> None:
+        self.code = code
+        super().__init__(f"Promo code usage limit reached: {code!r}")
+
+
+class PromoCodeInvalidMaxUsagesError(BaseException):
+    def __init__(self, value: int) -> None:
+        self.value = value
+        super().__init__("Max usages must be a positive integer")
+
+
 BOX_CREDIT_SKU = "box_credit"

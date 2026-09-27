@@ -288,7 +288,9 @@ export interface PromoCode {
   discount_percent: number;
   expires_at: string;
   usage_count: number;
+  max_usages: number | null;
   is_active: boolean;
+  status: "active" | "inactive" | "expired" | "exhausted";
   created_at: string;
 }
 

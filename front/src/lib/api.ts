@@ -482,10 +482,17 @@ export const api = {
     code: string;
     discount_percent: number;
     expires_at: string;
+    max_usages?: number | null;
   }) =>
     request<PromoCode>("/admin/promo-codes", {
       method: "POST",
       body: JSON.stringify(payload),
+    }),
+
+  setAdminPromoCodeActive: (promoId: string, isActive: boolean) =>
+    request<PromoCode>(`/admin/promo-codes/${promoId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_active: isActive }),
     }),
 
   adminProducts: () => request<Product[]>("/admin/products"),

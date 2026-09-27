@@ -10,6 +10,8 @@ from app.application.dto.commerce import (
     CreatePromoCodeCommand,
     HandleYookassaWebhookCommand,
     ListBalanceLogsCommand,
+    ListPromoCodesCommand,
+    SetPromoCodeActiveCommand,
     UpdateProductCommand,
 )
 from app.application.ports.payments.base import (
@@ -28,6 +30,7 @@ from app.application.use_cases.commerce import (
     ListPromoCodesUseCase,
     ListUserBalanceLogsUseCase,
     ListUserBalancesUseCase,
+    SetPromoCodeActiveUseCase,
     UpdateProductUseCase,
 )
 from app.domain.entities.orders import OrderStatus
@@ -38,9 +41,12 @@ from app.domain.exceptions.commerce import (
     ProductAlreadyExistsError,
     ProductValidationError,
     PromoCodeAlreadyExistsError,
+    PromoCodeExhaustedError,
     PromoCodeExpiredError,
     PromoCodeFormatError,
+    PromoCodeInactiveError,
     PromoCodeInvalidDiscountError,
+    PromoCodeInvalidMaxUsagesError,
     PromoCodeNotFoundError,
 )
 from app.settings import Settings
@@ -103,11 +109,18 @@ async def _seed_promo(
     *,
     code: str = "SALE20",
     discount_percent: int = 20,
+    max_usages: int | None = None,
+    usage_count: int = 0,
+    is_active: bool = True,
+    expires_at: datetime | None = None,
 ) -> PromoCode:
     promo = PromoCode(
         code=code,
         discount_percent=discount_percent,
-        expires_at=_future_expiry(),
+        expires_at=expires_at or _future_expiry(),
+        max_usages=max_usages,
+        usage_count=usage_count,
+        is_active=is_active,
     )
     await uow.promo_codes.add(promo)
     return promo
@@ -268,6 +281,52 @@ class TestCommerceUseCases:
                 CheckoutCartCommand(actor_id=user_id, promo_code="NOPE")
             )
 
+    async def test_checkout_inactive_promo_fails(self):
+        uow = InMemoryUnitOfWork()
+        user_id = uuid.uuid4()
+        payments = FakePaymentProvider()
+        settings = Settings(yookassa_return_url="http://localhost/profile")
+        await _seed_promo(uow, code="OFF1", is_active=False)
+        await AddCartItemUseCase(uow).execute(
+            AddCartItemCommand(actor_id=user_id, sku=BOX_CREDIT_SKU, quantity=1)
+        )
+        with pytest.raises(PromoCodeInactiveError):
+            await CheckoutCartUseCase(uow, payments, settings).execute(
+                CheckoutCartCommand(actor_id=user_id, promo_code="OFF1")
+            )
+
+    async def test_checkout_exhausted_promo_fails(self):
+        uow = InMemoryUnitOfWork()
+        user_id = uuid.uuid4()
+        payments = FakePaymentProvider()
+        settings = Settings(yookassa_return_url="http://localhost/profile")
+        await _seed_promo(uow, code="LIMIT1", max_usages=2, usage_count=2)
+        await AddCartItemUseCase(uow).execute(
+            AddCartItemCommand(actor_id=user_id, sku=BOX_CREDIT_SKU, quantity=1)
+        )
+        with pytest.raises(PromoCodeExhaustedError):
+            await CheckoutCartUseCase(uow, payments, settings).execute(
+                CheckoutCartCommand(actor_id=user_id, promo_code="LIMIT1")
+            )
+
+    async def test_checkout_expired_promo_fails(self):
+        uow = InMemoryUnitOfWork()
+        user_id = uuid.uuid4()
+        payments = FakePaymentProvider()
+        settings = Settings(yookassa_return_url="http://localhost/profile")
+        await _seed_promo(
+            uow,
+            code="OLD1",
+            expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
+        )
+        await AddCartItemUseCase(uow).execute(
+            AddCartItemCommand(actor_id=user_id, sku=BOX_CREDIT_SKU, quantity=1)
+        )
+        with pytest.raises(PromoCodeExpiredError):
+            await CheckoutCartUseCase(uow, payments, settings).execute(
+                CheckoutCartCommand(actor_id=user_id, promo_code="OLD1")
+            )
+
     async def test_create_and_list_promo_codes(self):
         uow = InMemoryUnitOfWork()
         admin_id = uuid.uuid4()
@@ -277,13 +336,18 @@ class TestCommerceUseCases:
                 code="spring",
                 discount_percent=15,
                 expires_at=_future_expiry(),
+                max_usages=50,
             )
         )
         assert promo.code == "SPRING"
         assert promo.discount_percent == 15
-        listed = await ListPromoCodesUseCase(uow).execute()
-        assert len(listed) == 1
-        assert listed[0].id == promo.id
+        assert promo.max_usages == 50
+        assert promo.resolve_status() == "active"
+        listed = await ListPromoCodesUseCase(uow).execute(
+            ListPromoCodesCommand(page=1, page_size=10)
+        )
+        assert listed.total == 1
+        assert listed.items[0].id == promo.id
 
         with pytest.raises(PromoCodeAlreadyExistsError):
             await CreatePromoCodeUseCase(uow).execute(
@@ -294,6 +358,37 @@ class TestCommerceUseCases:
                     expires_at=_future_expiry(),
                 )
             )
+
+    async def test_deactivate_and_reactivate_promo_code(self):
+        uow = InMemoryUnitOfWork()
+        admin_id = uuid.uuid4()
+        promo = await CreatePromoCodeUseCase(uow).execute(
+            CreatePromoCodeCommand(
+                actor_id=admin_id,
+                code="TOGGLE",
+                discount_percent=10,
+                expires_at=_future_expiry(),
+            )
+        )
+        off = await SetPromoCodeActiveUseCase(uow).execute(
+            SetPromoCodeActiveCommand(
+                actor_id=admin_id,
+                promo_id=promo.id,
+                is_active=False,
+            )
+        )
+        assert off.is_active is False
+        assert off.resolve_status() == "inactive"
+
+        on = await SetPromoCodeActiveUseCase(uow).execute(
+            SetPromoCodeActiveCommand(
+                actor_id=admin_id,
+                promo_id=promo.id,
+                is_active=True,
+            )
+        )
+        assert on.is_active is True
+        assert on.resolve_status() == "active"
 
     async def test_create_promo_rejects_bad_input(self):
         uow = InMemoryUnitOfWork()
@@ -323,6 +418,16 @@ class TestCommerceUseCases:
                     code="OLDIE",
                     discount_percent=10,
                     expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+                )
+            )
+        with pytest.raises(PromoCodeInvalidMaxUsagesError):
+            await CreatePromoCodeUseCase(uow).execute(
+                CreatePromoCodeCommand(
+                    actor_id=admin_id,
+                    code="ZERO1",
+                    discount_percent=10,
+                    expires_at=_future_expiry(),
+                    max_usages=0,
                 )
             )
 

@@ -114,7 +114,9 @@ class PromoCodeSchema(BaseModel):
     discount_percent: int
     expires_at: datetime
     usage_count: int
+    max_usages: int | None = None
     is_active: bool
+    status: str
     created_at: datetime
 
 
@@ -122,6 +124,11 @@ class CreatePromoCodeRequest(BaseModel):
     code: str = Field(min_length=4, max_length=20)
     discount_percent: int = Field(ge=5, le=100)
     expires_at: datetime
+    max_usages: int | None = Field(default=None, ge=1)
+
+
+class SetPromoCodeActiveRequest(BaseModel):
+    is_active: bool
 
 
 class PromoCodesPageSchema(BaseModel):

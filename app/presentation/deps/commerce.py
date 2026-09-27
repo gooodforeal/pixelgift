@@ -17,6 +17,7 @@ from app.application.use_cases.commerce import (
     ListUserBalancesUseCase,
     ListUserOrdersUseCase,
     RemoveCartItemUseCase,
+    SetPromoCodeActiveUseCase,
     SyncPendingOrdersUseCase,
     UpdateCartItemUseCase,
     UpdateProductUseCase,
@@ -97,6 +98,10 @@ def get_list_promo_codes_uc() -> ListPromoCodesUseCase:
 
 def get_create_promo_code_uc() -> CreatePromoCodeUseCase:
     return CreatePromoCodeUseCase(SqlAlchemyUnitOfWork())
+
+
+def get_set_promo_code_active_uc() -> SetPromoCodeActiveUseCase:
+    return SetPromoCodeActiveUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_list_all_products_uc() -> ListAllProductsUseCase:

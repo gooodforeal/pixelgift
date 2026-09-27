@@ -14,6 +14,7 @@ from app.application.dto.commerce import (
     ListOrdersCommand,
     ListPromoCodesCommand,
     RemoveCartItemCommand,
+    SetPromoCodeActiveCommand,
     UpdateCartItemCommand,
     UpdateProductCommand,
 )
@@ -416,6 +417,7 @@ class CreatePromoCodeUseCase:
     async def execute(self, command: CreatePromoCodeCommand) -> PromoCode:
         code = PromoCode.validate_code(command.code)
         discount = PromoCode.validate_discount_percent(command.discount_percent)
+        max_usages = PromoCode.validate_max_usages(command.max_usages)
         expires_at = command.expires_at
         if expires_at.tzinfo is None:
             expires_at = expires_at.replace(tzinfo=dt_timezone.utc)
@@ -432,6 +434,7 @@ class CreatePromoCodeUseCase:
                 code=code,
                 discount_percent=discount,
                 expires_at=expires_at,
+                max_usages=max_usages,
                 created_by_user_id=command.actor_id,
             )
             await uow.promo_codes.add(promo)
@@ -455,6 +458,21 @@ class ListPromoCodesUseCase:
             return PromoCodesPage(
                 items=items, total=total, page=page, page_size=page_size
             )
+
+
+class SetPromoCodeActiveUseCase:
+    def __init__(self, uow: BaseUnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(self, command: SetPromoCodeActiveCommand) -> PromoCode:
+        async with self._uow as uow:
+            promo = await uow.promo_codes.get_by_id(command.promo_id)
+            if promo is None:
+                raise PromoCodeNotFoundError(str(command.promo_id))
+            promo.set_active(command.is_active)
+            await uow.promo_codes.update(promo)
+            await uow.commit()
+            return promo
 
 
 class ListAllProductsUseCase:

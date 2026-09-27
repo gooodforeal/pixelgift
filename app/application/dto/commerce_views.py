@@ -6,6 +6,7 @@ from app.domain.entities.carts import Cart
 from app.domain.entities.orders import Order
 from app.domain.entities.products import Product
 from app.domain.entities.product_sales import ProductSale
+from app.domain.entities.promo_codes import PromoCode
 from app.domain.entities.user_balance_logs import UserBalanceLog
 from app.domain.entities.user_balances import UserBalance
 
@@ -46,6 +47,14 @@ class BalanceLogsPage:
 @dataclass(frozen=True, kw_only=True)
 class OrdersPage:
     items: list[Order]
+    total: int
+    page: int
+    page_size: int
+
+
+@dataclass(frozen=True, kw_only=True)
+class PromoCodesPage:
+    items: list[PromoCode]
     total: int
     page: int
     page_size: int

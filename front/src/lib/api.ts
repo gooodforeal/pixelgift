@@ -16,6 +16,7 @@ import type {
   PaginatedBalanceLogs,
   PaginatedBoxes,
   PaginatedOrders,
+  PaginatedPromoCodes,
   PaginatedSupportTickets,
   Product,
   PromoCode,
@@ -467,7 +468,15 @@ export const api = {
       body: JSON.stringify(payload ?? {}),
     }),
 
-  adminPromoCodes: () => request<PromoCode[]>("/admin/promo-codes"),
+  adminPromoCodes: (params?: { page?: number; pageSize?: number }) => {
+    const search = new URLSearchParams();
+    if (params?.page != null) search.set("page", String(params.page));
+    if (params?.pageSize != null) search.set("page_size", String(params.pageSize));
+    const query = search.toString();
+    return request<PaginatedPromoCodes>(
+      `/admin/promo-codes${query ? `?${query}` : ""}`,
+    );
+  },
 
   createAdminPromoCode: (payload: {
     code: string;

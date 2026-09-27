@@ -124,7 +124,14 @@ class CreatePromoCodeRequest(BaseModel):
     expires_at: datetime
 
 
-class PromoCodesResponse(BaseResponseSchema[list[PromoCodeSchema]]):
+class PromoCodesPageSchema(BaseModel):
+    items: list[PromoCodeSchema]
+    total: int
+    page: int
+    page_size: int
+
+
+class PromoCodesResponse(BaseResponseSchema[PromoCodesPageSchema]):
     pass
 
 

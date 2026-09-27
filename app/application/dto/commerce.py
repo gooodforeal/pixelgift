@@ -85,6 +85,12 @@ class ListOrdersCommand:
 
 
 @dataclass(frozen=True, kw_only=True)
+class ListPromoCodesCommand:
+    page: int = 1
+    page_size: int = 10
+
+
+@dataclass(frozen=True, kw_only=True)
 class HandleYookassaWebhookCommand:
     event: str
     object_payload: dict

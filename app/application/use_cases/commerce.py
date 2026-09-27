@@ -12,6 +12,7 @@ from app.application.dto.commerce import (
     HandleYookassaWebhookCommand,
     ListBalanceLogsCommand,
     ListOrdersCommand,
+    ListPromoCodesCommand,
     RemoveCartItemCommand,
     UpdateCartItemCommand,
     UpdateProductCommand,
@@ -24,6 +25,7 @@ from app.application.dto.commerce_views import (
     CheckoutResult,
     OrdersPage,
     ProductView,
+    PromoCodesPage,
 )
 from app.application.ports.payments.base import BasePaymentProvider
 from app.application.uow.base import BaseUnitOfWork
@@ -441,9 +443,18 @@ class ListPromoCodesUseCase:
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
-    async def execute(self) -> list[PromoCode]:
+    async def execute(self, command: ListPromoCodesCommand) -> PromoCodesPage:
+        page = max(1, command.page)
+        page_size = min(100, max(1, command.page_size))
+        offset = (page - 1) * page_size
         async with self._uow as uow:
-            return await uow.promo_codes.list_all()
+            total = await uow.promo_codes.count_all()
+            items = await uow.promo_codes.list_page(
+                limit=page_size, offset=offset
+            )
+            return PromoCodesPage(
+                items=items, total=total, page=page, page_size=page_size
+            )
 
 
 class ListAllProductsUseCase:

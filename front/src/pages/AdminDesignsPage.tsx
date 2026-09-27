@@ -56,7 +56,7 @@ export function AdminDesignsPage() {
           <div>
             <p className="chip w-fit">
               <Palette className="size-3.5" />
-              Панель
+              Дизайны
             </p>
             <h1 className="mt-3 font-sans text-2xl font-semibold tracking-tight sm:text-3xl">
               Дизайны коробок

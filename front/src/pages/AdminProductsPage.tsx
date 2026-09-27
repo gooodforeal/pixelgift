@@ -295,7 +295,7 @@ export function AdminProductsPage() {
           <div>
             <p className="chip w-fit">
               <Package className="size-3.5" />
-              Панель
+              Товары
             </p>
             <h1 className="mt-3 font-sans text-2xl font-semibold tracking-tight sm:text-3xl">
               Товары
@@ -327,7 +327,7 @@ export function AdminProductsPage() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(index, 10) * 0.03 }}
-                    className="boxes-list__row glass relative flex items-center gap-3 !rounded-xl p-2.5 sm:gap-4 sm:p-3"
+                    className="boxes-list__row glass relative flex gap-3 !rounded-xl p-2.5 sm:gap-4 sm:p-3"
                   >
                     <div className="boxes-list__cover shrink-0 overflow-hidden rounded-lg">
                       {cover ? (
@@ -373,39 +373,38 @@ export function AdminProductsPage() {
                             −{product.sale_discount_percent}%
                           </span>
                         ) : null}
+                        <span className="chip px-2 py-0.5">
+                          <Images className="size-3.5" />
+                          {photoCount}{" "}
+                          {pluralize(photoCount, ["фото", "фото", "фото"])}
+                        </span>
                       </div>
                       <p className="mt-1 truncate text-xs text-slate-400 sm:text-sm">
                         <span className="font-mono">{product.sku}</span>
-                        {" · "}
-                        {product.sale_unit_price != null ? (
-                          <>
-                            <span className="line-through opacity-70">
-                              {formatPrice(product.unit_price, product.currency)}
-                            </span>
-                            {" → "}
-                            {formatPrice(
-                              product.sale_unit_price,
-                              product.currency,
-                            )}
-                          </>
-                        ) : (
-                          formatPrice(product.unit_price, product.currency)
-                        )}
                         {product.description
                           ? ` · ${product.description}`
                           : ""}
                       </p>
                     </div>
 
-                    <div className="hidden items-center gap-2 md:flex">
-                      <span className="chip px-2 py-0.5">
-                        <Images className="size-3.5" />
-                        {photoCount}{" "}
-                        {pluralize(photoCount, ["фото", "фото", "фото"])}
-                      </span>
-                    </div>
-
-                    <div className="flex shrink-0 items-center gap-1">
+                    <div className="boxes-list__actions flex shrink-0 flex-col items-end gap-1.5">
+                      {product.sale_unit_price != null ? (
+                        <div className="flex flex-wrap items-baseline justify-end gap-2 text-sm">
+                          <span className="tabular-nums text-slate-500 line-through">
+                            {formatPrice(product.unit_price, product.currency)}
+                          </span>
+                          <span className="font-semibold tabular-nums text-emerald-300">
+                            {formatPrice(
+                              product.sale_unit_price,
+                              product.currency,
+                            )}
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-sm font-semibold tabular-nums text-white">
+                          {formatPrice(product.unit_price, product.currency)}
+                        </p>
+                      )}
                       <CardActionsMenu
                         label={`Действия с товаром «${product.name}»`}
                         items={[

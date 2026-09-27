@@ -324,7 +324,7 @@ export function ProductsPage() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(index, 10) * 0.03 }}
-                  className="boxes-list__row glass relative flex items-center gap-3 !rounded-xl p-2.5 sm:gap-4 sm:p-3"
+                  className="boxes-list__row glass relative flex gap-3 !rounded-xl p-2.5 sm:gap-4 sm:p-3"
                 >
                   <div className="boxes-list__cover shrink-0 overflow-hidden rounded-lg">
                     <ProductThumb
@@ -347,17 +347,10 @@ export function ProductsPage() {
                     ) : null}
                   </div>
 
-                  <ProductPrice
-                    className="hidden shrink-0 text-sm sm:flex"
-                    unitPrice={product.unit_price}
-                    currency={product.currency}
-                    saleUnitPrice={product.sale_unit_price}
-                    saleDiscountPercent={product.sale_discount_percent}
-                  />
-
-                  <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center">
+                  <div className="boxes-list__actions flex shrink-0 flex-col items-end gap-1.5">
                     <ProductPrice
-                      className="text-sm sm:hidden"
+                      className="text-sm"
+                      align="end"
                       unitPrice={product.unit_price}
                       currency={product.currency}
                       saleUnitPrice={product.sale_unit_price}

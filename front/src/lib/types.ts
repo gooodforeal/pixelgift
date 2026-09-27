@@ -292,6 +292,13 @@ export interface PromoCode {
   created_at: string;
 }
 
+export interface PaginatedPromoCodes {
+  items: PromoCode[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export interface UserProductBalance {
   product_id: string;
   sku: string;

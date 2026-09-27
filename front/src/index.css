@@ -2535,6 +2535,15 @@ html[data-theme="light"] .landing-step:hover {
   @apply bg-white/14 text-white shadow-sm shadow-black/20;
 }
 
+.boxes-list__row {
+  align-items: flex-start;
+}
+
+.boxes-list__meta,
+.boxes-list__actions {
+  @apply self-end;
+}
+
 .boxes-list__cover {
   @apply ring-1 ring-white/10 transition hover:ring-white/25;
 }

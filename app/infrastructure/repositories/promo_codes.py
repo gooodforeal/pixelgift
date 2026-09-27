@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.promo_codes import PromoCode
@@ -49,3 +49,20 @@ class SqlAlchemyPromoCodesRepository(BasePromoCodesRepository):
             select(PromoCodeModel).order_by(PromoCodeModel.created_at.desc())
         )
         return [promo_code_to_entity(m) for m in result.scalars().all()]
+
+    async def list_page(
+        self, *, limit: int, offset: int = 0
+    ) -> list[PromoCode]:
+        result = await self._session.execute(
+            select(PromoCodeModel)
+            .order_by(PromoCodeModel.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        return [promo_code_to_entity(m) for m in result.scalars().all()]
+
+    async def count_all(self) -> int:
+        result = await self._session.execute(
+            select(func.count()).select_from(PromoCodeModel)
+        )
+        return int(result.scalar_one())

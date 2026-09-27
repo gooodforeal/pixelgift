@@ -489,7 +489,7 @@ export function DashboardPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(index, 10) * 0.03 }}
-                className="boxes-list__row glass relative flex items-center gap-3 !rounded-xl p-2.5 sm:gap-4 sm:p-3"
+                className="boxes-list__row glass relative flex gap-3 !rounded-xl p-2.5 sm:gap-4 sm:p-3"
               >
                 <Link
                   to={`/app/boxes/${box.id}`}
@@ -515,21 +515,18 @@ export function DashboardPage() {
                       </Link>
                     </h2>
                     <StatusBadge status={box.status} />
+                    <span className="chip px-2 py-0.5">
+                      <Images className="size-3.5" />
+                      {box.items.length}{" "}
+                      {pluralize(box.items.length, ["файл", "файла", "файлов"])}
+                    </span>
                   </div>
                   <p className="mt-1 truncate text-xs text-slate-400 sm:text-sm">
                     Для {box.recipient_name} · {formatDateTime(box.activates_at)}
                   </p>
                 </div>
 
-                <div className="hidden items-center gap-2 md:flex">
-                  <span className="chip px-2 py-0.5">
-                    <Images className="size-3.5" />
-                    {box.items.length}{" "}
-                    {pluralize(box.items.length, ["файл", "файла", "файлов"])}
-                  </span>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-1">
+                <div className="boxes-list__actions flex shrink-0 items-center gap-1">
                   <button
                     type="button"
                     className="btn-ghost hidden px-3 py-1.5 text-xs sm:inline-flex"

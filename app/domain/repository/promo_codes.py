@@ -10,3 +10,11 @@ class BasePromoCodesRepository(BaseRepository[PromoCode], ABC):
 
     @abstractmethod
     async def list_all(self) -> list[PromoCode]: ...
+
+    @abstractmethod
+    async def list_page(
+        self, *, limit: int, offset: int = 0
+    ) -> list[PromoCode]: ...
+
+    @abstractmethod
+    async def count_all(self) -> int: ...

@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Percent,
   Plus,
@@ -20,6 +22,7 @@ import { formatDateTime, pluralize } from "../lib/format";
 import type { PromoCode } from "../lib/types";
 
 const DISCOUNT_OPTIONS = Array.from({ length: 20 }, (_, i) => (i + 1) * 5);
+const PROMO_PAGE_SIZE = 10;
 
 const FIELD = "field mt-1.5 !rounded-xl px-3 py-2";
 
@@ -30,17 +33,71 @@ function defaultExpiresLocal(): string {
   return d.toISOString().slice(0, 16);
 }
 
+function PromoPagination({
+  page,
+  pageCount,
+  total,
+  pageSize,
+  onChange,
+}: {
+  page: number;
+  pageCount: number;
+  total: number;
+  pageSize: number;
+  onChange: (page: number) => void;
+}) {
+  if (pageCount <= 1) return null;
+
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
+
+  return (
+    <nav
+      className="boxes-pagination mt-6 flex flex-wrap items-center justify-between gap-3"
+      aria-label="Страницы промокодов"
+    >
+      <p className="boxes-pagination__meta text-sm text-slate-400">
+        {from}–{to} из {total}
+      </p>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          className="btn-ghost size-9 px-0 py-0 disabled:opacity-35"
+          aria-label="Предыдущая страница"
+          disabled={page <= 1}
+          onClick={() => onChange(page - 1)}
+        >
+          <ChevronLeft className="size-4" />
+        </button>
+        <span className="boxes-pagination__page min-w-[4.5rem] text-center text-sm tabular-nums text-slate-300">
+          {page} / {pageCount}
+        </span>
+        <button
+          type="button"
+          className="btn-ghost size-9 px-0 py-0 disabled:opacity-35"
+          aria-label="Следующая страница"
+          disabled={page >= pageCount}
+          onClick={() => onChange(page + 1)}
+        >
+          <ChevronRight className="size-4" />
+        </button>
+      </div>
+    </nav>
+  );
+}
+
 export function AdminPromoCodesPage() {
   const toast = useToast();
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState(20);
   const [expiresAt, setExpiresAt] = useState(defaultExpiresLocal);
 
   const promoQuery = useQuery({
-    queryKey: ["admin-promo-codes"],
-    queryFn: api.adminPromoCodes,
+    queryKey: ["admin-promo-codes", page, PROMO_PAGE_SIZE],
+    queryFn: () => api.adminPromoCodes({ page, pageSize: PROMO_PAGE_SIZE }),
   });
 
   const resetForm = () => {
@@ -63,6 +120,7 @@ export function AdminPromoCodesPage() {
       }),
     onSuccess: (promo) => {
       void queryClient.invalidateQueries({ queryKey: ["admin-promo-codes"] });
+      setPage(1);
       closeModal();
       toast(`Промокод ${promo.code} создан`, "success");
     },
@@ -71,7 +129,20 @@ export function AdminPromoCodesPage() {
     },
   });
 
-  const promos = promoQuery.data ?? [];
+  const total = promoQuery.data?.total ?? 0;
+  const promos = promoQuery.data?.items ?? [];
+  const pageCount = Math.max(1, Math.ceil(total / PROMO_PAGE_SIZE));
+  const showPromos = promoQuery.isSuccess && total > 0;
+
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
+
+  const goToPage = (next: number) => {
+    setPage(Math.min(pageCount, Math.max(1, next)));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const canSubmit = useMemo(() => {
     const normalized = code.trim().toUpperCase();
     return (
@@ -121,11 +192,16 @@ export function AdminPromoCodesPage() {
           <div>
             <p className="chip w-fit">
               <Ticket className="size-3.5" />
-              Панель
+              Промокоды
             </p>
             <h1 className="mt-3 font-sans text-2xl font-semibold tracking-tight sm:text-3xl">
               Промокоды
             </h1>
+            <p className="mt-2 text-sm text-slate-400">
+              {total > 0
+                ? `${total} ${pluralize(total, ["промокод", "промокода", "промокодов"])}`
+                : "Здесь появятся промокоды"}
+            </p>
           </div>
           <button
             type="button"
@@ -141,7 +217,7 @@ export function AdminPromoCodesPage() {
         </div>
 
         <section className="mt-8">
-          {!promos.length ? (
+          {!showPromos ? (
             <p className="text-sm text-slate-400">Пока нет промокодов.</p>
           ) : (
             <div className="boxes-list flex flex-col gap-2.5">
@@ -151,7 +227,7 @@ export function AdminPromoCodesPage() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(index, 10) * 0.03 }}
-                  className="boxes-list__row glass relative flex items-center gap-3 !rounded-xl p-2.5 sm:gap-4 sm:p-3"
+                  className="boxes-list__row glass relative flex gap-3 !rounded-xl p-2.5 sm:gap-4 sm:p-3"
                 >
                   <div className="boxes-list__cover shrink-0 overflow-hidden rounded-lg">
                     <div className="grid h-[4.5rem] w-[4.5rem] place-items-center bg-gradient-to-br from-glow-violet/15 via-transparent to-glow-cyan/10 sm:h-16 sm:w-28">
@@ -174,6 +250,15 @@ export function AdminPromoCodesPage() {
                         />
                         <span>{promo.discount_percent}%</span>
                       </span>
+                      <span className="chip px-2 py-0.5">
+                        <Ticket className="size-3.5" />
+                        {promo.usage_count}{" "}
+                        {pluralize(promo.usage_count, [
+                          "использование",
+                          "использования",
+                          "использований",
+                        ])}
+                      </span>
                     </div>
                     <p className="mt-1 truncate text-xs text-slate-400 sm:text-sm">
                       до {formatDateTime(promo.expires_at)}
@@ -181,19 +266,7 @@ export function AdminPromoCodesPage() {
                     </p>
                   </div>
 
-                  <div className="hidden items-center gap-2 md:flex">
-                    <span className="chip px-2 py-0.5">
-                      <Ticket className="size-3.5" />
-                      {promo.usage_count}{" "}
-                      {pluralize(promo.usage_count, [
-                        "использование",
-                        "использования",
-                        "использований",
-                      ])}
-                    </span>
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-1">
+                  <div className="boxes-list__actions flex shrink-0 items-center gap-1">
                     <button
                       type="button"
                       className="btn-ghost hidden px-3 py-1.5 text-xs sm:inline-flex"
@@ -218,6 +291,16 @@ export function AdminPromoCodesPage() {
               ))}
             </div>
           )}
+
+          {showPromos ? (
+            <PromoPagination
+              page={page}
+              pageCount={pageCount}
+              total={total}
+              pageSize={PROMO_PAGE_SIZE}
+              onChange={goToPage}
+            />
+          ) : null}
         </section>
       </div>
 

@@ -713,6 +713,14 @@ class InMemoryPromoCodesRepository(BasePromoCodesRepository):
             reverse=True,
         )
 
+    async def list_page(
+        self, *, limit: int, offset: int = 0
+    ) -> list[PromoCode]:
+        return (await self.list_all())[offset : offset + limit]
+
+    async def count_all(self) -> int:
+        return len(self.items)
+
 
 class InMemoryCartsRepository(BaseCartsRepository):
     def __init__(self) -> None:

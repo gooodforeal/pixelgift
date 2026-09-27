@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
-from app.application.dto.commerce import CreatePromoCodeCommand
+from app.application.dto.commerce import CreatePromoCodeCommand, ListPromoCodesCommand
 from app.application.use_cases.commerce import (
     CreatePromoCodeUseCase,
     ListPromoCodesUseCase,
@@ -16,6 +16,7 @@ from app.presentation.schemas.commerce import (
     CreatePromoCodeRequest,
     PromoCodeResponse,
     PromoCodeSchema,
+    PromoCodesPageSchema,
     PromoCodesResponse,
 )
 
@@ -37,12 +38,21 @@ def _promo_to_schema(promo: PromoCode) -> PromoCodeSchema:
 @router.get("", response_model=PromoCodesResponse)
 async def list_promo_codes(
     _: User = Depends(require_admin),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     uc: ListPromoCodesUseCase = Depends(get_list_promo_codes_uc),
 ) -> PromoCodesResponse:
-    promos = await uc.execute()
+    result = await uc.execute(
+        ListPromoCodesCommand(page=page, page_size=page_size)
+    )
     return PromoCodesResponse(
         message="ok",
-        result=[_promo_to_schema(p) for p in promos],
+        result=PromoCodesPageSchema(
+            items=[_promo_to_schema(p) for p in result.items],
+            total=result.total,
+            page=result.page,
+            page_size=result.page_size,
+        ),
     )
 
 

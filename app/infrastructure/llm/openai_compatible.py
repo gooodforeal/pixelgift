@@ -1,5 +1,7 @@
 from collections.abc import Sequence
+from typing import Any
 
+import httpx
 from openai import APIStatusError, AsyncOpenAI
 
 from app.application.ports.llm.base import BaseLlmClient, LlmMessage
@@ -10,11 +12,20 @@ class OpenAICompatibleLlmClient(BaseLlmClient):
     def __init__(self, settings: Settings) -> None:
         self._api_key = settings.llm_api_key.strip()
         self._model = settings.llm_model.strip()
-        self._client = AsyncOpenAI(
-            api_key=self._api_key or "missing",
-            base_url=settings.llm_base_url.strip(),
-            timeout=settings.llm_timeout_seconds,
-        )
+
+        client_kwargs: dict[str, Any] = {
+            "api_key": self._api_key or "missing",
+            "base_url": settings.llm_base_url.strip(),
+            "timeout": settings.llm_timeout_seconds,
+        }
+        proxy = settings.llm_proxy_url.strip()
+        if proxy:
+            client_kwargs["http_client"] = httpx.AsyncClient(
+                proxy=proxy,
+                timeout=settings.llm_timeout_seconds,
+            )
+
+        self._client = AsyncOpenAI(**client_kwargs)
 
     @property
     def is_configured(self) -> bool:

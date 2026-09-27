@@ -67,6 +67,10 @@ class Settings(BaseSettings):
     llm_model: str = "gpt-4o-mini"
     llm_timeout_seconds: float = 60
     llm_assistant_max_messages: int = 20
+    # Optional HTTP(S) proxy for LLM calls only.
+    # Examples: http://host:7890  or  http://user:password@host:7890
+    # URL-encode special chars in user/password (@ → %40, : → %3A).
+    llm_proxy_url: str = ""
 
     # YooKassa (test/live keys via env)
     yookassa_shop_id: str = ""

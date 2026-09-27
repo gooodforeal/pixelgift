@@ -4,7 +4,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Gift,
-  LogIn,
   Menu,
   Package,
   Shield,
@@ -208,19 +207,14 @@ export function Header() {
                 ) : null}
               </>
             ) : (
-              <>
-                <RailLink
-                  to="/products"
-                  label="Товары"
-                  active={isProducts}
-                  withLabel
-                >
-                  <Package className="size-5" strokeWidth={2} />
-                </RailLink>
-                <RailLink to="/login" label="Войти" active={isLogin} withLabel>
-                  <LogIn className="size-5" strokeWidth={2} />
-                </RailLink>
-              </>
+              <RailLink
+                to="/products"
+                label="Товары"
+                active={isProducts}
+                withLabel
+              >
+                <Package className="size-5" strokeWidth={2} />
+              </RailLink>
             )}
           </nav>
 
@@ -236,7 +230,17 @@ export function Header() {
                   <UserRound className="size-5" strokeWidth={2} />
                 </RailLink>
               </>
-            ) : null}
+            ) : (
+              <Link
+                to="/login"
+                className={`btn-primary app-rail__login${
+                  isLogin ? " is-active" : ""
+                }`}
+                aria-current={isLogin ? "page" : undefined}
+              >
+                Войти
+              </Link>
+            )}
             <UiThemeToggle className="app-rail__theme" />
             <button
               type="button"
@@ -339,24 +343,14 @@ export function Header() {
                 </MenuLink>
               </>
             ) : (
-              <>
-                <MenuLink
-                  to="/products"
-                  label="Товары"
-                  active={isProducts}
-                  onNavigate={closeMenu}
-                >
-                  <Package className="size-5" strokeWidth={2} />
-                </MenuLink>
-                <MenuLink
-                  to="/login"
-                  label="Войти"
-                  active={isLogin}
-                  onNavigate={closeMenu}
-                >
-                  <LogIn className="size-5" strokeWidth={2} />
-                </MenuLink>
-              </>
+              <MenuLink
+                to="/products"
+                label="Товары"
+                active={isProducts}
+                onNavigate={closeMenu}
+              >
+                <Package className="size-5" strokeWidth={2} />
+              </MenuLink>
             )}
           </nav>
         </div>

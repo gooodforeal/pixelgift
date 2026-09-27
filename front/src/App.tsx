@@ -20,6 +20,7 @@ import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { ProductsPage } from "./pages/ProductsPage";
+import { ProductPage } from "./pages/ProductPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { PublicBoxPage } from "./pages/PublicBoxPage";
 import { SupportPage } from "./pages/SupportPage";
@@ -138,6 +139,14 @@ export function App() {
             element={
               <AppShell>
                 <ProductsPage />
+              </AppShell>
+            }
+          />
+          <Route
+            path="/products/:productId"
+            element={
+              <AppShell>
+                <ProductPage />
               </AppShell>
             }
           />

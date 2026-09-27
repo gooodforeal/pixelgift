@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
@@ -8,7 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
-  Ellipsis,
   Eye,
   Gift,
   Images,
@@ -19,6 +18,7 @@ import {
   Rocket,
 } from "lucide-react";
 
+import { CardActionsMenu, type CardActionItem } from "../components/CardActionsMenu";
 import { DesignCover } from "../components/DesignCover";
 import { PageTransition } from "../components/PageTransition";
 import { Spinner } from "../components/Spinner";
@@ -56,125 +56,73 @@ function BoxCardMenu({
   onArchive: () => void;
   onUnarchive: () => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!open) return;
+  const items = useMemo(() => {
+    const next: CardActionItem[] = [];
+    const canView =
+      box.status === "active" ||
+      box.status === "opened" ||
+      box.status === "archived";
 
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node | null;
-      if (!target || rootRef.current?.contains(target)) return;
-      setOpen(false);
-    };
+    next.push({
+      key: "open",
+      label: canView ? "Смотреть" : "Редактировать",
+      icon: canView ? (
+        <Eye className="size-3.5" />
+      ) : (
+        <PencilLine className="size-3.5" />
+      ),
+      onClick: () => navigate(`/app/boxes/${box.id}`),
+    });
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
+    if (box.status === "draft") {
+      next.push({
+        key: "publish",
+        label: "Опубликовать",
+        icon: <Rocket className="size-3.5" />,
+        disabled: publishPending || box.items.length === 0,
+        onClick: onPublish,
+      });
+    }
 
-    window.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open]);
+    if (box.status !== "archived") {
+      next.push({
+        key: "archive",
+        label: "В архив",
+        icon: <Archive className="size-3.5" />,
+        disabled: archivePending,
+        danger: true,
+        onClick: onArchive,
+      });
+    }
 
-  const close = () => setOpen(false);
+    if (box.status === "archived" && box.first_opened_at == null) {
+      next.push({
+        key: "unarchive",
+        label: "Из архива",
+        icon: <ArchiveRestore className="size-3.5" />,
+        disabled: unarchivePending,
+        onClick: onUnarchive,
+      });
+    }
 
-  return (
-    <div ref={rootRef} className="relative ml-auto">
-      <button
-        type="button"
-        className="btn-ghost size-8 px-0 py-0"
-        aria-label="Действия с боксом"
-        aria-expanded={open}
-        aria-haspopup="menu"
-        onClick={() => setOpen((value) => !value)}
-      >
-        <Ellipsis className="size-4" />
-      </button>
+    return next;
+  }, [
+    archivePending,
+    box.first_opened_at,
+    box.id,
+    box.items.length,
+    box.status,
+    navigate,
+    onArchive,
+    onPublish,
+    onUnarchive,
+    publishPending,
+    unarchivePending,
+  ]);
 
-      {open && (
-        <div
-          role="menu"
-          className="box-card-menu absolute right-0 bottom-full z-20 mb-2 min-w-[11.5rem] overflow-hidden rounded-2xl border border-white/12 bg-ink-950/95 p-1 shadow-2xl shadow-black/40 backdrop-blur-xl"
-        >
-          {box.status === "active" ||
-          box.status === "opened" ||
-          box.status === "archived" ? (
-            <Link
-              role="menuitem"
-              to={`/app/boxes/${box.id}`}
-              className="box-card-menu__item"
-              onClick={close}
-            >
-              <Eye className="size-3.5" />
-              Смотреть
-            </Link>
-          ) : (
-            <Link
-              role="menuitem"
-              to={`/app/boxes/${box.id}`}
-              className="box-card-menu__item"
-              onClick={close}
-            >
-              <PencilLine className="size-3.5" />
-              Редактировать
-            </Link>
-          )}
-
-          {box.status === "draft" && (
-            <button
-              type="button"
-              role="menuitem"
-              className="box-card-menu__item"
-              disabled={publishPending || box.items.length === 0}
-              onClick={() => {
-                onPublish();
-                close();
-              }}
-            >
-              <Rocket className="size-3.5" />
-              Опубликовать
-            </button>
-          )}
-
-          {box.status !== "archived" && (
-            <button
-              type="button"
-              role="menuitem"
-              className="box-card-menu__item box-card-menu__item--danger"
-              disabled={archivePending}
-              onClick={() => {
-                onArchive();
-                close();
-              }}
-            >
-              <Archive className="size-3.5" />
-              В архив
-            </button>
-          )}
-
-          {box.status === "archived" && box.first_opened_at == null && (
-            <button
-              type="button"
-              role="menuitem"
-              className="box-card-menu__item"
-              disabled={unarchivePending}
-              onClick={() => {
-                onUnarchive();
-                close();
-              }}
-            >
-              <ArchiveRestore className="size-3.5" />
-              Из архива
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  return <CardActionsMenu label="Действия с боксом" items={items} />;
 }
 
 function BoxesViewToggle({
@@ -493,14 +441,14 @@ export function DashboardPage() {
               >
                 <Link
                   to={`/app/boxes/${box.id}`}
-                  className="boxes-list__cover shrink-0 overflow-hidden rounded-lg"
+                  className="boxes-list__cover"
                   aria-label={`Открыть бокс «${box.title}»`}
                 >
                   <DesignCover
                     code={design?.code ?? "romantic"}
                     previewImageUrl={design?.preview_image_url}
                     themeConfig={design?.theme_config}
-                    heightClassName="h-[4.5rem] w-[4.5rem] sm:h-16 sm:w-28"
+                    heightClassName="h-full min-h-[4.75rem] w-full"
                   />
                 </Link>
 

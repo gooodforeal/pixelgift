@@ -285,8 +285,8 @@ export function AdminPromoCodesPage() {
                   transition={{ delay: Math.min(index, 10) * 0.03 }}
                   className="boxes-list__row glass relative flex gap-3 !rounded-xl p-2.5 sm:gap-4 sm:p-3"
                 >
-                  <div className="boxes-list__cover shrink-0 overflow-hidden rounded-lg">
-                    <div className="grid h-[4.5rem] w-[4.5rem] place-items-center bg-gradient-to-br from-glow-violet/15 via-transparent to-glow-cyan/10 sm:h-16 sm:w-28">
+                  <div className="boxes-list__cover">
+                    <div className="grid h-full min-h-[4.75rem] w-full place-items-center bg-gradient-to-br from-glow-violet/15 via-transparent to-glow-cyan/10">
                       <Ticket
                         className="size-7 text-glow-violet/80"
                         strokeWidth={1.5}

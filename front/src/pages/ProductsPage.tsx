@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, type MouseEvent, type ReactNode } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
@@ -69,16 +69,24 @@ function ProductGallery({
   urls,
   name,
   fallback,
+  openHref,
 }: {
   urls: string[];
   name: string;
   fallback: "gift" | "package";
+  openHref: string;
 }) {
   const [index, setIndex] = useState(0);
+  const stop = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  let media: ReactNode;
   if (!urls.length) {
     const Icon = fallback === "gift" ? Gift : Package;
-    return (
-      <div className="flex h-44 items-center justify-center bg-gradient-to-br from-glow-cyan/10 via-transparent to-glow-violet/10">
+    media = (
+      <div className="flex h-44 items-center justify-center bg-gradient-to-br from-glow-cyan/15 via-ink-950/30 to-glow-violet/15">
         <Icon
           className={`size-12 ${
             fallback === "gift" ? "text-glow-cyan/80" : "text-slate-500/70"
@@ -87,52 +95,70 @@ function ProductGallery({
         />
       </div>
     );
+  } else {
+    const current = toProxiedAssetUrl(urls[index] ?? urls[0]!);
+    media = (
+      <div className="relative h-44 overflow-hidden bg-ink-950">
+        <img
+          src={current}
+          alt={name}
+          className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+          loading="lazy"
+        />
+        {urls.length > 1 ? (
+          <>
+            <button
+              type="button"
+              className="product-gallery__nav absolute top-1/2 left-2 size-8 -translate-y-1/2"
+              aria-label="Предыдущее фото"
+              onClick={(event) => {
+                stop(event);
+                setIndex((i) => (i - 1 + urls.length) % urls.length);
+              }}
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+            <button
+              type="button"
+              className="product-gallery__nav absolute top-1/2 right-2 size-8 -translate-y-1/2"
+              aria-label="Следующее фото"
+              onClick={(event) => {
+                stop(event);
+                setIndex((i) => (i + 1) % urls.length);
+              }}
+            >
+              <ChevronRight className="size-4" />
+            </button>
+            <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+              {urls.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`Фото ${i + 1}`}
+                  className={`size-1.5 rounded-full ${
+                    i === index ? "bg-white" : "bg-white/40"
+                  }`}
+                  onClick={(event) => {
+                    stop(event);
+                    setIndex(i);
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        ) : null}
+      </div>
+    );
   }
-  const current = toProxiedAssetUrl(urls[index] ?? urls[0]!);
+
   return (
-    <div className="relative h-44 overflow-hidden bg-ink-950/40">
-      <img
-        src={current}
-        alt={name}
-        className="h-full w-full object-cover"
-        loading="lazy"
-      />
-      {urls.length > 1 ? (
-        <>
-          <button
-            type="button"
-            className="btn-ghost absolute top-1/2 left-2 size-8 -translate-y-1/2 bg-ink-950/50 px-0!"
-            aria-label="Предыдущее фото"
-            onClick={() =>
-              setIndex((i) => (i - 1 + urls.length) % urls.length)
-            }
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <button
-            type="button"
-            className="btn-ghost absolute top-1/2 right-2 size-8 -translate-y-1/2 bg-ink-950/50 px-0!"
-            aria-label="Следующее фото"
-            onClick={() => setIndex((i) => (i + 1) % urls.length)}
-          >
-            <ChevronRight className="size-4" />
-          </button>
-          <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
-            {urls.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                aria-label={`Фото ${i + 1}`}
-                className={`size-1.5 rounded-full ${
-                  i === index ? "bg-white" : "bg-white/40"
-                }`}
-                onClick={() => setIndex(i)}
-              />
-            ))}
-          </div>
-        </>
-      ) : null}
-    </div>
+    <Link
+      to={openHref}
+      className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow-violet/40"
+      aria-label={`Открыть ${name}`}
+    >
+      {media}
+    </Link>
   );
 }
 
@@ -272,12 +298,18 @@ export function ProductsPage() {
                     fallback={
                       product.sku === "box_credit" ? "gift" : "package"
                     }
+                    openHref={`/products/${product.id}`}
                   />
                   <div className="flex flex-1 flex-col p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h2 className="font-sans text-lg font-semibold text-slate-100">
-                          {product.name}
+                        <h2 className="font-sans text-lg font-semibold">
+                          <Link
+                            to={`/products/${product.id}`}
+                            className="products-card__title text-slate-100 transition hover:opacity-80"
+                          >
+                            {product.name}
+                          </Link>
                         </h2>
                       </div>
                       <ProductPrice
@@ -289,7 +321,7 @@ export function ProductsPage() {
                       />
                     </div>
                     {product.description ? (
-                      <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-400">
+                      <p className="products-card__desc mt-3 flex-1 text-sm leading-relaxed text-slate-400">
                         {product.description}
                       </p>
                     ) : (
@@ -326,22 +358,32 @@ export function ProductsPage() {
                   transition={{ delay: Math.min(index, 10) * 0.03 }}
                   className="boxes-list__row glass relative flex gap-3 !rounded-xl p-2.5 sm:gap-4 sm:p-3"
                 >
-                  <div className="boxes-list__cover shrink-0 overflow-hidden rounded-lg">
+                  <Link
+                    to={`/products/${product.id}`}
+                    className="boxes-list__cover transition hover:opacity-90"
+                    aria-label={`Открыть ${product.name}`}
+                  >
                     <ProductThumb
                       urls={product.image_urls ?? []}
                       name={product.name}
                       fallback={
                         product.sku === "box_credit" ? "gift" : "package"
                       }
+                      className="h-full min-h-[4.75rem] w-full"
                     />
-                  </div>
+                  </Link>
 
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate font-sans text-sm font-semibold sm:text-base">
-                      {product.name}
+                      <Link
+                        to={`/products/${product.id}`}
+                        className="products-card__title transition hover:opacity-80"
+                      >
+                        {product.name}
+                      </Link>
                     </h2>
                     {product.description ? (
-                      <p className="mt-1 line-clamp-1 text-xs text-slate-400 sm:text-sm">
+                      <p className="products-card__desc mt-1 line-clamp-1 text-xs text-slate-400 sm:text-sm">
                         {product.description}
                       </p>
                     ) : null}

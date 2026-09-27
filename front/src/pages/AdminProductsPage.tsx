@@ -329,15 +329,15 @@ export function AdminProductsPage() {
                     transition={{ delay: Math.min(index, 10) * 0.03 }}
                     className="boxes-list__row glass relative flex gap-3 !rounded-xl p-2.5 sm:gap-4 sm:p-3"
                   >
-                    <div className="boxes-list__cover shrink-0 overflow-hidden rounded-lg">
+                    <div className="boxes-list__cover">
                       {cover ? (
                         <img
                           src={toProxiedAssetUrl(cover)}
                           alt=""
-                          className="h-[4.5rem] w-[4.5rem] object-cover sm:h-16 sm:w-28"
+                          className="h-full min-h-[4.75rem] w-full object-cover"
                         />
                       ) : (
-                        <div className="grid h-[4.5rem] w-[4.5rem] place-items-center bg-gradient-to-br from-glow-cyan/10 via-transparent to-glow-violet/10 sm:h-16 sm:w-28">
+                        <div className="grid h-full min-h-[4.75rem] w-full place-items-center bg-gradient-to-br from-glow-cyan/10 via-transparent to-glow-violet/10">
                           <Package
                             className="size-7 text-slate-500/80"
                             strokeWidth={1.5}
@@ -401,7 +401,7 @@ export function AdminProductsPage() {
                           </span>
                         </div>
                       ) : (
-                        <p className="text-sm font-semibold tabular-nums text-white">
+                        <p className="text-sm font-semibold tabular-nums text-slate-100">
                           {formatPrice(product.unit_price, product.currency)}
                         </p>
                       )}

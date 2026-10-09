@@ -1,7 +1,7 @@
 [project]
 name = "pixelgift"
 version = "0.1.0"
-description = "Add your description here"
+description = "Digital gift boxes: editor, public delivery, commerce, Telegram auth"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

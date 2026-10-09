@@ -1,3 +1,5 @@
+"""Ошибки тикетов поддержки и вложений."""
+
 from app.domain.exceptions.base import BaseException
 import uuid
 
@@ -7,6 +9,7 @@ class SupportTicketError(BaseException):
 
 
 class SupportTicketNotFoundError(SupportTicketError):
+    """Тикет поддержки не найден."""
     status_code = 404
 
     def __init__(self, ticket_id: uuid.UUID) -> None:
@@ -15,11 +18,13 @@ class SupportTicketNotFoundError(SupportTicketError):
 
 
 class SupportTicketValidationError(SupportTicketError):
+    """Ошибка валидации тикета поддержки."""
     def __init__(self, message: str) -> None:
         super().__init__(message)
 
 
 class SupportTicketAttachmentNotFoundError(SupportTicketError):
+    """Вложение тикета не найдено."""
     status_code = 404
 
     def __init__(self, attachment_id: uuid.UUID) -> None:

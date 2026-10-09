@@ -1,3 +1,5 @@
+"""HTTP-адаптер YooKassa для создания и опроса платежей."""
+
 import logging
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -17,6 +19,7 @@ YOOKASSA_API_URL = "https://api.yookassa.ru/v3"
 
 
 def _kopecks_to_amount_str(kopecks: int) -> str:
+    """Форматирует копейки в строку суммы с двумя знаками."""
     value = (Decimal(kopecks) / Decimal(100)).quantize(
         Decimal("0.01"), rounding=ROUND_HALF_UP
     )
@@ -24,6 +27,8 @@ def _kopecks_to_amount_str(kopecks: int) -> str:
 
 
 class YooKassaPaymentProvider(BasePaymentProvider):
+    """Реализация BasePaymentProvider через REST API v3 (redirect, capture)."""
+
     def __init__(self, settings: Settings) -> None:
         self._shop_id = settings.yookassa_shop_id
         self._secret_key = settings.yookassa_secret_key

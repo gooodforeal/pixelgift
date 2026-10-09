@@ -1,3 +1,5 @@
+"""Представления SQLAdmin для ORM-моделей."""
+
 from sqladmin import ModelView
 from sqladmin.filters import AllUniqueStringValuesFilter
 
@@ -20,6 +22,8 @@ from app.infrastructure.models.users import UserModel
 
 
 class UserAdmin(ModelView, model=UserModel):
+    """CRUD-просмотр пользователей (создание отключено)."""
+
     name = "Пользователь"
     name_plural = "Пользователи"
     icon = "fa-solid fa-user"
@@ -54,6 +58,8 @@ class UserAdmin(ModelView, model=UserModel):
 
 
 class UserSessionAdmin(ModelView, model=UserSessionModel):
+    """Просмотр refresh-сессий пользователей."""
+
     name = "Сессия"
     name_plural = "Сессии"
     icon = "fa-solid fa-key"
@@ -76,6 +82,8 @@ class UserSessionAdmin(ModelView, model=UserSessionModel):
 
 
 class TelegramLoginChallengeAdmin(ModelView, model=TelegramLoginChallengeModel):
+    """Просмотр кодов Telegram-логина."""
+
     name = "Код входа"
     name_plural = "Коды входа"
     icon = "fa-brands fa-telegram"
@@ -94,6 +102,8 @@ class TelegramLoginChallengeAdmin(ModelView, model=TelegramLoginChallengeModel):
 
 
 class BoxAdmin(ModelView, model=BoxModel):
+    """Просмотр и редактирование подарочных боксов."""
+
     name = "Бокс"
     name_plural = "Боксы"
     icon = "fa-solid fa-gift"
@@ -125,6 +135,8 @@ class BoxAdmin(ModelView, model=BoxModel):
 
 
 class BoxItemAdmin(ModelView, model=BoxItemModel):
+    """Просмотр элементов (моментов) внутри бокса."""
+
     name = "Момент"
     name_plural = "Моменты"
     icon = "fa-solid fa-layer-group"
@@ -142,6 +154,8 @@ class BoxItemAdmin(ModelView, model=BoxItemModel):
 
 
 class MediaFileAdmin(ModelView, model=MediaFileModel):
+    """Просмотр загруженных медиафайлов."""
+
     name = "Медиафайл"
     name_plural = "Медиафайлы"
     icon = "fa-solid fa-photo-film"
@@ -161,6 +175,8 @@ class MediaFileAdmin(ModelView, model=MediaFileModel):
 
 
 class NotificationJobAdmin(ModelView, model=NotificationJobModel):
+    """Очередь задач уведомлений по боксам."""
+
     name = "notification_jobs"
     name_plural = "notification_jobs"
     icon = "fa-solid fa-bell"
@@ -200,6 +216,8 @@ class NotificationJobAdmin(ModelView, model=NotificationJobModel):
 
 
 class BoxDesignAdmin(ModelView, model=BoxDesignModel):
+    """Управление темами оформления боксов."""
+
     name = "Дизайн"
     name_plural = "Дизайны"
     icon = "fa-solid fa-palette"
@@ -217,6 +235,8 @@ class BoxDesignAdmin(ModelView, model=BoxDesignModel):
 
 
 class DesignAssetAdmin(ModelView, model=DesignAssetModel):
+    """Файлы превью и ассеты дизайнов."""
+
     name = "Ассет дизайна"
     name_plural = "Ассеты дизайнов"
     icon = "fa-solid fa-image"
@@ -233,6 +253,8 @@ class DesignAssetAdmin(ModelView, model=DesignAssetModel):
 
 
 class DesignRatingAdmin(ModelView, model=DesignRatingModel):
+    """Оценки дизайнов пользователями."""
+
     name = "Оценка"
     name_plural = "Оценки"
     icon = "fa-solid fa-star"
@@ -252,6 +274,8 @@ class DesignRatingAdmin(ModelView, model=DesignRatingModel):
 
 
 class SupportTicketAdmin(ModelView, model=SupportTicketModel):
+    """Тикеты обращений в поддержку."""
+
     name = "Тикет"
     name_plural = "Тикеты"
     icon = "fa-solid fa-headset"
@@ -277,6 +301,8 @@ class SupportTicketAdmin(ModelView, model=SupportTicketModel):
 
 
 class SupportTicketAttachmentAdmin(ModelView, model=SupportTicketAttachmentModel):
+    """Вложения к тикетам поддержки (только чтение)."""
+
     name = "Вложение"
     name_plural = "Вложения"
     icon = "fa-solid fa-paperclip"

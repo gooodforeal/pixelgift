@@ -1,8 +1,10 @@
+"""Зависимости use case'ов боксов, публичного доступа и сертификатов."""
+
 from __future__ import annotations
 
 from fastapi import Depends
 
-from app.application.use_cases.certificates import GenerateGiftCertificateUseCase
+from app.application.services.jwt import JwtService
 from app.application.use_cases.boxes import (
     AddBoxItemUseCase,
     ArchiveBoxUseCase,
@@ -14,6 +16,7 @@ from app.application.use_cases.boxes import (
     UpdateBoxItemUseCase,
     UpdateBoxUseCase,
 )
+from app.application.use_cases.certificates import GenerateGiftCertificateUseCase
 from app.application.use_cases.queries import (
     GetBoxUseCase,
     GetOpenedThisMonthStatsUseCase,
@@ -34,57 +37,68 @@ from app.presentation.deps.common import (
     get_storage,
     get_task_queue,
 )
-from app.application.services.jwt import JwtService
 from app.settings import Settings
 
 
 def get_create_box_uc() -> CreateBoxUseCase:
+    """Use case создания бокса."""
     return CreateBoxUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_update_box_uc() -> UpdateBoxUseCase:
+    """Use case полного обновления бокса."""
     return UpdateBoxUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_add_box_item_uc() -> AddBoxItemUseCase:
+    """Use case добавления элемента в бокс."""
     return AddBoxItemUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_update_box_item_uc() -> UpdateBoxItemUseCase:
+    """Use case изменения элемента бокса."""
     return UpdateBoxItemUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_remove_box_item_uc() -> RemoveBoxItemUseCase:
+    """Use case удаления элемента из бокса."""
     return RemoveBoxItemUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_reorder_box_items_uc() -> ReorderBoxItemsUseCase:
+    """Use case изменения порядка элементов."""
     return ReorderBoxItemsUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_publish_box_uc() -> PublishBoxUseCase:
+    """Use case публикации бокса с постановкой уведомлений в очередь."""
     return PublishBoxUseCase(SqlAlchemyUnitOfWork(), TaskiqTaskQueue())
 
 
 def get_archive_box_uc() -> ArchiveBoxUseCase:
+    """Use case архивации бокса."""
     return ArchiveBoxUseCase(SqlAlchemyUnitOfWork(), TaskiqTaskQueue())
 
 
 def get_unarchive_box_uc() -> UnarchiveBoxUseCase:
+    """Use case снятия бокса с архива."""
     return UnarchiveBoxUseCase(SqlAlchemyUnitOfWork(), TaskiqTaskQueue())
 
 
 def get_list_boxes_uc() -> ListBoxesUseCase:
+    """Use case списка боксов владельца с пагинацией."""
     return ListBoxesUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_get_box_uc() -> GetBoxUseCase:
+    """Use case получения одного бокса владельца."""
     return GetBoxUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_gift_certificate_uc(
     settings: Settings = Depends(get_settings),
 ) -> GenerateGiftCertificateUseCase:
+    """Use case генерации PDF подарочного сертификата."""
     return GenerateGiftCertificateUseCase(
         SqlAlchemyUnitOfWork(),
         ReportLabGiftCertificateRenderer(),
@@ -97,6 +111,7 @@ def get_public_box_uc(
     task_queue: TaskiqTaskQueue = Depends(get_task_queue),
     jwt_service: JwtService = Depends(get_jwt_service),
 ) -> GetPublicBoxUseCase:
+    """Use case публичного просмотра бокса по slug."""
     return GetPublicBoxUseCase(
         SqlAlchemyUnitOfWork(), storage, task_queue, jwt_service
     )
@@ -106,6 +121,7 @@ def get_unlock_public_box_uc(
     task_queue: TaskiqTaskQueue = Depends(get_task_queue),
     jwt_service: JwtService = Depends(get_jwt_service),
 ) -> UnlockPublicBoxUseCase:
+    """Use case разблокировки бокса паролем и выдачи unlock_token."""
     return UnlockPublicBoxUseCase(SqlAlchemyUnitOfWork(), jwt_service, task_queue)
 
 
@@ -113,10 +129,12 @@ def get_public_box_item_content_uc(
     storage: S3ObjectStorage = Depends(get_storage),
     jwt_service: JwtService = Depends(get_jwt_service),
 ) -> GetPublicBoxItemContentUseCase:
+    """Use case выдачи контента элемента публичного бокса."""
     return GetPublicBoxItemContentUseCase(
         SqlAlchemyUnitOfWork(), storage, jwt_service
     )
 
 
 def get_opened_this_month_stats_uc() -> GetOpenedThisMonthStatsUseCase:
+    """Use case агрегированной статистики открытий боксов за месяц."""
     return GetOpenedThisMonthStatsUseCase(SqlAlchemyUnitOfWork())

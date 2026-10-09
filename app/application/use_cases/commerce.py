@@ -1,3 +1,5 @@
+"""Сценарии магазина: каталог, корзина, оплата YooKassa, балансы и промокоды."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone as dt_timezone
@@ -171,7 +173,11 @@ async def _fulfill_succeeded_order(
     payment_status: str,
     payment_paid: bool,
 ) -> bool:
-    """Apply YooKassa result to a pending order. Returns True if state changed."""
+    """Применяет статус платежа YooKassa к заказу в ожидании.
+
+    Returns:
+        True, если статус заказа изменился (успех, отмена или начисление).
+    """
     if payment_status == "canceled" and order.status == OrderStatus.PENDING:
         order.mark_canceled()
         await uow.orders.update(order)
@@ -224,6 +230,8 @@ async def _credit_order_items(uow: BaseUnitOfWork, order: Order) -> None:
 
 
 class ListProductsUseCase:
+    """Публичный каталог активных товаров со скидками."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -234,6 +242,8 @@ class ListProductsUseCase:
 
 
 class GetCartUseCase:
+    """Возвращает корзину пользователя, создавая пустую при первом обращении."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -248,6 +258,8 @@ class GetCartUseCase:
 
 
 class AddCartItemUseCase:
+    """Добавляет или увеличивает количество товара в корзине по SKU."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -274,6 +286,8 @@ class AddCartItemUseCase:
 
 
 class UpdateCartItemUseCase:
+    """Задаёт новое количество позиции в корзине (0 удаляет через домен)."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -291,6 +305,8 @@ class UpdateCartItemUseCase:
 
 
 class RemoveCartItemUseCase:
+    """Удаляет товар из корзины по product_id."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -306,6 +322,8 @@ class RemoveCartItemUseCase:
 
 
 class CheckoutCartUseCase:
+    """Оформляет заказ из корзины: промокод, оплата или мгновенное начисление при сумме 0."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -411,6 +429,8 @@ class CheckoutCartUseCase:
 
 
 class CreatePromoCodeUseCase:
+    """Создаёт новый промокод с проверкой уникальности и срока действия."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -443,6 +463,8 @@ class CreatePromoCodeUseCase:
 
 
 class ListPromoCodesUseCase:
+    """Админский постраничный список промокодов."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -461,6 +483,8 @@ class ListPromoCodesUseCase:
 
 
 class SetPromoCodeActiveUseCase:
+    """Включает или отключает промокод без удаления."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -476,6 +500,8 @@ class SetPromoCodeActiveUseCase:
 
 
 class ListAllProductsUseCase:
+    """Полный каталог товаров для админки, включая неактивные и все скидки."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -486,6 +512,8 @@ class ListAllProductsUseCase:
 
 
 class CreateProductUseCase:
+    """Регистрирует новый товар и опциональную скидку."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -533,6 +561,8 @@ class CreateProductUseCase:
 
 
 class UpdateProductUseCase:
+    """Частично обновляет товар и при необходимости блок распродажи."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -571,6 +601,8 @@ class UpdateProductUseCase:
 
 
 class GetOrderUseCase:
+    """Возвращает заказ только его владельцу."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -585,6 +617,8 @@ class GetOrderUseCase:
 
 
 class ListUserBalancesUseCase:
+    """Список кредитов пользователя по купленным товарам (например, слоты боксов)."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -604,6 +638,8 @@ class ListUserBalancesUseCase:
 
 
 class ListUserBalanceLogsUseCase:
+    """История начислений и списаний баланса с привязкой к товарам."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -628,6 +664,8 @@ class ListUserBalanceLogsUseCase:
 
 
 class ListUserOrdersUseCase:
+    """Постраничный список заказов текущего пользователя."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -646,6 +684,8 @@ class ListUserOrdersUseCase:
 
 
 class HandleYookassaWebhookUseCase:
+    """Обрабатывает webhook YooKassa: синхронизирует оплату с заказом."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -685,7 +725,7 @@ class HandleYookassaWebhookUseCase:
 
 
 class SyncPendingOrdersUseCase:
-    """Poll YooKassa for the user's pending orders (fallback when webhook is delayed)."""
+    """Опрашивает YooKassa по незавершённым заказам пользователя (fallback без webhook)."""
 
     def __init__(
         self,

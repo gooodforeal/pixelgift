@@ -1,3 +1,5 @@
+"""Чтение данных: личный кабинет, публичная страница бокса и профиль."""
+
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
@@ -44,6 +46,8 @@ async def _kick_notification_dispatch(task_queue: BaseTaskQueue | None) -> None:
 
 @dataclass(frozen=True, kw_only=True)
 class PublicBoxView:
+    """Публичное представление бокса для страницы получателя."""
+
     box: Box
     content_unlocked: bool
     design: BoxDesign | None = None
@@ -69,6 +73,8 @@ def _token_unlocks_box(
 
 @dataclass(frozen=True, kw_only=True)
 class BoxesPage:
+    """Страница списка боксов владельца со счётчиками по статусам."""
+
     items: list[Box]
     total: int
     page: int
@@ -77,6 +83,8 @@ class BoxesPage:
 
 
 class GetBoxUseCase:
+    """Возвращает бокс владельцу, при необходимости активируя по расписанию."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -94,6 +102,8 @@ class GetBoxUseCase:
 
 
 class ListBoxesUseCase:
+    """Постраничный список боксов пользователя с авто-активацией due-боксов."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -131,6 +141,8 @@ class ListBoxesUseCase:
 
 
 class GetPublicBoxUseCase:
+    """Отдаёт публичную страницу бокса: таймер, дизайн, флаг разблокировки контента."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -191,6 +203,8 @@ class GetPublicBoxUseCase:
 
 
 class UnlockPublicBoxUseCase:
+    """Проверяет пароль получателя и выдаёт JWT для доступа к медиа карточек."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -255,7 +269,7 @@ class UnlockPublicBoxUseCase:
 
 
 class GetPublicBoxItemContentUseCase:
-    """Streams media of an unlocked public box — no authentication required."""
+    """Скачивает медиа карточки разблокированного публичного бокса без auth API."""
 
     def __init__(
         self,
@@ -305,6 +319,8 @@ class GetPublicBoxItemContentUseCase:
 
 
 class GetUserAvatarUseCase:
+    """Отдаёт JPEG-аватар пользователя из object storage."""
+
     def __init__(self, uow: BaseUnitOfWork, storage: BaseObjectStorage) -> None:
         self._uow = uow
         self._storage = storage
@@ -326,6 +342,8 @@ class GetUserAvatarUseCase:
 
 
 class GetCurrentUserUseCase:
+    """Загружает активного пользователя по id из access-токена."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -341,6 +359,8 @@ class GetCurrentUserUseCase:
 
 @dataclass(frozen=True, kw_only=True)
 class OpenedThisMonthStats:
+    """Агрегат «сколько боксов впервые открыто в текущем месяце»."""
+
     count: int
     period_start: datetime
     period_end: datetime
@@ -348,7 +368,7 @@ class OpenedThisMonthStats:
 
 
 class GetOpenedThisMonthStatsUseCase:
-    """Global count of boxes first opened in the current calendar month (Moscow)."""
+    """Считает глобально боксы с первым открытием в текущем календарном месяце (Москва)."""
 
     TIMEZONE = "Europe/Moscow"
 

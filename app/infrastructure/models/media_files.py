@@ -1,3 +1,4 @@
+"""ORM-модель медиафайлов."""
 import uuid
 
 from sqlalchemy import BigInteger, ForeignKey, Index, Integer, String, Text, Uuid
@@ -7,6 +8,8 @@ from app.infrastructure.models.base import Base, CreatedAtMixin
 
 
 class MediaFileModel(CreatedAtMixin, Base):
+    """Загруженный медиафайл пользователя в storage."""
+
     __tablename__ = "media_files"
     __table_args__ = (
         Index("ix_media_files_owner_id_created_at", "owner_id", "created_at"),

@@ -1,3 +1,5 @@
+"""Каталог, корзина, заказы, балансы и webhook YooKassa."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -75,6 +77,7 @@ router = APIRouter(tags=["commerce"])
 async def list_products(
     uc: ListProductsUseCase = Depends(get_list_products_uc),
 ) -> ProductsResponse:
+    """GET /products — активные товары."""
     views = await uc.execute()
     return ProductsResponse(
         message="ok",
@@ -87,6 +90,7 @@ async def get_cart(
     actor_id: uuid.UUID = Depends(get_current_user_id),
     uc: GetCartUseCase = Depends(get_get_cart_uc),
 ) -> CartResponse:
+    """GET /cart — корзина текущего пользователя."""
     view = await uc.execute(actor_id)
     return CartResponse(message="ok", result=cart_view_to_schema(view))
 
@@ -97,6 +101,7 @@ async def add_cart_item(
     actor_id: uuid.UUID = Depends(get_current_user_id),
     uc: AddCartItemUseCase = Depends(get_add_cart_item_uc),
 ) -> CartResponse:
+    """POST /cart/items — добавить SKU в корзину."""
     view = await uc.execute(
         AddCartItemCommand(
             actor_id=actor_id, sku=body.sku, quantity=body.quantity
@@ -112,6 +117,7 @@ async def update_cart_item(
     actor_id: uuid.UUID = Depends(get_current_user_id),
     uc: UpdateCartItemUseCase = Depends(get_update_cart_item_uc),
 ) -> CartResponse:
+    """PATCH /cart/items/{product_id} — изменить количество."""
     view = await uc.execute(
         UpdateCartItemCommand(
             actor_id=actor_id, product_id=product_id, quantity=body.quantity
@@ -126,6 +132,7 @@ async def remove_cart_item(
     actor_id: uuid.UUID = Depends(get_current_user_id),
     uc: RemoveCartItemUseCase = Depends(get_remove_cart_item_uc),
 ) -> CartResponse:
+    """DELETE /cart/items/{product_id} — удалить позицию."""
     view = await uc.execute(
         RemoveCartItemCommand(actor_id=actor_id, product_id=product_id)
     )
@@ -138,6 +145,7 @@ async def checkout_cart(
     actor_id: uuid.UUID = Depends(get_current_user_id),
     uc: CheckoutCartUseCase = Depends(get_checkout_cart_uc),
 ) -> CheckoutResponse:
+    """POST /cart/checkout — создать заказ и платёж."""
     result = await uc.execute(
         CheckoutCartCommand(
             actor_id=actor_id,
@@ -162,6 +170,7 @@ async def sync_pending_orders(
     actor_id: uuid.UUID = Depends(get_current_user_id),
     uc: SyncPendingOrdersUseCase = Depends(get_sync_pending_orders_uc),
 ) -> SyncPendingOrdersResponse:
+    """POST /orders/sync — синхронизация pending с YooKassa."""
     synced = await uc.execute(actor_id)
     return SyncPendingOrdersResponse(
         message="ok",
@@ -176,6 +185,7 @@ async def list_orders(
     page_size: int = Query(20, ge=1, le=100),
     uc: ListUserOrdersUseCase = Depends(get_list_orders_uc),
 ) -> OrdersResponse:
+    """GET /orders — заказы пользователя."""
     result = await uc.execute(
         ListOrdersCommand(actor_id=actor_id, page=page, page_size=page_size)
     )
@@ -196,6 +206,7 @@ async def get_order(
     actor_id: uuid.UUID = Depends(get_current_user_id),
     uc: GetOrderUseCase = Depends(get_get_order_uc),
 ) -> OrderResponse:
+    """GET /orders/{order_id} — один заказ."""
     order = await uc.execute(GetOrderCommand(actor_id=actor_id, order_id=order_id))
     return OrderResponse(message="ok", result=order_to_schema(order))
 
@@ -205,6 +216,7 @@ async def list_balances(
     actor_id: uuid.UUID = Depends(get_current_user_id),
     uc: ListUserBalancesUseCase = Depends(get_list_balances_uc),
 ) -> BalancesResponse:
+    """GET /balances — балансы кредитов."""
     views = await uc.execute(actor_id)
     return BalancesResponse(
         message="ok",
@@ -219,6 +231,7 @@ async def list_balance_logs(
     page_size: int = Query(20, ge=1, le=100),
     uc: ListUserBalanceLogsUseCase = Depends(get_list_balance_logs_uc),
 ) -> BalanceLogsResponse:
+    """GET /balance-logs — журнал баланса."""
     result = await uc.execute(
         ListBalanceLogsCommand(actor_id=actor_id, page=page, page_size=page_size)
     )
@@ -238,6 +251,7 @@ async def yookassa_webhook(
     request: Request,
     uc: HandleYookassaWebhookUseCase = Depends(get_yookassa_webhook_uc),
 ) -> dict[str, str]:
+    """POST /payments/yookassa/webhook — уведомления платёжки."""
     payload: dict[str, Any] = await request.json()
     event = str(payload.get("event") or "")
     obj = payload.get("object")

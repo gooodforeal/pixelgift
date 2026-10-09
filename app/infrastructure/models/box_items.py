@@ -1,3 +1,4 @@
+"""ORM-модель элементов бокса."""
 import uuid
 from typing import TYPE_CHECKING, Any
 
@@ -12,6 +13,8 @@ if TYPE_CHECKING:
 
 
 class BoxItemModel(CreatedAtMixin, Base):
+    """Элемент содержимого коробки; metadata в JSONB."""
+
     __tablename__ = "box_items"
 
     id: Mapped[uuid.UUID] = mapped_column(

@@ -1,3 +1,5 @@
+"""Маппинг доменных сущностей боксов и дизайнов в API-схемы."""
+
 from app.application.dto.designs import BoxDesignWithRating
 from app.domain.aggregates.boxes import Box
 from app.domain.entities.box_designs import BoxDesign

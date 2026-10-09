@@ -1,3 +1,5 @@
+"""Маппинг MediaFile ↔ MediaFileModel."""
+
 from app.domain.entities.media_files import MediaFile, MediaKind
 from app.infrastructure.models.media_files import MediaFileModel
 

@@ -1,3 +1,5 @@
+"""Маппинг UserBalanceLog ↔ UserBalanceLogModel."""
+
 from app.domain.entities.user_balance_logs import BalanceLogReason, UserBalanceLog
 from app.infrastructure.models.user_balance_logs import UserBalanceLogModel
 

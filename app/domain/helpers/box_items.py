@@ -1,3 +1,5 @@
+"""Разбор и валидация metadata для элементов бокса (геоточка, вопрос)."""
+
 from typing import Any
 
 from app.domain.entities.box_items import (
@@ -10,6 +12,7 @@ from app.domain.entities.box_items import (
 
 
 def parse_geopoint_metadata(metadata: dict[str, Any] | None) -> tuple[float, float]:
+    """Извлекает широту и долготу из metadata и проверяет допустимые диапазоны."""
     data = metadata or {}
     lat = data.get("lat")
     lng = data.get("lng")
@@ -29,7 +32,7 @@ def parse_geopoint_metadata(metadata: dict[str, Any] | None) -> tuple[float, flo
 def parse_question_metadata(
     metadata: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    """Validate and normalize question card payload stored in item metadata."""
+    """Проверяет и нормализует payload карточки-вопроса в metadata элемента."""
     data = metadata or {}
     raw_question = data.get("question")
     if not isinstance(raw_question, str):

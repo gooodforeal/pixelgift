@@ -1,3 +1,5 @@
+"""Абстрактный контракт CRUD-репозитория для сущностей домена."""
+
 from abc import ABC, abstractmethod
 import uuid
 from typing import Generic, Optional, TypeVar
@@ -8,6 +10,8 @@ T = TypeVar("T", bound=BaseEntity)
 
 
 class BaseRepository(Generic[T], ABC):
+    """Минимальный набор асинхронных операций персистентности сущности."""
+
     @abstractmethod
     async def add(self, entity: T) -> None: ...
 

@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий промокодов."""
 import uuid
 
 from sqlalchemy import func, select
@@ -14,6 +15,8 @@ from app.infrastructure.models.promo_codes import PromoCodeModel
 
 
 class SqlAlchemyPromoCodesRepository(BasePromoCodesRepository):
+    """SQLAlchemy-репозиторий промокодов; пагинация list_page."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

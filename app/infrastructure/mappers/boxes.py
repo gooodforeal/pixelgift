@@ -1,3 +1,5 @@
+"""Маппинг Box/BoxItem ↔ ORM."""
+
 from app.domain.aggregates.boxes import Box, BoxStatus
 from app.domain.entities.box_items import BoxItem, BoxItemType
 from app.domain.values.activates_at import ActivatesAt

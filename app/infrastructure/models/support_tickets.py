@@ -1,3 +1,4 @@
+"""ORM-модель тикетов поддержки."""
 import uuid
 
 from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, Uuid, func
@@ -7,6 +8,8 @@ from app.infrastructure.models.base import Base, TimestampMixin
 
 
 class SupportTicketModel(TimestampMixin, Base):
+    """Обращение в поддержку со статусом и вложениями."""
+
     __tablename__ = "support_tickets"
     __table_args__ = (
         Index("ix_support_tickets_status_created_at", "status", "created_at"),
@@ -26,6 +29,8 @@ class SupportTicketModel(TimestampMixin, Base):
 
 
 class SupportTicketAttachmentModel(Base):
+    """Вложение тикета (ключ в storage)."""
+
     __tablename__ = "support_ticket_attachments"
     __table_args__ = (
         Index("ix_support_ticket_attachments_ticket_id", "ticket_id"),

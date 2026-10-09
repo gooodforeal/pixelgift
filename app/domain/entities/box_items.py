@@ -1,3 +1,5 @@
+"""Элемент содержимого подарочного бокса и допустимые типы."""
+
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
@@ -9,6 +11,8 @@ from app.domain.values.sort_order import SortOrder
 
 
 class BoxItemType(StrEnum):
+    """Тип медиа или интерактивного блока внутри бокса."""
+
     IMAGE = "image"
     DRAWING = "drawing"
     GIF = "gif"
@@ -35,6 +39,8 @@ TOY_CODES: frozenset[str] = frozenset(
 
 @dataclass(frozen=False, kw_only=True)
 class BoxItem(BaseEntity):
+    """Один слот содержимого бокса с порядком, подписью и metadata."""
+
     box_id: uuid.UUID
     media_file_id: uuid.UUID | None
     item_type: BoxItemType

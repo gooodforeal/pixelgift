@@ -1,3 +1,5 @@
+"""Маппинг сущностей коммерции в API-схемы."""
+
 from __future__ import annotations
 
 from app.application.dto.commerce_views import (

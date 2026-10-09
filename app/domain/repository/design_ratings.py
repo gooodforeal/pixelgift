@@ -1,3 +1,5 @@
+"""Контракт персистентности оценок дизайнов."""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import uuid
@@ -9,12 +11,16 @@ from app.domain.repository.base import BaseRepository
 
 @dataclass(frozen=True, slots=True)
 class DesignRatingAggregate:
+    """Сводная средняя оценка и число голосов по design_id."""
+
     design_id: uuid.UUID
     average: float
     count: int
 
 
 class BaseDesignRatingsRepository(BaseRepository[DesignRating], ABC):
+    """Оценки пользователя, агрегаты и пакетные выборки."""
+
     @abstractmethod
     async def get_by_user_and_design(
         self,

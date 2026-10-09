@@ -1,3 +1,5 @@
+"""Зависимости профиля пользователя и проверки прав администратора."""
+
 from __future__ import annotations
 
 import uuid
@@ -15,12 +17,14 @@ from app.presentation.deps.common import get_storage
 
 
 def get_current_user_uc() -> GetCurrentUserUseCase:
+    """Use case загрузки текущего пользователя по id."""
     return GetCurrentUserUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_user_avatar_uc(
     storage: S3ObjectStorage = Depends(get_storage),
 ) -> GetUserAvatarUseCase:
+    """Use case выдачи байтов аватара пользователя из хранилища."""
     return GetUserAvatarUseCase(SqlAlchemyUnitOfWork(), storage)
 
 
@@ -28,6 +32,7 @@ async def require_admin(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: GetCurrentUserUseCase = Depends(get_current_user_uc),
 ) -> User:
+    """Требует активного пользователя с флагом is_admin."""
     try:
         user = await uc.execute(user_id=user_id)
     except UserNotFoundError as exc:

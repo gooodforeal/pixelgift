@@ -1,3 +1,5 @@
+"""Публичный slug бокса в URL (строчные буквы, цифры, -, _)."""
+
 import re
 from dataclasses import dataclass
 
@@ -12,6 +14,7 @@ _SLUG_RE = re.compile(r"^(?:[a-z0-9]|[a-z0-9][a-z0-9_-]{0,30}[a-z0-9])$")
 
 @dataclass(frozen=True)
 class PublicSlug(BaseValueObject[str]):
+    """Строка без краевых пробелов, соответствующая шаблону slug."""
     def __post_init__(self) -> None:
         self.validate(self.value)
 

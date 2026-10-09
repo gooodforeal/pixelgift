@@ -1,3 +1,5 @@
+"""Публичный экспорт продуктовых знаний для слоя application."""
+
 from app.application.knowledge.card_types import CARD_TYPES, CardTypeInfo
 from app.application.knowledge.wizard_steps import (
     WIZARD_STEPS,

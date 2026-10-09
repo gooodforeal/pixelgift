@@ -1,9 +1,12 @@
+"""Ошибки каталога, корзины, заказов, баланса и промокодов."""
+
 import uuid
 
 from app.domain.exceptions.base import BaseException
 
 
 class ProductNotFoundError(BaseException):
+    """Товар не найден."""
     status_code = 404
 
     def __init__(self, *, product_id: uuid.UUID | None = None, sku: str | None = None) -> None:
@@ -16,6 +19,7 @@ class ProductNotFoundError(BaseException):
 
 
 class ProductNotAvailableError(BaseException):
+    """Товар недоступен."""
     status_code = 409
 
     def __init__(self, sku: str) -> None:
@@ -24,6 +28,7 @@ class ProductNotAvailableError(BaseException):
 
 
 class ProductAlreadyExistsError(BaseException):
+    """Товар уже существует."""
     status_code = 409
 
     def __init__(self, sku: str) -> None:
@@ -32,11 +37,13 @@ class ProductAlreadyExistsError(BaseException):
 
 
 class ProductValidationError(BaseException):
+    """Ошибка валидации товара."""
     def __init__(self, message: str) -> None:
         super().__init__(message)
 
 
 class EmptyCartError(BaseException):
+    """Корзина пуста."""
     status_code = 409
 
     def __init__(self) -> None:
@@ -44,6 +51,7 @@ class EmptyCartError(BaseException):
 
 
 class CartItemNotFoundError(BaseException):
+    """Позиция корзины не найдена."""
     status_code = 404
 
     def __init__(self, product_id: uuid.UUID) -> None:
@@ -52,12 +60,14 @@ class CartItemNotFoundError(BaseException):
 
 
 class InvalidCartQuantityError(BaseException):
+    """Некорректное количество в корзине."""
     def __init__(self, quantity: int) -> None:
         self.quantity = quantity
         super().__init__(f"Cart quantity must be >= 1, got {quantity}")
 
 
 class OrderNotFoundError(BaseException):
+    """Заказ не найден."""
     status_code = 404
 
     def __init__(self, order_id: uuid.UUID) -> None:
@@ -66,6 +76,7 @@ class OrderNotFoundError(BaseException):
 
 
 class OrderAccessDeniedError(BaseException):
+    """Нет доступа к заказу."""
     status_code = 403
 
     def __init__(self, order_id: uuid.UUID, actor_id: uuid.UUID) -> None:
@@ -75,6 +86,7 @@ class OrderAccessDeniedError(BaseException):
 
 
 class OrderNotPayableError(BaseException):
+    """Заказ нельзя оплатить в текущем статусе."""
     status_code = 409
 
     def __init__(self, order_id: uuid.UUID, status: str) -> None:
@@ -84,6 +96,7 @@ class OrderNotPayableError(BaseException):
 
 
 class InsufficientBalanceError(BaseException):
+    """Недостаточно средств на балансе."""
     status_code = 402
 
     def __init__(self, *, sku: str, required: int, available: int) -> None:
@@ -96,6 +109,7 @@ class InsufficientBalanceError(BaseException):
 
 
 class PaymentProviderError(BaseException):
+    """Ошибка платёжного провайдера."""
     status_code = 502
 
     def __init__(self, message: str = "Payment provider error") -> None:
@@ -103,6 +117,7 @@ class PaymentProviderError(BaseException):
 
 
 class PromoCodeNotFoundError(BaseException):
+    """Промокод не найден."""
     status_code = 404
 
     def __init__(self, code: str) -> None:
@@ -111,6 +126,7 @@ class PromoCodeNotFoundError(BaseException):
 
 
 class PromoCodeAlreadyExistsError(BaseException):
+    """Промокод уже существует."""
     status_code = 409
 
     def __init__(self, code: str) -> None:
@@ -119,6 +135,7 @@ class PromoCodeAlreadyExistsError(BaseException):
 
 
 class PromoCodeFormatError(BaseException):
+    """Неверный формат промокода."""
     def __init__(self, code: str) -> None:
         self.code = code
         super().__init__(
@@ -127,6 +144,7 @@ class PromoCodeFormatError(BaseException):
 
 
 class PromoCodeInvalidDiscountError(BaseException):
+    """Некорректная скидка промокода."""
     def __init__(self, value: int) -> None:
         self.value = value
         super().__init__(
@@ -135,6 +153,7 @@ class PromoCodeInvalidDiscountError(BaseException):
 
 
 class PromoCodeExpiredError(BaseException):
+    """Промокод истёк."""
     status_code = 409
 
     def __init__(self, code: str) -> None:
@@ -143,6 +162,7 @@ class PromoCodeExpiredError(BaseException):
 
 
 class PromoCodeInactiveError(BaseException):
+    """Промокод неактивен."""
     status_code = 409
 
     def __init__(self, code: str) -> None:
@@ -151,6 +171,7 @@ class PromoCodeInactiveError(BaseException):
 
 
 class PromoCodeExhaustedError(BaseException):
+    """Лимит использований промокода исчерпан."""
     status_code = 409
 
     def __init__(self, code: str) -> None:
@@ -159,6 +180,7 @@ class PromoCodeExhaustedError(BaseException):
 
 
 class PromoCodeInvalidMaxUsagesError(BaseException):
+    """Некорректный лимит использований промокода."""
     def __init__(self, value: int) -> None:
         self.value = value
         super().__init__("Max usages must be a positive integer")

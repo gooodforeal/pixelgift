@@ -1,3 +1,5 @@
+"""Маппинг SupportTicket и вложений ↔ ORM."""
+
 from app.domain.entities.support_tickets import (
     SupportTicket,
     SupportTicketAttachment,

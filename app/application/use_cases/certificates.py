@@ -1,3 +1,5 @@
+"""Генерация PDF подарочного сертификата для опубликованного бокса."""
+
 from dataclasses import dataclass
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from datetime import datetime
@@ -19,6 +21,8 @@ from app.domain.exceptions.boxes import (
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class GiftCertificateFile:
+    """Готовый PDF и имя файла для Content-Disposition."""
+
     data: bytes
     filename: str
     media_type: str = "application/pdf"
@@ -39,6 +43,8 @@ def _gift_url(public_web_url: str, slug: str) -> str:
 
 
 class GenerateGiftCertificateUseCase:
+    """Собирает данные бокса и рендерит PDF (светлая/тёмная тема) для владельца."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,

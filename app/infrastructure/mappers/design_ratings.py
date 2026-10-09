@@ -1,3 +1,5 @@
+"""Маппинг DesignRating ↔ DesignRatingModel."""
+
 from app.domain.entities.design_ratings import DesignRating
 from app.domain.values.rating_stars import RatingStars
 from app.infrastructure.models.design_ratings import DesignRatingModel

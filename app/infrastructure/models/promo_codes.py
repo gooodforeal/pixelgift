@@ -1,3 +1,4 @@
+"""ORM-модель промокодов."""
 import uuid
 from datetime import datetime
 
@@ -8,6 +9,8 @@ from app.infrastructure.models.base import Base, TimestampMixin
 
 
 class PromoCodeModel(TimestampMixin, Base):
+    """Промокод: процент скидки, срок и лимит использований."""
+
     __tablename__ = "promo_codes"
 
     id: Mapped[uuid.UUID] = mapped_column(

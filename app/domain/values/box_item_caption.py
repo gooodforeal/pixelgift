@@ -1,3 +1,5 @@
+"""Подпись или текст элемента бокса (до 300 символов)."""
+
 from dataclasses import dataclass
 
 from app.domain.exceptions.box_items import (
@@ -12,6 +14,7 @@ MAX_LENGTH = 300
 
 @dataclass(frozen=True)
 class BoxItemCaption(BaseValueObject[str]):
+    """Не пустая подпись без краевых пробелов и с лимитом длины."""
     def __post_init__(self) -> None:
         self.validate(self.value)
 

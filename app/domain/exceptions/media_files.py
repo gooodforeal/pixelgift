@@ -1,8 +1,11 @@
+"""Ошибки медиафайлов пользователя."""
+
 from app.domain.exceptions.base import BaseException
 import uuid
 
 
 class MediaFileNotFoundError(BaseException):
+    """Медиафайл не найден."""
     status_code = 404
 
     def __init__(self, media_file_id: uuid.UUID) -> None:
@@ -11,6 +14,7 @@ class MediaFileNotFoundError(BaseException):
 
 
 class MediaFileAccessDeniedError(BaseException):
+    """Нет доступа к медиафайлу."""
     status_code = 403
 
     def __init__(self, media_file_id: uuid.UUID, actor_id: uuid.UUID) -> None:
@@ -22,6 +26,7 @@ class MediaFileAccessDeniedError(BaseException):
 
 
 class UnsupportedMediaTypeError(BaseException):
+    """Неподдерживаемый тип медиа."""
     def __init__(self, content_type: str, filename: str | None = None) -> None:
         self.content_type = content_type
         self.filename = filename

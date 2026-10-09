@@ -1,3 +1,5 @@
+"""Админ-API тикетов поддержки."""
+
 import uuid
 
 from fastapi import APIRouter, Depends, Query, Response
@@ -38,6 +40,7 @@ async def list_support_tickets(
     _: User = Depends(require_admin),
     uc: ListSupportTicketsUseCase = Depends(get_list_support_tickets_uc),
 ) -> PaginatedSupportTicketsResponse:
+    """GET /admin/support — список тикетов с фильтрами."""
     page = await uc.execute(
         status=status_filter,
         sort_asc=sort == "asc",
@@ -61,6 +64,7 @@ async def get_support_ticket(
     _: User = Depends(require_admin),
     uc: GetSupportTicketUseCase = Depends(get_get_support_ticket_uc),
 ) -> SupportTicketResponse:
+    """GET /admin/support/{ticket_id} — один тикет."""
     ticket = await uc.execute(ticket_id=ticket_id)
     return SupportTicketResponse(
         message="Success", result=support_ticket_to_response(ticket)
@@ -74,6 +78,7 @@ async def update_support_ticket_status(
     _: User = Depends(require_admin),
     uc: UpdateSupportTicketStatusUseCase = Depends(get_update_support_ticket_status_uc),
 ) -> SupportTicketResponse:
+    """PATCH /admin/support/{ticket_id} — смена статуса."""
     ticket = await uc.execute(
         UpdateSupportTicketStatusCommand(
             ticket_id=ticket_id,
@@ -94,6 +99,7 @@ async def get_support_attachment_content(
         get_support_attachment_content_uc
     ),
 ) -> Response:
+    """GET .../attachments/{attachment_id}/content — файл вложения."""
     content = await uc.execute(ticket_id=ticket_id, attachment_id=attachment_id)
     return Response(
         content=content.data,

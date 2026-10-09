@@ -1,3 +1,5 @@
+"""Маппинг Cart/CartItem ↔ ORM."""
+
 from app.domain.entities.carts import Cart, CartItem
 from app.infrastructure.models.carts import CartItemModel, CartModel
 

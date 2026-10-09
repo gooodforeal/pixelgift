@@ -1,3 +1,5 @@
+"""Товар каталога (например, пакет кредитов на создание боксов)."""
+
 from dataclasses import dataclass, field
 from enum import StrEnum
 
@@ -8,11 +10,15 @@ PRODUCT_MAX_IMAGES = 5
 
 
 class ProductKind(StrEnum):
+    """Тип товара в каталоге."""
+
     CREDIT = "credit"
 
 
 @dataclass(frozen=False, kw_only=True)
 class Product(BaseEntity):
+    """Описание SKU с ценой в копейках, медиа и флагом активности."""
+
     sku: str
     name: str
     kind: ProductKind
@@ -24,6 +30,7 @@ class Product(BaseEntity):
 
     @staticmethod
     def validate_image_urls(urls: list[str] | None) -> list[str]:
+        """Нормализует список URL изображений и проверяет лимит PRODUCT_MAX_IMAGES."""
         if urls is None:
             return []
         cleaned: list[str] = []

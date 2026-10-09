@@ -1,3 +1,5 @@
+"""Маппинг PromoCode ↔ PromoCodeModel."""
+
 from app.domain.entities.promo_codes import PromoCode
 from app.infrastructure.models.promo_codes import PromoCodeModel
 

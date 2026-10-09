@@ -1,3 +1,5 @@
+"""Планирование и отправка отложенных уведомлений (email и Telegram)."""
+
 from datetime import datetime, timedelta, timezone
 import logging
 import uuid
@@ -25,6 +27,7 @@ _TEMPLATE_TELEGRAM_EVENT: dict[NotificationTemplate, OwnerTelegramEvent] = {
 
 
 async def sync_gift_ready_job(uow: BaseUnitOfWork, box: Box) -> None:
+    """Синхронизирует job письма получателю на ``activates_at`` при scheduled/active."""
     existing = await uow.notification_jobs.get_by_box_and_template(
         box.id,
         NotificationTemplate.GIFT_READY,
@@ -71,10 +74,10 @@ async def schedule_owner_notification_job(
     at: datetime | None = None,
     resend_if_sent: bool = False,
 ) -> bool:
-    """
-    Ensure a notification job exists and is due at ``at``.
+    """Создаёт или перепланирует job уведомления владельца на момент ``at``.
 
-    Returns True if the job is scheduled for (re)delivery.
+    Returns:
+        True, если job запланирован к (повторной) отправке.
     """
     if template is NotificationTemplate.GIFT_READY:
         raise ValueError("Use sync_gift_ready_job for gift_ready")
@@ -101,6 +104,8 @@ async def schedule_owner_notification_job(
 
 
 class DispatchDueNotificationsUseCase:
+    """Воркер: забирает due jobs, отправляет письма/Telegram, учитывает retry."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,

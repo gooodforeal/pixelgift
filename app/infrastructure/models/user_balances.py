@@ -1,3 +1,4 @@
+"""ORM-модель балансов пользователей."""
 import uuid
 from typing import TYPE_CHECKING
 
@@ -11,6 +12,8 @@ if TYPE_CHECKING:
 
 
 class UserBalanceModel(TimestampMixin, Base):
+    """Баланс единиц товара у пользователя."""
+
     __tablename__ = "user_balances"
     __table_args__ = (
         UniqueConstraint(

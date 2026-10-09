@@ -1,3 +1,5 @@
+"""Контракт персистентности промокодов."""
+
 from abc import ABC, abstractmethod
 
 from app.domain.entities.promo_codes import PromoCode
@@ -5,6 +7,8 @@ from app.domain.repository.base import BaseRepository
 
 
 class BasePromoCodesRepository(BaseRepository[PromoCode], ABC):
+    """CRUD промокодов с постраничным списком."""
+
     @abstractmethod
     async def get_by_code(self, code: str) -> PromoCode | None: ...
 

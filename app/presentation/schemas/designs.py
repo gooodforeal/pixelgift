@@ -1,3 +1,5 @@
+"""Схемы дизайнов боксов и оценок."""
+
 from typing import Any
 import uuid
 
@@ -7,6 +9,7 @@ from app.presentation.schemas.base import BaseResponseSchema
 
 
 class GiftBoxPaletteConfig(BaseModel):
+    """Цвета 3D-подарка в theme_config."""
     body: str | None = None
     bodyDark: str | None = None
     lid: str | None = None
@@ -16,6 +19,7 @@ class GiftBoxPaletteConfig(BaseModel):
 
 
 class ThemeConfigSchema(BaseModel):
+    """Визуальные параметры темы дизайна."""
     gradient: list[str] | None = None
     accent: str | None = None
     text: str | None = None
@@ -27,6 +31,7 @@ class ThemeConfigSchema(BaseModel):
 
 
 class BoxDesignSchema(BaseModel):
+    """Дизайн бокса для каталога."""
     id: uuid.UUID
     code: str
     name: str
@@ -40,32 +45,39 @@ class BoxDesignSchema(BaseModel):
 
 
 class BoxDesignResponse(BaseResponseSchema[BoxDesignSchema]):
+    """Ответ с одним дизайном."""
     pass
 
 
 class BoxDesignListResponse(BaseResponseSchema[list[BoxDesignSchema]]):
+    """Ответ со списком дизайнов."""
     pass
 
 
 class AdminBoxDesignSchema(BoxDesignSchema):
+    """Дизайн с админ-полями."""
     is_active: bool
     preview_asset_id: uuid.UUID | None = None
     preview_asset_id_light: uuid.UUID | None = None
 
 
 class AdminBoxDesignResponse(BaseResponseSchema[AdminBoxDesignSchema]):
+    """Ответ админ-API с одним дизайном."""
     pass
 
 
 class AdminBoxDesignListResponse(BaseResponseSchema[list[AdminBoxDesignSchema]]):
+    """Ответ админ-API со списком дизайнов."""
     pass
 
 
 class RateDesignRequest(BaseModel):
+    """Тело PUT оценки дизайна."""
     stars: int = Field(..., ge=1, le=5)
 
 
 class DesignRatingSchema(BaseModel):
+    """Агрегированная оценка после голосования."""
     design_id: uuid.UUID
     stars: int
     rating_avg: float
@@ -73,10 +85,12 @@ class DesignRatingSchema(BaseModel):
 
 
 class DesignRatingResponse(BaseResponseSchema[DesignRatingSchema]):
+    """Ответ PUT /designs/{id}/rating."""
     pass
 
 
 class CreateBoxDesignRequest(BaseModel):
+    """Тело создания дизайна."""
     code: str
     name: str
     preview_image_url: str
@@ -87,6 +101,7 @@ class CreateBoxDesignRequest(BaseModel):
 
 
 class UpdateBoxDesignRequest(BaseModel):
+    """Тело полного обновления дизайна."""
     code: str
     name: str
     preview_image_url: str
@@ -97,6 +112,7 @@ class UpdateBoxDesignRequest(BaseModel):
 
 
 class PatchBoxDesignRequest(BaseModel):
+    """Тело частичного обновления дизайна."""
     code: str | None = None
     name: str | None = None
     preview_image_url: str | None = None
@@ -107,6 +123,7 @@ class PatchBoxDesignRequest(BaseModel):
 
 
 class DesignAssetUploadSchema(BaseModel):
+    """Загруженный ассет дизайна."""
     id: uuid.UUID
     url: str
     mime_type: str
@@ -114,4 +131,5 @@ class DesignAssetUploadSchema(BaseModel):
 
 
 class DesignAssetUploadResponse(BaseResponseSchema[DesignAssetUploadSchema]):
+    """Ответ POST /admin/designs/upload."""
     pass

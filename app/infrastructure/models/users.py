@@ -1,3 +1,4 @@
+"""ORM-модель пользователей."""
 import uuid
 from datetime import datetime
 
@@ -8,6 +9,8 @@ from app.infrastructure.models.base import Base, TimestampMixin
 
 
 class UserModel(TimestampMixin, Base):
+    """Пользователь Telegram и флаги доступа."""
+
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(

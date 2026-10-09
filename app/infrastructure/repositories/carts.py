@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий корзин."""
 import uuid
 
 from sqlalchemy import select
@@ -11,6 +12,8 @@ from app.infrastructure.models.carts import CartModel
 
 
 class SqlAlchemyCartsRepository(BaseCartsRepository):
+    """SQLAlchemy-репозиторий корзины; позиции через selectinload."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

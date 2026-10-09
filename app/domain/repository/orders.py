@@ -1,3 +1,5 @@
+"""Контракт персистентности заказов."""
+
 from abc import ABC, abstractmethod
 import uuid
 
@@ -6,6 +8,8 @@ from app.domain.repository.base import BaseRepository
 
 
 class BaseOrdersRepository(BaseRepository[Order], ABC):
+    """Поиск заказов по провайдеру, idempotency key и пользователю."""
+
     @abstractmethod
     async def get_by_provider_payment_id(
         self, provider_payment_id: str

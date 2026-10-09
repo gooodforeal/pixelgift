@@ -1,3 +1,5 @@
+"""Сервис JWT: access-токены API и токены разблокировки публичного бокса."""
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import uuid
@@ -9,18 +11,23 @@ from app.settings import Settings
 
 @dataclass(frozen=True, kw_only=True)
 class AccessTokenPayload:
+    """Распарсенный access JWT."""
     user_id: uuid.UUID
     exp: datetime
 
 
 @dataclass(frozen=True, kw_only=True)
 class BoxUnlockTokenPayload:
+    """Распарсенный JWT разблокировки публичного бокса."""
+
     box_id: uuid.UUID
     public_slug: str
     exp: datetime
 
 
 class JwtService:
+    """Выпуск и проверка JWT для API и долгоживущего unlock-токена бокса."""
+
     def __init__(self, settings: Settings) -> None:
         self._secret = settings.jwt_secret
         self._algorithm = settings.jwt_algorithm

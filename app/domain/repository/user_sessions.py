@@ -1,3 +1,5 @@
+"""Контракт персистентности сессий пользователя."""
+
 from abc import ABC, abstractmethod
 import uuid
 
@@ -6,6 +8,8 @@ from app.domain.repository.base import BaseRepository
 
 
 class BaseUserSessionsRepository(BaseRepository[UserSession], ABC):
+    """Поиск сессии по хешу refresh-токена и список сессий пользователя."""
+
     @abstractmethod
     async def get_by_refresh_token_hash(
         self, refresh_token_hash: str

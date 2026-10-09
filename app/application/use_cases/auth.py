@@ -1,3 +1,5 @@
+"""Вход через Telegram-бота, сессии JWT и настройки пользователя."""
+
 from datetime import datetime, timedelta, timezone
 import secrets
 
@@ -40,10 +42,12 @@ from app.settings import Settings
 
 
 def generate_login_code() -> str:
+    """Одноразовый код для deep-link ``login_<code>`` в боте."""
     return secrets.token_urlsafe(32)
 
 
 def avatar_storage_key(user_id) -> str:
+    """Ключ object storage для аватара пользователя."""
     return f"avatars/{user_id}"
 
 
@@ -54,6 +58,8 @@ def _truncate_user_agent(user_agent: str | None) -> str | None:
 
 
 class StartTelegramLoginUseCase:
+    """Создаёт челлендж входа и ссылку на Telegram-бота."""
+
     def __init__(self, uow: BaseUnitOfWork, settings: Settings) -> None:
         self._uow = uow
         self._settings = settings
@@ -86,6 +92,8 @@ class StartTelegramLoginUseCase:
 
 
 class PollTelegramLoginStatusUseCase:
+    """Клиент опрашивает код; при успехе в боте выдаёт access/refresh и потребляет челлендж."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -164,6 +172,8 @@ class PollTelegramLoginStatusUseCase:
 
 
 class RefreshAccessTokenUseCase:
+    """Ротация refresh-токена: отзыв старой сессии и выдача новой пары."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -218,6 +228,8 @@ class RefreshAccessTokenUseCase:
 
 
 class LogoutUseCase:
+    """Отзывает сессию по refresh-токену (идемпотентно)."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -238,6 +250,8 @@ class LogoutUseCase:
 
 
 class CompleteTelegramLoginUseCase:
+    """Вызывается ботом: подтверждает код, создаёт/обновляет пользователя и аватар."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -344,6 +358,8 @@ class CompleteTelegramLoginUseCase:
 
 
 class UpdateCurrentUserSettingsUseCase:
+    """Обновляет настройки профиля (например, Telegram-уведомления)."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 

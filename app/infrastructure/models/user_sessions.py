@@ -1,3 +1,4 @@
+"""ORM-модель сессий пользователей."""
 import uuid
 from datetime import datetime
 
@@ -8,6 +9,8 @@ from app.infrastructure.models.base import Base, CreatedAtMixin
 
 
 class UserSessionModel(CreatedAtMixin, Base):
+    """Refresh-сессия пользователя (хеш токена, срок, отзыв)."""
+
     __tablename__ = "user_sessions"
     __table_args__ = (
         Index("ix_user_sessions_user_id", "user_id"),

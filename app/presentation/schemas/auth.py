@@ -1,3 +1,5 @@
+"""Схемы аутентификации и профиля пользователя."""
+
 from base64 import b64decode
 import binascii
 import uuid
@@ -8,16 +10,19 @@ from app.presentation.schemas.base import BaseResponseSchema
 
 
 class TelegramLoginStartSchema(BaseModel):
+    """Данные для начала входа через Telegram."""
     code: str
     bot_url: str
     expires_at: str
 
 
 class TelegramLoginStartResponse(BaseResponseSchema[TelegramLoginStartSchema]):
+    """Ответ POST /auth/telegram/start."""
     pass
 
 
 class TelegramLoginStatusSchema(BaseModel):
+    """Статус ожидания или завершения логина."""
     status: str
     access_token: str | None = None
     token_type: str | None = None
@@ -25,19 +30,23 @@ class TelegramLoginStatusSchema(BaseModel):
 
 
 class TelegramLoginStatusResponse(BaseResponseSchema[TelegramLoginStatusSchema]):
+    """Ответ GET /auth/telegram/status."""
     pass
 
 
 class AccessTokenSchema(BaseModel):
+    """Метаданные access-токена после refresh."""
     token_type: str = "bearer"
     user_id: uuid.UUID | None = None
 
 
 class AccessTokenResponse(BaseResponseSchema[AccessTokenSchema]):
+    """Ответ POST /auth/refresh."""
     pass
 
 
 class CompleteTelegramLoginRequest(BaseModel):
+    """Тело webhook бота о завершении логина."""
     code: str
     telegram_id: int
     first_name: str
@@ -60,15 +69,18 @@ class CompleteTelegramLoginRequest(BaseModel):
 
 
 class CompleteTelegramLoginSchema(BaseModel):
+    """Результат завершения логина для бота."""
     ok: bool
     reply_text: str
 
 
 class CompleteTelegramLoginResponse(BaseResponseSchema[CompleteTelegramLoginSchema]):
+    """Ответ POST /auth/telegram/webhook."""
     pass
 
 
 class CurrentUserSchema(BaseModel):
+    """Профиль авторизованного пользователя."""
     id: uuid.UUID
     first_name: str
     last_name: str | None = None
@@ -82,8 +94,10 @@ class CurrentUserSchema(BaseModel):
 
 
 class CurrentUserResponse(BaseResponseSchema[CurrentUserSchema]):
+    """Ответ GET/PATCH /auth/me."""
     pass
 
 
 class UpdateCurrentUserSettingsRequest(BaseModel):
+    """Частичное обновление настроек пользователя."""
     notifications_enabled: bool | None = None

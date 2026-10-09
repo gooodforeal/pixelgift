@@ -1,3 +1,5 @@
+"""Клиент LLM через OpenAI-compatible Chat Completions API."""
+
 from collections.abc import Sequence
 from typing import Any
 
@@ -9,6 +11,8 @@ from app.settings import Settings
 
 
 class OpenAICompatibleLlmClient(BaseLlmClient):
+    """AsyncOpenAI с опциональным proxy; fallback на reasoning/refusal при пустом content."""
+
     def __init__(self, settings: Settings) -> None:
         self._api_key = settings.llm_api_key.strip()
         self._model = settings.llm_model.strip()

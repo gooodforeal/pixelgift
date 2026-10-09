@@ -1,3 +1,5 @@
+"""Задачи Taskiq: cron диспетчер уведомлений и ручной kick."""
+
 from app.application.use_cases.boxes import ActivateDueBoxesUseCase
 from app.application.use_cases.notifications import DispatchDueNotificationsUseCase
 from app.infrastructure.worker.app import broker
@@ -15,6 +17,7 @@ async def dispatch_due_notifications(
         get_dispatch_due_notifications_uc_dep
     ),
 ) -> int:
+    """Каждую минуту активирует due-коробки и отправляет due-уведомления."""
     await activate_uc.execute()
     return await uc.execute()
 
@@ -25,5 +28,5 @@ async def kick_notification_dispatch(
         get_dispatch_due_notifications_uc_dep
     ),
 ) -> int:
-    """Immediate wake-up after scheduling owner notification jobs."""
+    """Немедленный запуск диспетчера после постановки jobs владельца."""
     return await uc.execute()

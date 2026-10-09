@@ -1,3 +1,5 @@
+"""Название дизайна бокса (до 15 символов)."""
+
 from dataclasses import dataclass
 
 from app.domain.exceptions.box_designs import (
@@ -12,6 +14,7 @@ MAX_LENGTH = 15
 
 @dataclass(frozen=True)
 class BoxDesignName(BaseValueObject[str]):
+    """Не пустое имя без краевых пробелов и с лимитом длины."""
     def __post_init__(self) -> None:
         self.validate(self.value)
 

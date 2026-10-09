@@ -1,3 +1,5 @@
+"""Сценарии ассистента «Гифти»: контекст редактора, LLM-диалог и история."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -127,6 +129,7 @@ def build_box_editor_context(
     box: Box | None,
     form: BoxEditorFormSnapshot | None,
 ) -> dict[str, Any]:
+    """Собирает JSON-контекст текущего шага визарда для системного промпта LLM."""
     step_meta = next((item for item in WIZARD_STEPS if item.id == step), None)
     context: dict[str, Any] = {
         "current_step": step,
@@ -265,7 +268,11 @@ async def resolve_assistant_thread(
     thread_id: uuid.UUID | None,
     box_id: uuid.UUID | None,
 ):
-    """Resolve or create the chat thread for this editor session."""
+    """Находит или создаёт поток чата для сессии редактора и привязывает к боксу.
+
+    Returns:
+        Пара (thread, box): box может быть None, если передан только thread_id.
+    """
     if thread_id is None and box_id is None:
         raise AssistantValidationError("thread_id or box_id is required")
 
@@ -309,6 +316,8 @@ async def resolve_assistant_thread(
 
 
 class ChatBoxAssistantUseCase:
+    """Отвечает на сообщение пользователя в контексте шага визарда и сохраняет историю."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -408,6 +417,8 @@ class ChatBoxAssistantUseCase:
 
 
 class ListBoxAssistantHistoryUseCase:
+    """Возвращает сохранённые сообщения потока ассистента для UI."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,

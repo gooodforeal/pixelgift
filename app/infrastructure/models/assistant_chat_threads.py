@@ -1,3 +1,4 @@
+"""ORM-модель тредов чата ассистента."""
 import uuid
 from datetime import datetime
 
@@ -8,6 +9,8 @@ from app.infrastructure.models.base import Base
 
 
 class AssistantChatThreadModel(Base):
+    """Диалог ассистента; опционально привязан к одной коробке."""
+
     __tablename__ = "assistant_chat_threads"
     __table_args__ = (Index("ix_assistant_chat_threads_user_id", "user_id"),)
 

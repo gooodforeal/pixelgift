@@ -1,3 +1,5 @@
+"""Описания типов карточек содержимого бокса для подсказок ассистента."""
+
 from dataclasses import dataclass
 
 from app.domain.entities.box_items import (
@@ -13,6 +15,8 @@ from app.domain.entities.box_items import (
 
 @dataclass(frozen=True, slots=True)
 class CardTypeInfo:
+    """Человекочитаемое имя и правила заполнения типа карточки."""
+
     title: str
     description: str
 

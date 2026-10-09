@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий тикетов поддержки."""
 import uuid
 
 from sqlalchemy import func, select
@@ -15,6 +16,8 @@ from app.infrastructure.models.support_tickets import SupportTicketModel
 
 
 class SqlAlchemySupportTicketsRepository(BaseSupportTicketsRepository):
+    """SQLAlchemy-репозиторий тикетов; вложения через selectinload."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

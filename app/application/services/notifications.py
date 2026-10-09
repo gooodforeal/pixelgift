@@ -1,3 +1,5 @@
+"""Сборка HTML/Telegram и оркестрация уведомлений владельца и получателя."""
+
 from enum import StrEnum
 from functools import lru_cache
 from html import escape
@@ -21,6 +23,8 @@ _TELEGRAM_CARDS = _APP_ROOT / "static" / "telegram"
 
 
 class OwnerTelegramEvent(StrEnum):
+    """Тип события бокса для Telegram-карточки владельцу."""
+
     PUBLISHED = "published"
     GIFT_READY = "gift_ready"
     OPENED = "opened"
@@ -70,6 +74,7 @@ def render_gift_ready_html(
     gift_url: str,
     unlock_password: str | None = None,
 ) -> str:
+    """Подставляет данные подарка в HTML-шаблон письма «подарок готов»."""
     password_block = ""
     if unlock_password:
         password_block = (
@@ -110,6 +115,7 @@ def render_owner_telegram_html(
     box: Box,
     public_web_url: str,
 ) -> str:
+    """Формирует HTML-подпись к Telegram-карточке по типу события."""
     title = escape(box.title.value)
     name = escape(box.recipient_name.value)
     url = _gift_url(public_web_url, box.public_slug.value)

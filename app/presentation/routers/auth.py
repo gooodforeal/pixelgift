@@ -1,3 +1,5 @@
+"""HTTP-роуты аутентификации через Telegram и профиля пользователя."""
+
 from base64 import b64decode
 import uuid
 
@@ -69,6 +71,7 @@ async def start_telegram_login(
     request: Request,
     uc: StartTelegramLoginUseCase = Depends(get_start_telegram_login_uc),
 ) -> TelegramLoginStartResponse:
+    """POST /auth/telegram/start — выдаёт код и ссылку на бота."""
     client_ip = request.client.host if request.client else None
     result = await uc.execute(StartTelegramLoginCommand(client_ip_hash=client_ip))
     return TelegramLoginStartResponse(
@@ -88,6 +91,7 @@ async def telegram_login_status(
     uc: PollTelegramLoginStatusUseCase = Depends(get_poll_telegram_login_uc),
     cfg: Settings = Depends(get_settings),
 ) -> Response:
+    """GET /auth/telegram/status — опрос логина, при успехе ставит cookies."""
     result = await uc.execute(
         PollTelegramLoginCommand(
             code=code,
@@ -119,6 +123,7 @@ async def refresh_access_token(
     uc: RefreshAccessTokenUseCase = Depends(get_refresh_access_token_uc),
     cfg: Settings = Depends(get_settings),
 ) -> Response:
+    """POST /auth/refresh — обновляет access по refresh-cookie."""
     raw = request.cookies.get(cfg.refresh_cookie_name)
     if not raw:
         raise HTTPException(
@@ -161,6 +166,7 @@ async def get_current_user(
     user_id=Depends(get_current_user_id),
     uc: GetCurrentUserUseCase = Depends(get_current_user_uc),
 ) -> CurrentUserResponse:
+    """GET /auth/me — профиль текущего пользователя."""
     user = await uc.execute(user_id=user_id)
     return CurrentUserResponse(
         message="Success",
@@ -185,6 +191,7 @@ async def update_current_user_settings(
     user_id=Depends(get_current_user_id),
     uc: UpdateCurrentUserSettingsUseCase = Depends(get_update_current_user_settings_uc),
 ) -> CurrentUserResponse:
+    """PATCH /auth/me — обновляет настройки (уведомления)."""
     if body.notifications_enabled is None:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
@@ -218,6 +225,7 @@ async def get_user_avatar(
     user_id: uuid.UUID,
     uc: GetUserAvatarUseCase = Depends(get_user_avatar_uc),
 ) -> Response:
+    """GET /users/{user_id}/avatar — байты аватара."""
     content = await uc.execute(user_id=user_id)
     return Response(
         content=content.data,
@@ -232,6 +240,7 @@ async def logout(
     uc: LogoutUseCase = Depends(get_logout_uc),
     cfg: Settings = Depends(get_settings),
 ) -> Response:
+    """POST /auth/logout — отзыв сессии и очистка cookies."""
     raw = request.cookies.get(cfg.refresh_cookie_name)
     await uc.execute(LogoutCommand(refresh_token=raw))
     response = Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -248,6 +257,7 @@ async def create_telegram_login(
     _: None = Depends(verify_bot_api_secret),
     uc: CompleteTelegramLoginUseCase = Depends(get_complete_telegram_login_uc),
 ) -> CompleteTelegramLoginResponse:
+    """POST /auth/telegram/webhook — завершение логина от бота."""
     photo_bytes: bytes | None = None
     if body.photo_base64:
         photo_bytes = b64decode(body.photo_base64, validate=True)

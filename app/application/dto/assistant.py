@@ -1,3 +1,5 @@
+"""DTO чата ассистента «Гифти» в редакторе бокса."""
+
 from dataclasses import dataclass, field
 from typing import Any, Literal
 import uuid
@@ -16,12 +18,16 @@ AssistantHistoryRole = Literal["user", "assistant"]
 
 @dataclass(frozen=True, kw_only=True)
 class AssistantHistoryMessage:
+    """Одна реплика в истории для API."""
+
     role: AssistantHistoryRole
     content: str
 
 
 @dataclass(frozen=True, kw_only=True)
 class BoxEditorFormSnapshot:
+    """Снимок полей формы до создания бокса (контекст для LLM)."""
+
     design_id: str | None = None
     title: str | None = None
     recipient_name: str | None = None
@@ -35,6 +41,8 @@ class BoxEditorFormSnapshot:
 
 @dataclass(frozen=True, kw_only=True)
 class ChatBoxAssistantCommand:
+    """Запрос ответа ассистента на шаге визарда."""
+
     user_id: uuid.UUID
     message: str
     step: BoxWizardStep
@@ -45,6 +53,8 @@ class ChatBoxAssistantCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class ChatBoxAssistantResult:
+    """Ответ ассистента и собранный JSON-контекст редактора."""
+
     reply: str
     thread_id: uuid.UUID
     context: dict[str, Any] = field(default_factory=dict)
@@ -52,6 +62,8 @@ class ChatBoxAssistantResult:
 
 @dataclass(frozen=True, kw_only=True)
 class ListBoxAssistantHistoryCommand:
+    """Запрос истории сообщений потока."""
+
     user_id: uuid.UUID
     thread_id: uuid.UUID | None = None
     box_id: uuid.UUID | None = None
@@ -59,5 +71,7 @@ class ListBoxAssistantHistoryCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class ListBoxAssistantHistoryResult:
+    """История диалога с id потока."""
+
     thread_id: uuid.UUID
     messages: tuple[AssistantHistoryMessage, ...]

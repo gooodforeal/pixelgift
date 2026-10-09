@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий задач уведомлений."""
 from datetime import datetime
 import uuid
 
@@ -19,6 +20,8 @@ from app.infrastructure.models.notification_jobs import NotificationJobModel
 
 
 class SqlAlchemyNotificationJobsRepository(BaseNotificationJobsRepository):
+    """SQLAlchemy-репозиторий задач уведомлений; claim_due под FOR UPDATE SKIP LOCKED."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

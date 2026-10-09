@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий сессий пользователей."""
 import uuid
 
 from sqlalchemy import select
@@ -14,6 +15,8 @@ from app.infrastructure.models.user_sessions import UserSessionModel
 
 
 class SqlAlchemyUserSessionsRepository(BaseUserSessionsRepository):
+    """SQLAlchemy-репозиторий refresh-сессий; поиск по хешу токена."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

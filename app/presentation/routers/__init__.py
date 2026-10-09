@@ -1,3 +1,5 @@
+"""HTTP-роутеры API Pixelgift."""
+
 from app.presentation.routers import (
     admin_designs,
     admin_products,

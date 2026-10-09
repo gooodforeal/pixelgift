@@ -1,3 +1,5 @@
+"""Баланс пользователя по конкретному продукту (например, кредиты)."""
+
 from dataclasses import dataclass
 from datetime import datetime, timezone as dt_timezone
 import uuid
@@ -9,6 +11,8 @@ from app.domain.exceptions.commerce import InsufficientBalanceError
 
 @dataclass(frozen=False, kw_only=True)
 class UserBalance(BaseEntity):
+    """Текущий остаток единиц product_id у user_id."""
+
     user_id: uuid.UUID
     product_id: uuid.UUID
     balance: int = 0
@@ -22,6 +26,7 @@ class UserBalance(BaseEntity):
         reference_id: uuid.UUID,
         sku: str | None = None,
     ) -> UserBalanceLog:
+        """Увеличивает balance и возвращает запись журнала операции."""
         if delta <= 0:
             raise ValueError("credit delta must be positive")
         self.balance += delta
@@ -45,6 +50,7 @@ class UserBalance(BaseEntity):
         reference_id: uuid.UUID,
         sku: str = "credit",
     ) -> UserBalanceLog:
+        """Списывает delta при достаточном балансе; иначе InsufficientBalanceError."""
         if delta <= 0:
             raise ValueError("debit delta must be positive")
         if self.balance < delta:

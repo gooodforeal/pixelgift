@@ -1,7 +1,11 @@
+"""Порт фоновой очереди задач."""
+
 from abc import ABC, abstractmethod
 
 
 class BaseTaskQueue(ABC):
+    """Контракт адаптера очереди: пробуждение воркера уведомлений."""
+
     @abstractmethod
     async def kick_notification_dispatch(self) -> None:
-        """Wake the worker to process due notification_jobs immediately."""
+        """Сигнализирует воркеру немедленно обработать due ``notification_jobs``."""

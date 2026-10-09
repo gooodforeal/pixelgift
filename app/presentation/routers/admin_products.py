@@ -1,3 +1,5 @@
+"""Админ-API товаров каталога."""
+
 import uuid
 
 from fastapi import APIRouter, Depends, status
@@ -31,6 +33,7 @@ async def list_all_products(
     _: User = Depends(require_admin),
     uc: ListAllProductsUseCase = Depends(get_list_all_products_uc),
 ) -> ProductsResponse:
+    """GET /admin/products — все товары."""
     views = await uc.execute()
     return ProductsResponse(
         message="ok",
@@ -48,6 +51,7 @@ async def create_product(
     admin: User = Depends(require_admin),
     uc: CreateProductUseCase = Depends(get_create_product_uc),
 ) -> ProductResponse:
+    """POST /admin/products — создание товара."""
     view = await uc.execute(
         CreateProductCommand(
             actor_id=admin.id,
@@ -72,6 +76,7 @@ async def update_product(
     admin: User = Depends(require_admin),
     uc: UpdateProductUseCase = Depends(get_update_product_uc),
 ) -> ProductResponse:
+    """PATCH /admin/products/{product_id} — обновление товара."""
     update_sale = "sale_discount_percent" in body.model_fields_set
     view = await uc.execute(
         UpdateProductCommand(

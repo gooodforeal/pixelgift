@@ -1,3 +1,5 @@
+"""Схемы каталога, корзины, заказов и балансов."""
+
 from datetime import datetime
 import uuid
 
@@ -7,6 +9,7 @@ from app.presentation.schemas.base import BaseResponseSchema
 
 
 class ProductSchema(BaseModel):
+    """Товар каталога."""
     id: uuid.UUID
     sku: str
     name: str
@@ -21,10 +24,12 @@ class ProductSchema(BaseModel):
 
 
 class ProductsResponse(BaseResponseSchema[list[ProductSchema]]):
+    """Список товаров."""
     pass
 
 
 class CartItemSchema(BaseModel):
+    """Позиция корзины."""
     product_id: uuid.UUID
     sku: str
     name: str
@@ -38,6 +43,7 @@ class CartItemSchema(BaseModel):
 
 
 class CartSchema(BaseModel):
+    """Корзина пользователя."""
     id: uuid.UUID
     items: list[CartItemSchema]
     total_amount: int
@@ -45,23 +51,28 @@ class CartSchema(BaseModel):
 
 
 class CartResponse(BaseResponseSchema[CartSchema]):
+    """Ответ операций с корзиной."""
     pass
 
 
 class AddCartItemRequest(BaseModel):
+    """Добавление позиции по SKU."""
     sku: str = Field(min_length=1, max_length=64)
     quantity: int = Field(default=1, ge=1, le=100)
 
 
 class UpdateCartItemRequest(BaseModel):
+    """Изменение количества."""
     quantity: int = Field(ge=1, le=100)
 
 
 class CheckoutRequest(BaseModel):
+    """Оформление заказа с опциональным промокодом."""
     promo_code: str | None = Field(default=None, max_length=20)
 
 
 class OrderItemSchema(BaseModel):
+    """Строка заказа."""
     product_id: uuid.UUID
     quantity: int
     unit_price: int
@@ -69,6 +80,7 @@ class OrderItemSchema(BaseModel):
 
 
 class OrderSchema(BaseModel):
+    """Заказ пользователя."""
     id: uuid.UUID
     status: str
     amount: int
@@ -82,6 +94,7 @@ class OrderSchema(BaseModel):
 
 
 class CheckoutResultSchema(BaseModel):
+    """Результат checkout с URL оплаты."""
     order_id: uuid.UUID
     confirmation_url: str | None = None
     amount: int
@@ -91,14 +104,17 @@ class CheckoutResultSchema(BaseModel):
 
 
 class CheckoutResponse(BaseResponseSchema[CheckoutResultSchema]):
+    """Ответ POST /cart/checkout."""
     pass
 
 
 class OrderResponse(BaseResponseSchema[OrderSchema]):
+    """Ответ с одним заказом."""
     pass
 
 
 class OrdersPageSchema(BaseModel):
+    """Страница заказов."""
     items: list[OrderSchema]
     total: int
     page: int
@@ -106,10 +122,12 @@ class OrdersPageSchema(BaseModel):
 
 
 class OrdersResponse(BaseResponseSchema[OrdersPageSchema]):
+    """Ответ GET /orders."""
     pass
 
 
 class PromoCodeSchema(BaseModel):
+    """Промокод."""
     id: uuid.UUID
     code: str
     discount_percent: int
@@ -122,6 +140,7 @@ class PromoCodeSchema(BaseModel):
 
 
 class CreatePromoCodeRequest(BaseModel):
+    """Создание промокода (админ)."""
     code: str = Field(min_length=4, max_length=20)
     discount_percent: int = Field(ge=5, le=100)
     expires_at: datetime
@@ -129,10 +148,12 @@ class CreatePromoCodeRequest(BaseModel):
 
 
 class SetPromoCodeActiveRequest(BaseModel):
+    """Включение/выключение промокода."""
     is_active: bool
 
 
 class PromoCodesPageSchema(BaseModel):
+    """Страница промокодов."""
     items: list[PromoCodeSchema]
     total: int
     page: int
@@ -140,14 +161,17 @@ class PromoCodesPageSchema(BaseModel):
 
 
 class PromoCodesResponse(BaseResponseSchema[PromoCodesPageSchema]):
+    """Список промокодов (админ)."""
     pass
 
 
 class PromoCodeResponse(BaseResponseSchema[PromoCodeSchema]):
+    """Ответ с одним промокодом."""
     pass
 
 
 class CreateProductRequest(BaseModel):
+    """Создание товара (админ)."""
     sku: str = Field(min_length=1, max_length=64)
     name: str = Field(min_length=1, max_length=128)
     description: str = Field(default="", max_length=2000)
@@ -169,6 +193,7 @@ class CreateProductRequest(BaseModel):
 
 
 class UpdateProductRequest(BaseModel):
+    """Обновление товара (админ)."""
     name: str | None = Field(default=None, min_length=1, max_length=128)
     description: str | None = Field(default=None, max_length=2000)
     unit_price: int | None = Field(default=None, ge=0)
@@ -187,10 +212,12 @@ class UpdateProductRequest(BaseModel):
 
 
 class ProductResponse(BaseResponseSchema[ProductSchema]):
+    """Ответ с одним товаром."""
     pass
 
 
 class BalanceSchema(BaseModel):
+    """Баланс кредитов по продукту."""
     product_id: uuid.UUID
     sku: str
     name: str
@@ -198,10 +225,12 @@ class BalanceSchema(BaseModel):
 
 
 class BalancesResponse(BaseResponseSchema[list[BalanceSchema]]):
+    """Список балансов."""
     pass
 
 
 class BalanceLogSchema(BaseModel):
+    """Запись журнала баланса."""
     id: uuid.UUID
     product_id: uuid.UUID
     sku: str
@@ -215,6 +244,7 @@ class BalanceLogSchema(BaseModel):
 
 
 class BalanceLogsPageSchema(BaseModel):
+    """Страница журнала баланса."""
     items: list[BalanceLogSchema]
     total: int
     page: int
@@ -222,12 +252,15 @@ class BalanceLogsPageSchema(BaseModel):
 
 
 class BalanceLogsResponse(BaseResponseSchema[BalanceLogsPageSchema]):
+    """Ответ GET /balance-logs."""
     pass
 
 
 class SyncPendingOrdersSchema(BaseModel):
+    """Число синхронизированных заказов."""
     synced: int
 
 
 class SyncPendingOrdersResponse(BaseResponseSchema[SyncPendingOrdersSchema]):
+    """Ответ POST /orders/sync."""
     pass

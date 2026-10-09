@@ -1,3 +1,5 @@
+"""Отложенная отправка Telegram-уведомлений по событиям бокса."""
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import StrEnum
@@ -7,6 +9,8 @@ from app.domain.entities.base import BaseEntity
 
 
 class NotificationJobStatus(StrEnum):
+    """Состояние задачи уведомления в очереди."""
+
     SCHEDULED = "scheduled"
     PROCESSING = "processing"
     SENT = "sent"
@@ -15,6 +19,8 @@ class NotificationJobStatus(StrEnum):
 
 
 class NotificationTemplate(StrEnum):
+    """Шаблон текста уведомления для конкретного события бокса."""
+
     GIFT_READY = "gift_ready"
     BOX_OPENED = "box_opened"
     BOX_PUBLISHED = "box_published"
@@ -23,7 +29,7 @@ class NotificationTemplate(StrEnum):
 
 
 def _retry_delay_minutes(attempt_count: int) -> int:
-    """Exponential backoff after failed attempts: 1, 2, 4, 8, 16, 30… minutes."""
+    """Экспоненциальная задержка повтора после сбоя: 1, 2, 4, 8, 16, 30… минут."""
     if attempt_count < 1:
         return 1
     return min(30, 2 ** (attempt_count - 1))
@@ -31,6 +37,8 @@ def _retry_delay_minutes(attempt_count: int) -> int:
 
 @dataclass(frozen=False, kw_only=True)
 class NotificationJob(BaseEntity):
+    """Задача отправки уведомления с расписанием, попытками и статусом."""
+
     box_id: uuid.UUID
     template: NotificationTemplate
     scheduled_at: datetime
@@ -49,6 +57,7 @@ class NotificationJob(BaseEntity):
         scheduled_at: datetime,
         status: NotificationJobStatus = NotificationJobStatus.SCHEDULED,
     ) -> "NotificationJob":
+        """Создаёт новую задачу с next_run_at, равным scheduled_at."""
         return cls(
             box_id=box_id,
             template=template,
@@ -58,18 +67,20 @@ class NotificationJob(BaseEntity):
         )
 
     def mark_processing(self) -> None:
+        """Помечает задачу как выполняющуюся, сбрасывает last_error."""
         self.status = NotificationJobStatus.PROCESSING
         self.last_error = None
         self._touch()
 
     def mark_sent(self, *, now: datetime | None = None) -> None:
+        """Фиксирует успешную отправку и время sent_at."""
         self.status = NotificationJobStatus.SENT
         self.sent_at = now or datetime.now(timezone.utc)
         self.last_error = None
         self._touch()
 
     def mark_failed(self, error: str) -> None:
-        """Terminal failure without further automatic retries."""
+        """Окончательный сбой без дальнейших автоматических повторов."""
         self.status = NotificationJobStatus.FAILED
         self.last_error = error[:1000]
         self._touch()
@@ -81,11 +92,11 @@ class NotificationJob(BaseEntity):
         max_attempts: int,
         now: datetime | None = None,
     ) -> bool:
-        """
-        Record a failed send attempt.
+        """Учитывает неудачную попытку отправки.
 
-        Returns True if the job was rescheduled for retry, False if it became
-        permanently failed (attempt_count reached max_attempts).
+        Returns:
+            True, если задача перепланирована на повтор; False, если исчерпан
+            лимит попыток и статус стал failed.
         """
         now = now or datetime.now(timezone.utc)
         attempts_limit = max(1, max_attempts)
@@ -105,13 +116,14 @@ class NotificationJob(BaseEntity):
         return False
 
     def cancel(self) -> None:
+        """Отменяет задачу; уже отправленные не меняются."""
         if self.status == NotificationJobStatus.SENT:
             return
         self.status = NotificationJobStatus.CANCELLED
         self._touch()
 
     def reschedule(self, scheduled_at: datetime) -> None:
-        """Reset to a new original plan (e.g. box activation time changed)."""
+        """Сбрасывает расписание и счётчик попыток (например, при смене activates_at)."""
         self.scheduled_at = scheduled_at
         self.next_run_at = scheduled_at
         self.status = NotificationJobStatus.SCHEDULED

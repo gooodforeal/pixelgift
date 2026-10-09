@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий боксов."""
 import uuid
 from datetime import datetime
 
@@ -19,6 +20,8 @@ from app.infrastructure.models.boxes import BoxModel
 
 
 class SqlAlchemyBoxesRepository(BaseBoxesRepository):
+    """SQLAlchemy-репозиторий коробок; items через selectinload; claim с SKIP LOCKED."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

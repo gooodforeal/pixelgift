@@ -1,3 +1,5 @@
+"""Публичный просмотр опубликованного бокса по slug."""
+
 import uuid
 
 from fastapi import APIRouter, Depends, Query, Response
@@ -29,6 +31,7 @@ async def get_public_box(
     unlock_token: str | None = Query(default=None),
     uc: GetPublicBoxUseCase = Depends(get_public_box_uc),
 ) -> PublicBoxResponse:
+    """GET /b/{public_slug} — данные бокса (контент по unlock_token)."""
     view = await uc.execute(public_slug=public_slug, unlock_token=unlock_token)
     return PublicBoxResponse(
         message="Success",
@@ -49,6 +52,7 @@ async def unlock_public_box(
     body: UnlockPublicBoxRequest,
     uc: UnlockPublicBoxUseCase = Depends(get_unlock_public_box_uc),
 ) -> UnlockPublicBoxResponse:
+    """POST /b/{public_slug}/unlock — проверка пароля и unlock_token."""
     view = await uc.execute(public_slug=public_slug, password=body.password)
     return UnlockPublicBoxResponse(
         message="Success",
@@ -70,6 +74,7 @@ async def get_public_box_item_content(
     unlock_token: str | None = Query(default=None),
     uc: GetPublicBoxItemContentUseCase = Depends(get_public_box_item_content_uc),
 ) -> Response:
+    """GET /b/{public_slug}/items/{item_id}/content — медиа элемента."""
     content = await uc.execute(
         public_slug=public_slug,
         item_id=item_id,

@@ -1,3 +1,5 @@
+"""Taskiq Depends: UoW, use case активации коробок и диспетчера уведомлений."""
+
 from taskiq_dependencies import Depends
 
 from app.application.services.notifications import NotificationService

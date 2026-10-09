@@ -1,3 +1,5 @@
+"""Контракт персистентности агрегата Box."""
+
 from abc import ABC, abstractmethod
 from datetime import datetime
 import uuid
@@ -8,7 +10,7 @@ from app.domain.values.public_slug import PublicSlug
 
 
 class BaseBoxesRepository(BaseRepository[Box], ABC):
-    """Repository for the Box aggregate (box root + nested items)."""
+    """Репозиторий агрегата Box (корень и вложенные items)."""
 
     @abstractmethod
     async def get_by_public_slug(self, public_slug: PublicSlug) -> Box | None: ...

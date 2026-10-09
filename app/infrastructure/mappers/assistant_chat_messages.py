@@ -1,3 +1,5 @@
+"""Маппинг AssistantChatMessage ↔ ORM."""
+
 from app.domain.entities.assistant_chat_messages import (
     AssistantChatMessage,
     AssistantMessageRole,

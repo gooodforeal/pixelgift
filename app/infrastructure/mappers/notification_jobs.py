@@ -1,3 +1,5 @@
+"""Маппинг NotificationJob ↔ NotificationJobModel."""
+
 from app.domain.entities.notification_jobs import (
     NotificationJob,
     NotificationJobStatus,

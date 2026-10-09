@@ -1,3 +1,5 @@
+"""Контракт персистентности скидок на товары."""
+
 from abc import ABC, abstractmethod
 import uuid
 
@@ -6,6 +8,8 @@ from app.domain.repository.base import BaseRepository
 
 
 class BaseProductSalesRepository(BaseRepository[ProductSale], ABC):
+    """Скидки по product_id, в том числе пакетная выборка активных."""
+
     @abstractmethod
     async def get_by_product_id(self, product_id: uuid.UUID) -> ProductSale | None: ...
 

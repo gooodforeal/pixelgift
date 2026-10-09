@@ -1,3 +1,5 @@
+"""Идентификатор пользователя Telegram как строка цифр."""
+
 from dataclasses import dataclass
 
 from app.domain.exceptions.users import (
@@ -10,6 +12,7 @@ from app.domain.values.base import BaseValueObject
 
 @dataclass(frozen=True)
 class TelegramId(BaseValueObject[str]):
+    """Положительное число длиной не более 20 символов."""
     def __post_init__(self):
         self.validate(self.value)
 

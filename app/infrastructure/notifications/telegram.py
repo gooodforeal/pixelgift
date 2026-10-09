@@ -1,3 +1,5 @@
+"""Уведомления через Telegram Bot API (httpx)."""
+
 import logging
 
 import httpx
@@ -9,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class TelegramBotNotifier(BaseTelegramNotifier):
+    """sendMessage и sendPhoto; без токена запросы пропускаются с warning."""
+
     def __init__(self, settings: Settings) -> None:
         self._token = settings.telegram_bot_token
 

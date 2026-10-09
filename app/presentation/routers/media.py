@@ -1,3 +1,5 @@
+"""Загрузка и выдача медиафайлов владельца."""
+
 import uuid
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
@@ -31,6 +33,7 @@ async def upload_media(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: UploadMediaUseCase = Depends(get_upload_media_uc),
 ) -> MediaFileResponse:
+    """POST /media — multipart загрузка файла."""
     data = await file.read()
     if not data:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Empty file")
@@ -61,6 +64,7 @@ async def get_media_content(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: GetOwnMediaContentUseCase = Depends(get_own_media_content_uc),
 ) -> Response:
+    """GET /media/{media_id}/content — байты файла для владельца."""
     content = await uc.execute(media_id=media_id, actor_id=user_id)
     return Response(
         content=content.data,

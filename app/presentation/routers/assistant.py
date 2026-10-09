@@ -1,3 +1,5 @@
+"""LLM-ассистент мастера создания бокса."""
+
 import uuid
 
 from fastapi import APIRouter, Depends, Query
@@ -35,6 +37,7 @@ async def get_box_editor_assistant_history(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: ListBoxAssistantHistoryUseCase = Depends(get_list_box_assistant_history_uc),
 ) -> BoxAssistantHistoryResponse:
+    """GET /assistant/box-editor/history — история диалога."""
     result = await uc.execute(
         ListBoxAssistantHistoryCommand(
             user_id=user_id,
@@ -60,6 +63,7 @@ async def chat_box_editor_assistant(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: ChatBoxAssistantUseCase = Depends(get_chat_box_assistant_uc),
 ) -> ChatBoxAssistantResponse:
+    """POST /assistant/box-editor — сообщение ассистенту."""
     form = None
     if body.form is not None:
         form = BoxEditorFormSnapshot(

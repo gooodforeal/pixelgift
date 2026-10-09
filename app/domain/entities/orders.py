@@ -1,3 +1,5 @@
+"""Заказ на оплату товаров через платёжного провайдера."""
+
 from dataclasses import dataclass, field
 from datetime import datetime, timezone as dt_timezone
 from enum import StrEnum
@@ -8,6 +10,8 @@ from app.domain.exceptions.commerce import OrderNotPayableError
 
 
 class OrderStatus(StrEnum):
+    """Статус оплаты заказа."""
+
     PENDING = "pending"
     SUCCEEDED = "succeeded"
     CANCELED = "canceled"
@@ -15,6 +19,8 @@ class OrderStatus(StrEnum):
 
 @dataclass(frozen=False, kw_only=True)
 class OrderItem(BaseEntity):
+    """Строка заказа с зафиксированными ценой и суммой на момент оформления."""
+
     order_id: uuid.UUID
     product_id: uuid.UUID
     quantity: int
@@ -24,6 +30,8 @@ class OrderItem(BaseEntity):
 
 @dataclass(frozen=False, kw_only=True)
 class Order(BaseEntity):
+    """Платёж пользователя с позициями, промокодом и идентификатором провайдера."""
+
     user_id: uuid.UUID
     status: OrderStatus
     amount: int
@@ -39,6 +47,7 @@ class Order(BaseEntity):
     items: list[OrderItem] = field(default_factory=list)
 
     def mark_succeeded(self, *, paid_at: datetime | None = None) -> None:
+        """Помечает pending-заказ оплаченным."""
         if self.status != OrderStatus.PENDING:
             raise OrderNotPayableError(self.id, self.status.value)
         self.status = OrderStatus.SUCCEEDED
@@ -46,6 +55,7 @@ class Order(BaseEntity):
         self._touch()
 
     def mark_canceled(self) -> None:
+        """Отменяет pending-заказ."""
         if self.status != OrderStatus.PENDING:
             raise OrderNotPayableError(self.id, self.status.value)
         self.status = OrderStatus.CANCELED

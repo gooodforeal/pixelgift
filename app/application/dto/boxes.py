@@ -1,3 +1,5 @@
+"""Команды изменения подарочного бокса в редакторе."""
+
 from dataclasses import dataclass, field
 from typing import Any
 import uuid
@@ -17,6 +19,8 @@ from app.domain.values.url import Url
 
 @dataclass(frozen=True, kw_only=True)
 class CreateBoxCommand:
+    """Создание черновика бокса; списывается один кредит «бокс»."""
+
     owner_id: uuid.UUID
     design_id: uuid.UUID
     title: BoxTitle
@@ -34,6 +38,8 @@ class CreateBoxCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class UpdateBoxCommand:
+    """Обновление полей бокса в статусе черновик/запланирован."""
+
     box_id: uuid.UUID
     actor_id: uuid.UUID
     design_id: uuid.UUID
@@ -50,6 +56,8 @@ class UpdateBoxCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class AddBoxItemCommand:
+    """Добавление карточки; тип задаётся ``item_type`` или выводится из медиа."""
+
     box_id: uuid.UUID
     actor_id: uuid.UUID
     media_file_id: uuid.UUID | None = None
@@ -61,6 +69,8 @@ class AddBoxItemCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class UpdateBoxItemCommand:
+    """Изменение подписи и metadata карточки."""
+
     box_id: uuid.UUID
     actor_id: uuid.UUID
     item_id: uuid.UUID
@@ -70,6 +80,8 @@ class UpdateBoxItemCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class RemoveBoxItemCommand:
+    """Удаление карточки из бокса."""
+
     box_id: uuid.UUID
     actor_id: uuid.UUID
     item_id: uuid.UUID
@@ -77,6 +89,8 @@ class RemoveBoxItemCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class ReorderBoxItemsCommand:
+    """Новый порядок карточек списком id."""
+
     box_id: uuid.UUID
     actor_id: uuid.UUID
     item_ids: tuple[uuid.UUID, ...]
@@ -84,17 +98,23 @@ class ReorderBoxItemsCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class PublishBoxCommand:
+    """Публикация бокса: ссылка становится доступна получателю."""
+
     box_id: uuid.UUID
     actor_id: uuid.UUID
 
 
 @dataclass(frozen=True, kw_only=True)
 class ArchiveBoxCommand:
+    """Архивация: публичная ссылка перестаёт открывать подарок."""
+
     box_id: uuid.UUID
     actor_id: uuid.UUID
 
 
 @dataclass(frozen=True, kw_only=True)
 class UnarchiveBoxCommand:
+    """Восстановление бокса из архива."""
+
     box_id: uuid.UUID
     actor_id: uuid.UUID

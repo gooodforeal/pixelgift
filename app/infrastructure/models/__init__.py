@@ -1,3 +1,5 @@
+"""Экспорт ORM-моделей и Base для Alembic/репозиториев."""
+
 from app.infrastructure.models.base import Base
 from app.infrastructure.models.assistant_chat_messages import AssistantChatMessageModel
 from app.infrastructure.models.assistant_chat_threads import AssistantChatThreadModel

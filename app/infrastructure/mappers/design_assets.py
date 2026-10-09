@@ -1,3 +1,5 @@
+"""Маппинг DesignAsset ↔ DesignAssetModel."""
+
 from app.domain.entities.design_assets import DesignAsset
 from app.infrastructure.models.design_assets import DesignAssetModel
 

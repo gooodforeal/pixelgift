@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий акций/скидок на товары."""
 import uuid
 
 from sqlalchemy import select
@@ -14,6 +15,8 @@ from app.infrastructure.models.product_sales import ProductSaleModel
 
 
 class SqlAlchemyProductSalesRepository(BaseProductSalesRepository):
+    """SQLAlchemy-репозиторий скидок на товары."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

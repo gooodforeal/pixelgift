@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий пользователей."""
 import uuid
 
 from sqlalchemy import select
@@ -10,6 +11,8 @@ from app.infrastructure.models.users import UserModel
 
 
 class SqlAlchemyUsersRepository(BaseUsersRepository):
+    """SQLAlchemy-репозиторий пользователей; поиск по telegram_id."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

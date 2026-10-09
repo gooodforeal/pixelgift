@@ -1,3 +1,5 @@
+"""Маппинг ProductSale ↔ ProductSaleModel."""
+
 from app.domain.entities.product_sales import ProductSale
 from app.infrastructure.models.product_sales import ProductSaleModel
 

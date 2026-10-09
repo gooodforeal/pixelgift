@@ -1,3 +1,5 @@
+"""HTTP(S) URL с обязательным хостом."""
+
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
@@ -14,6 +16,7 @@ _ALLOWED_SCHEMES = frozenset({"http", "https"})
 
 @dataclass(frozen=True)
 class Url(BaseValueObject[str]):
+    """Не пустой URL без краевых пробелов; допускаются только http и https."""
     def __post_init__(self) -> None:
         self.validate(self.value)
 

@@ -1,3 +1,4 @@
+"""ORM-модель рейтингов дизайнов."""
 import uuid
 
 from sqlalchemy import ForeignKey, Integer, UniqueConstraint, Uuid
@@ -7,6 +8,8 @@ from app.infrastructure.models.base import Base, TimestampMixin
 
 
 class DesignRatingModel(TimestampMixin, Base):
+    """Оценка дизайна (уникально на пару user/design)."""
+
     __tablename__ = "design_ratings"
     __table_args__ = (
         UniqueConstraint(

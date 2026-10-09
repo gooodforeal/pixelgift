@@ -1,3 +1,5 @@
+"""Справочник шагов визарда создания бокса для ассистента и UI."""
+
 from dataclasses import dataclass
 from typing import Literal
 
@@ -12,6 +14,8 @@ BoxWizardStepId = Literal[
 
 @dataclass(frozen=True, slots=True)
 class WizardStepInfo:
+    """Идентификатор шага, заголовок и краткое описание для пользователя."""
+
     id: BoxWizardStepId
     title: str
     description: str

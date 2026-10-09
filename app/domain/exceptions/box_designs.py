@@ -1,9 +1,12 @@
+"""Ошибки каталога дизайнов и ассетов."""
+
 import uuid
 
 from app.domain.exceptions.base import BaseException
 
 
 class BoxDesignNotFoundError(BaseException):
+    """Дизайн бокса не найден."""
     status_code = 404
 
     def __init__(self, design_id: uuid.UUID) -> None:
@@ -12,6 +15,7 @@ class BoxDesignNotFoundError(BaseException):
 
 
 class BoxDesignCodeConflictError(BaseException):
+    """Код дизайна уже занят."""
     status_code = 409
 
     def __init__(self, code: str) -> None:
@@ -20,6 +24,7 @@ class BoxDesignCodeConflictError(BaseException):
 
 
 class DesignAssetNotFoundError(BaseException):
+    """Ассет дизайна не найден."""
     status_code = 404
 
     def __init__(self, asset_id: uuid.UUID) -> None:
@@ -32,18 +37,21 @@ class BoxDesignNameError(BaseException):
 
 
 class BoxDesignNameSurroundingWhitespaceError(BoxDesignNameError):
+    """Имя дизайна содержит пробелы по краям."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box design name must not have surrounding whitespace")
 
 
 class BoxDesignNameEmptyError(BoxDesignNameError):
+    """Имя дизайна пустое."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box design name must not be empty")
 
 
 class BoxDesignNameTooLongError(BoxDesignNameError):
+    """Имя дизайна слишком длинное."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box design name is too long")
@@ -54,18 +62,21 @@ class BoxDesignDescriptionError(BaseException):
 
 
 class BoxDesignDescriptionSurroundingWhitespaceError(BoxDesignDescriptionError):
+    """Описание дизайна содержит пробелы по краям."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box design description must not have surrounding whitespace")
 
 
 class BoxDesignDescriptionEmptyError(BoxDesignDescriptionError):
+    """Описание дизайна пустое."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box design description must not be empty")
 
 
 class BoxDesignDescriptionTooLongError(BoxDesignDescriptionError):
+    """Описание дизайна слишком длинное."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box design description is too long")

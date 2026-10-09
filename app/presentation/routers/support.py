@@ -1,3 +1,5 @@
+"""Публичные обращения в поддержку."""
+
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 
 from app.application.dto.support import (
@@ -22,6 +24,7 @@ router = APIRouter(prefix="/support", tags=["support"])
 async def support_config(
     cfg: Settings = Depends(get_settings),
 ) -> SupportConfigResponse:
+    """GET /support/config — ссылка на Telegram поддержки."""
     return SupportConfigResponse(
         message="Success",
         result=SupportConfigSchema(telegram_url=cfg.support_telegram_url),
@@ -40,6 +43,7 @@ async def create_support_ticket(
     files: list[UploadFile] | None = File(default=None),
     uc: CreateSupportTicketUseCase = Depends(get_create_support_ticket_uc),
 ) -> SupportTicketResponse:
+    """POST /support — создание тикета с вложениями."""
     uploads: list[SupportAttachmentUpload] = []
     for upload in files or []:
         data = await upload.read()

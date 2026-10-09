@@ -1,3 +1,5 @@
+"""Маппинг Order/OrderItem ↔ ORM."""
+
 from app.domain.entities.orders import Order, OrderItem, OrderStatus
 from app.infrastructure.models.orders import OrderItemModel, OrderModel
 

@@ -1,8 +1,11 @@
+"""Ошибки пользователей и валидации Telegram ID."""
+
 from app.domain.exceptions.base import BaseException
 import uuid
 
 
 class UserNotFoundError(BaseException):
+    """Пользователь не найден."""
     status_code = 404
 
     def __init__(self, user_id: uuid.UUID | None = None) -> None:
@@ -15,18 +18,21 @@ class TelegramIdError(BaseException):
 
 
 class TelegramIdNotNumericError(TelegramIdError):
+    """Telegram ID должен быть числом."""
     def __init__(self, telegram_id: str) -> None:
         self.telegram_id = telegram_id
         super().__init__(f"Telegram ID {telegram_id!r} is not numeric")
 
 
 class TelegramIdNonPositiveError(TelegramIdError):
+    """Telegram ID должен быть положительным."""
     def __init__(self, telegram_id: str) -> None:
         self.telegram_id = telegram_id
         super().__init__(f"Telegram ID {telegram_id!r} must be positive")
 
 
 class TelegramIdTooLongError(TelegramIdError):
+    """Telegram ID слишком длинный."""
     def __init__(self, telegram_id: str) -> None:
         self.telegram_id = telegram_id
         super().__init__(f"Telegram ID {telegram_id!r} is too long")

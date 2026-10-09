@@ -1,3 +1,4 @@
+"""ORM-модель заказов."""
 import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -12,6 +13,8 @@ if TYPE_CHECKING:
 
 
 class OrderModel(TimestampMixin, Base):
+    """Заказ оплаты; суммы в копейках, связь с YooKassa."""
+
     __tablename__ = "orders"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -56,6 +59,8 @@ class OrderModel(TimestampMixin, Base):
 
 
 class OrderItemModel(TimestampMixin, Base):
+    """Строка заказа с зафиксированной unit_price."""
+
     __tablename__ = "order_items"
 
     id: Mapped[uuid.UUID] = mapped_column(

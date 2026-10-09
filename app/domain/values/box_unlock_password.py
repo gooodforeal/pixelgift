@@ -1,3 +1,5 @@
+"""Пароль для открытия бокса до активации (4–12 латинских букв или цифр)."""
+
 import re
 from dataclasses import dataclass
 
@@ -16,6 +18,7 @@ _PATTERN = re.compile(r"^[A-Za-z0-9]+$")
 
 @dataclass(frozen=True)
 class BoxUnlockPassword(BaseValueObject[str]):
+    """Не пустая строка фиксированной длины без пробелов по краям."""
     def __post_init__(self) -> None:
         self.validate(self.value)
 

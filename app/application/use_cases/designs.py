@@ -1,3 +1,5 @@
+"""Каталог тем оформления, рейтинги и загрузка ассетов дизайна."""
+
 from datetime import datetime, timezone
 from typing import Any
 import re
@@ -39,6 +41,7 @@ _ASSET_URL_RE = re.compile(
 
 
 def design_asset_id_from_url(url: str | None) -> uuid.UUID | None:
+    """Извлекает UUID ассета из URL вида ``/designs/assets/<id>``."""
     if not url:
         return None
     match = _ASSET_URL_RE.search(url)
@@ -62,6 +65,8 @@ async def _resolve_existing_asset_id(
 
 
 class ListBoxDesignsUseCase:
+    """Активные темы для визарда с рейтингом и оценкой текущего пользователя."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -107,6 +112,8 @@ class ListBoxDesignsUseCase:
 
 
 class RateDesignUseCase:
+    """Пользователь один раз оценивает тему звёздами."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -154,6 +161,8 @@ class RateDesignUseCase:
 
 
 class ListAllBoxDesignsUseCase:
+    """Полный список дизайнов для админки."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -163,6 +172,8 @@ class ListAllBoxDesignsUseCase:
 
 
 class GetBoxDesignUseCase:
+    """Возвращает одну тему по id."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -175,6 +186,8 @@ class GetBoxDesignUseCase:
 
 
 class CreateBoxDesignUseCase:
+    """Создаёт тему оформления с уникальным code."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -226,6 +239,8 @@ class CreateBoxDesignUseCase:
 
 
 class UpdateBoxDesignUseCase:
+    """Частичное обновление темы и привязка preview-ассетов по URL."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -286,6 +301,8 @@ class UpdateBoxDesignUseCase:
 
 
 class UploadDesignAssetUseCase:
+    """Загружает изображение ассета и возвращает публичный URL API."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -343,6 +360,8 @@ class UploadDesignAssetUseCase:
 
 
 class GetDesignAssetContentUseCase:
+    """Отдаёт байты ассета дизайна по id."""
+
     def __init__(self, uow: BaseUnitOfWork, storage: BaseObjectStorage) -> None:
         self._uow = uow
         self._storage = storage

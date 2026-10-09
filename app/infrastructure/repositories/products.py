@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий товаров."""
 import uuid
 
 from sqlalchemy import select
@@ -14,6 +15,8 @@ from app.infrastructure.models.products import ProductModel
 
 
 class SqlAlchemyProductsRepository(BaseProductsRepository):
+    """SQLAlchemy-репозиторий товаров; list_active и batch list_by_ids."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

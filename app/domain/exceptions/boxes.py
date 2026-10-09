@@ -1,3 +1,5 @@
+"""Ошибки боксов, slug, пароля открытия и связанных value object."""
+
 from datetime import datetime
 import uuid
 
@@ -9,12 +11,14 @@ class PublicSlugError(BaseException):
 
 
 class PublicSlugSurroundingWhitespaceError(PublicSlugError):
+    """Public slug содержит пробелы по краям."""
     def __init__(self, slug: str) -> None:
         self.slug = slug
         super().__init__(f"Public slug must not have surrounding whitespace: {slug!r}")
 
 
 class PublicSlugFormatError(PublicSlugError):
+    """Неверный формат public slug."""
     def __init__(self, slug: str) -> None:
         self.slug = slug
         super().__init__(f"Public slug {slug!r} has invalid format")
@@ -25,18 +29,21 @@ class BoxTitleError(BaseException):
 
 
 class BoxTitleSurroundingWhitespaceError(BoxTitleError):
+    """Заголовок бокса содержит пробелы по краям."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box title must not have surrounding whitespace")
 
 
 class BoxTitleEmptyError(BoxTitleError):
+    """Заголовок бокса пустой."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box title must not be empty")
 
 
 class BoxTitleTooLongError(BoxTitleError):
+    """Заголовок бокса слишком длинный."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box title is too long")
@@ -47,18 +54,21 @@ class BoxRecipientNameError(BaseException):
 
 
 class BoxRecipientNameSurroundingWhitespaceError(BoxRecipientNameError):
+    """Имя получателя содержит пробелы по краям."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Recipient name must not have surrounding whitespace")
 
 
 class BoxRecipientNameEmptyError(BoxRecipientNameError):
+    """Имя получателя пустое."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Recipient name must not be empty")
 
 
 class BoxRecipientNameTooLongError(BoxRecipientNameError):
+    """Имя получателя слишком длинное."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Recipient name is too long")
@@ -69,12 +79,14 @@ class BoxRecipientEmailError(BaseException):
 
 
 class BoxRecipientEmailSurroundingWhitespaceError(BoxRecipientEmailError):
+    """Email получателя содержит пробелы по краям."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Recipient email must not have surrounding whitespace")
 
 
 class BoxRecipientEmailInvalidError(BoxRecipientEmailError):
+    """Некорректный email получателя."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__(f"Recipient email is invalid: {value!r}")
@@ -85,18 +97,21 @@ class BoxPreviewTitleError(BaseException):
 
 
 class BoxPreviewTitleSurroundingWhitespaceError(BoxPreviewTitleError):
+    """Превью-заголовок содержит пробелы по краям."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Preview title must not have surrounding whitespace")
 
 
 class BoxPreviewTitleEmptyError(BoxPreviewTitleError):
+    """Превью-заголовок пустой."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Preview title must not be empty")
 
 
 class BoxPreviewTitleTooLongError(BoxPreviewTitleError):
+    """Превью-заголовок слишком длинный."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Preview title is too long")
@@ -107,18 +122,21 @@ class BoxMessageError(BaseException):
 
 
 class BoxMessageSurroundingWhitespaceError(BoxMessageError):
+    """Сообщение бокса содержит пробелы по краям."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box message must not have surrounding whitespace")
 
 
 class BoxMessageEmptyError(BoxMessageError):
+    """Сообщение бокса пустое."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box message must not be empty")
 
 
 class BoxMessageTooLongError(BoxMessageError):
+    """Сообщение бокса слишком длинное."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Box message is too long")
@@ -129,6 +147,7 @@ class BoxActivatesAtError(BaseException):
 
 
 class BoxActivatesAtNotInFutureError(BoxActivatesAtError):
+    """Дата активации бокса должна быть в будущем."""
     def __init__(self, activates_at: datetime) -> None:
         self.activates_at = activates_at
         super().__init__("Box activation time must be in the future")
@@ -139,12 +158,14 @@ class BoxItemAggregateError(BaseException):
 
 
 class BoxItemDuplicateSortOrderError(BoxItemAggregateError):
+    """Дублирующийся sort_order у элементов бокса."""
     def __init__(self, sort_order: int) -> None:
         self.sort_order = sort_order
         super().__init__(f"Box already has an item with sort_order={sort_order}")
 
 
 class BoxItemsLimitExceededError(BoxItemAggregateError):
+    """Превышен лимит элементов в боксе."""
     status_code = 409
 
     def __init__(self, limit: int) -> None:
@@ -153,6 +174,7 @@ class BoxItemsLimitExceededError(BoxItemAggregateError):
 
 
 class BoxItemNotFoundError(BoxItemAggregateError):
+    """Элемент бокса не найден."""
     status_code = 404
 
     def __init__(self, item_id: uuid.UUID) -> None:
@@ -161,6 +183,7 @@ class BoxItemNotFoundError(BoxItemAggregateError):
 
 
 class BoxItemReorderError(BoxItemAggregateError):
+    """BoxItemReorder: доменная ошибка."""
     def __init__(self) -> None:
         super().__init__(
             "Reorder must include each existing item id exactly once"
@@ -168,6 +191,7 @@ class BoxItemReorderError(BoxItemAggregateError):
 
 
 class BoxNotFoundError(BaseException):
+    """Бокс не найден."""
     status_code = 404
 
     def __init__(self, box_id: uuid.UUID) -> None:
@@ -176,6 +200,7 @@ class BoxNotFoundError(BaseException):
 
 
 class BoxNotFoundBySlugError(BaseException):
+    """Бокс с таким slug не найден."""
     status_code = 404
 
     def __init__(self, public_slug: str) -> None:
@@ -184,6 +209,7 @@ class BoxNotFoundBySlugError(BaseException):
 
 
 class BoxAccessDeniedError(BaseException):
+    """Нет доступа к боксу."""
     status_code = 403
 
     def __init__(self, box_id: uuid.UUID, actor_id: uuid.UUID) -> None:
@@ -193,6 +219,7 @@ class BoxAccessDeniedError(BaseException):
 
 
 class BoxNotEditableError(BaseException):
+    """Бокс нельзя редактировать в текущем состоянии."""
     status_code = 409
 
     def __init__(self, box_id: uuid.UUID, status: str) -> None:
@@ -202,6 +229,7 @@ class BoxNotEditableError(BaseException):
 
 
 class PublicSlugAlreadyTakenError(PublicSlugError):
+    """Public slug уже занят."""
     status_code = 409
 
     def __init__(self, slug: str) -> None:
@@ -210,6 +238,7 @@ class PublicSlugAlreadyTakenError(PublicSlugError):
 
 
 class BoxNotPublishableError(BaseException):
+    """Бокс нельзя опубликовать."""
     status_code = 409
 
     def __init__(self, box_id: uuid.UUID, status: str) -> None:
@@ -219,6 +248,7 @@ class BoxNotPublishableError(BaseException):
 
 
 class BoxCertificateNotAvailableError(BaseException):
+    """Сертификат для бокса недоступен."""
     status_code = 409
 
     def __init__(self, box_id: uuid.UUID, status: str) -> None:
@@ -231,12 +261,14 @@ class BoxCertificateNotAvailableError(BaseException):
 
 
 class BoxWithoutItemsError(BaseException):
+    """У бокса нет элементов."""
     def __init__(self, box_id: uuid.UUID) -> None:
         self.box_id = box_id
         super().__init__(f"Box {box_id} has no items and cannot be published")
 
 
 class BoxAlreadyArchivedError(BaseException):
+    """Бокс уже в архиве."""
     status_code = 409
 
     def __init__(self, box_id: uuid.UUID) -> None:
@@ -245,6 +277,7 @@ class BoxAlreadyArchivedError(BaseException):
 
 
 class BoxNotArchivedError(BaseException):
+    """Бокс не находится в архиве."""
     status_code = 409
 
     def __init__(self, box_id: uuid.UUID) -> None:
@@ -253,6 +286,7 @@ class BoxNotArchivedError(BaseException):
 
 
 class BoxAlreadyOpenedError(BaseException):
+    """Бокс уже открыт."""
     status_code = 409
 
     def __init__(self, box_id: uuid.UUID) -> None:
@@ -263,6 +297,7 @@ class BoxAlreadyOpenedError(BaseException):
 
 
 class BoxContentLockedError(BaseException):
+    """Содержимое бокса заблокировано."""
     status_code = 403
 
     def __init__(self, public_slug: str) -> None:
@@ -275,24 +310,28 @@ class BoxUnlockPasswordError(BaseException):
 
 
 class BoxUnlockPasswordEmptyError(BoxUnlockPasswordError):
+    """Пароль разблокировки пустой."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Unlock password must not be empty")
 
 
 class BoxUnlockPasswordTooShortError(BoxUnlockPasswordError):
+    """Пароль разблокировки слишком короткий."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Unlock password is too short")
 
 
 class BoxUnlockPasswordTooLongError(BoxUnlockPasswordError):
+    """Пароль разблокировки слишком длинный."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__("Unlock password is too long")
 
 
 class BoxUnlockPasswordFormatError(BoxUnlockPasswordError):
+    """Неверный формат пароля разблокировки."""
     def __init__(self, value: str) -> None:
         self.value = value
         super().__init__(
@@ -301,6 +340,7 @@ class BoxUnlockPasswordFormatError(BoxUnlockPasswordError):
 
 
 class BoxUnlockPasswordIncorrectError(BaseException):
+    """Неверный пароль разблокировки."""
     status_code = 403
 
     def __init__(self, public_slug: str) -> None:
@@ -309,6 +349,7 @@ class BoxUnlockPasswordIncorrectError(BaseException):
 
 
 class BoxUnlockNotYetAvailableError(BaseException):
+    """Разблокировка бокса ещё недоступна."""
     status_code = 403
 
     def __init__(self, public_slug: str) -> None:
@@ -319,6 +360,7 @@ class BoxUnlockNotYetAvailableError(BaseException):
 
 
 class BoxDesignNotAvailableError(BaseException):
+    """Выбранный дизайн бокса недоступен."""
     def __init__(self, design_id: uuid.UUID) -> None:
         self.design_id = design_id
         super().__init__(f"Box design is not available: {design_id}")

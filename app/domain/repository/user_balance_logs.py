@@ -1,3 +1,5 @@
+"""Контракт персистентности журнала баланса."""
+
 from abc import ABC, abstractmethod
 import uuid
 
@@ -6,6 +8,8 @@ from app.domain.repository.base import BaseRepository
 
 
 class BaseUserBalanceLogsRepository(BaseRepository[UserBalanceLog], ABC):
+    """Идемпотентный поиск по reason/reference и история пользователя."""
+
     @abstractmethod
     async def get_by_reason_reference(
         self,

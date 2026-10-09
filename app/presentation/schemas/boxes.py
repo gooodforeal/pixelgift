@@ -1,3 +1,5 @@
+"""Схемы боксов, элементов, медиа и публичного просмотра."""
+
 from datetime import datetime
 from typing import Any, Literal, Self
 import uuid
@@ -8,6 +10,7 @@ from app.presentation.schemas.base import BaseResponseSchema
 
 
 class BoxItemSchema(BaseModel):
+    """Элемент (момент) внутри бокса."""
     id: uuid.UUID
     media_file_id: uuid.UUID | None = None
     item_type: str
@@ -17,6 +20,7 @@ class BoxItemSchema(BaseModel):
 
 
 class BoxSchema(BaseModel):
+    """Полный бокс владельца."""
     id: uuid.UUID
     owner_id: uuid.UUID
     design_id: uuid.UUID
@@ -37,10 +41,12 @@ class BoxSchema(BaseModel):
 
 
 class BoxResponse(BaseResponseSchema[BoxSchema]):
+    """Ответ с одним боксом."""
     pass
 
 
 class PaginatedBoxesSchema(BaseModel):
+    """Страница боксов со счётчиками статусов."""
     items: list[BoxSchema]
     total: int
     page: int
@@ -49,10 +55,12 @@ class PaginatedBoxesSchema(BaseModel):
 
 
 class PaginatedBoxesResponse(BaseResponseSchema[PaginatedBoxesSchema]):
+    """Ответ GET /boxes."""
     pass
 
 
 class CreateBoxRequest(BaseModel):
+    """Тело создания бокса."""
     design_id: uuid.UUID
     title: str = Field(max_length=30)
     recipient_name: str = Field(max_length=30)
@@ -68,6 +76,7 @@ class CreateBoxRequest(BaseModel):
 
 
 class UpdateBoxRequest(BaseModel):
+    """Тело обновления бокса."""
     design_id: uuid.UUID
     title: str = Field(max_length=30)
     recipient_name: str = Field(max_length=30)
@@ -81,6 +90,7 @@ class UpdateBoxRequest(BaseModel):
 
 
 class AddBoxItemRequest(BaseModel):
+    """Добавление элемента в бокс."""
     media_file_id: uuid.UUID | None = None
     item_type: (
         Literal["text", "toy", "geopoint", "question", "drawing", "circle"] | None
@@ -136,15 +146,18 @@ class AddBoxItemRequest(BaseModel):
 
 
 class UpdateBoxItemRequest(BaseModel):
+    """Обновление элемента бокса."""
     caption: str | None = Field(default=None, max_length=300)
     metadata: dict[str, Any] | None = None
 
 
 class ReorderBoxItemsRequest(BaseModel):
+    """Новый порядок id элементов."""
     item_ids: list[uuid.UUID]
 
 
 class MediaFileSchema(BaseModel):
+    """Загруженный медиафайл пользователя."""
     id: uuid.UUID
     owner_id: uuid.UUID
     storage_key: str
@@ -155,10 +168,12 @@ class MediaFileSchema(BaseModel):
 
 
 class MediaFileResponse(BaseResponseSchema[MediaFileSchema]):
+    """Ответ загрузки медиа."""
     pass
 
 
 class PublicBoxSchema(BaseModel):
+    """Публичное представление бокса."""
     public_slug: str
     title: str
     recipient_name: str
@@ -176,23 +191,28 @@ class PublicBoxSchema(BaseModel):
 
 
 class PublicBoxResponse(BaseResponseSchema[PublicBoxSchema]):
+    """Ответ GET /b/{slug}."""
     pass
 
 
 class UnlockPublicBoxRequest(BaseModel):
+    """Пароль для разблокировки."""
     password: str = Field(min_length=1, max_length=12)
 
 
 class UnlockPublicBoxSchema(BaseModel):
+    """Unlock-токен и обновлённый бокс."""
     unlock_token: str | None = None
     box: PublicBoxSchema
 
 
 class UnlockPublicBoxResponse(BaseResponseSchema[UnlockPublicBoxSchema]):
+    """Ответ POST /b/{slug}/unlock."""
     pass
 
 
 class OpenedThisMonthStatsSchema(BaseModel):
+    """Статистика открытий за текущий месяц."""
     count: int
     period_start: datetime
     period_end: datetime
@@ -200,4 +220,5 @@ class OpenedThisMonthStatsSchema(BaseModel):
 
 
 class OpenedThisMonthStatsResponse(BaseResponseSchema[OpenedThisMonthStatsSchema]):
+    """Ответ GET /boxes/opens."""
     pass

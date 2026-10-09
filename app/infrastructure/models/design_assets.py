@@ -1,3 +1,4 @@
+"""ORM-модель ассетов дизайнов."""
 import uuid
 
 from sqlalchemy import BigInteger, String, Text, Uuid
@@ -7,6 +8,8 @@ from app.infrastructure.models.base import Base, CreatedAtMixin
 
 
 class DesignAssetModel(CreatedAtMixin, Base):
+    """Метаданные файла дизайна в object storage."""
+
     __tablename__ = "design_assets"
 
     id: Mapped[uuid.UUID] = mapped_column(

@@ -1,3 +1,5 @@
+"""Пользователь приложения, идентифицируемый через Telegram."""
+
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -8,6 +10,8 @@ from app.domain.values.url import Url
 
 @dataclass(frozen=False, kw_only=True)
 class User(BaseEntity):
+    """Профиль Telegram-пользователя, права и настройки уведомлений."""
+
     telegram_id: TelegramId
     first_name: str
     username: str | None = None

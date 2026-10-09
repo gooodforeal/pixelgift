@@ -1,3 +1,4 @@
+"""ORM-модель challenge Telegram-логина."""
 import uuid
 from datetime import datetime
 
@@ -8,6 +9,8 @@ from app.infrastructure.models.base import Base, CreatedAtMixin
 
 
 class TelegramLoginChallengeModel(CreatedAtMixin, Base):
+    """Одноразовый код входа через Telegram-бота."""
+
     __tablename__ = "telegram_login_challenges"
     __table_args__ = (
         Index("ix_telegram_login_challenges_status_expires_at", "status", "expires_at"),

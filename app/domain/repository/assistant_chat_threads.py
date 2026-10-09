@@ -1,3 +1,5 @@
+"""Контракт персистентности тредов ассистента."""
+
 from abc import ABC, abstractmethod
 import uuid
 
@@ -5,6 +7,8 @@ from app.domain.entities.assistant_chat_threads import AssistantChatThread
 
 
 class BaseAssistantChatThreadsRepository(ABC):
+    """Треды по id/box_id и привязка незанятого треда к боксу."""
+
     @abstractmethod
     async def add(self, entity: AssistantChatThread) -> None: ...
 
@@ -22,4 +26,4 @@ class BaseAssistantChatThreadsRepository(ABC):
         user_id: uuid.UUID,
         box_id: uuid.UUID,
     ) -> AssistantChatThread | None:
-        """Attach an unbound thread to a box. Returns updated thread or None."""
+        """Привязывает свободный тред к боксу; None, если тред не найден или занят."""

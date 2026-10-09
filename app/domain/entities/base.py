@@ -1,3 +1,5 @@
+"""Базовая сущность домена с идентификатором и метками времени."""
+
 from dataclasses import dataclass, field
 from abc import ABC
 import uuid
@@ -10,6 +12,7 @@ def _utc_now() -> datetime:
 
 @dataclass(frozen=False)
 class BaseEntity(ABC):
+    """Общие поля сущности: UUID и UTC-временные метки создания и обновления."""
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     created_at: datetime = field(default_factory=_utc_now)
     updated_at: datetime = field(default_factory=_utc_now)

@@ -1,3 +1,4 @@
+"""ORM-модель задач уведомлений."""
 import uuid
 from datetime import datetime
 
@@ -17,6 +18,8 @@ from app.infrastructure.models.base import Base, TimestampMixin
 
 
 class NotificationJobModel(TimestampMixin, Base):
+    """Отложенная отправка уведомления по коробке и шаблону."""
+
     __tablename__ = "notification_jobs"
     __table_args__ = (
         UniqueConstraint(

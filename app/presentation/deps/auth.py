@@ -1,3 +1,5 @@
+"""Зависимости аутентификации и use case'ов входа через Telegram."""
+
 from __future__ import annotations
 
 import uuid
@@ -25,6 +27,7 @@ _bearer = HTTPBearer(auto_error=False)
 def get_start_telegram_login_uc(
     cfg: Settings = Depends(get_settings),
 ) -> StartTelegramLoginUseCase:
+    """Use case старта Telegram-логина (код и ссылка на бота)."""
     return StartTelegramLoginUseCase(SqlAlchemyUnitOfWork(), cfg)
 
 
@@ -32,6 +35,7 @@ def get_poll_telegram_login_uc(
     jwt_service: JwtService = Depends(get_jwt_service),
     cfg: Settings = Depends(get_settings),
 ) -> PollTelegramLoginStatusUseCase:
+    """Use case опроса статуса логина и выдачи токенов."""
     return PollTelegramLoginStatusUseCase(SqlAlchemyUnitOfWork(), jwt_service, cfg)
 
 
@@ -39,14 +43,17 @@ def get_refresh_access_token_uc(
     jwt_service: JwtService = Depends(get_jwt_service),
     cfg: Settings = Depends(get_settings),
 ) -> RefreshAccessTokenUseCase:
+    """Use case обновления access-токена по refresh-cookie."""
     return RefreshAccessTokenUseCase(SqlAlchemyUnitOfWork(), jwt_service, cfg)
 
 
 def get_logout_uc() -> LogoutUseCase:
+    """Use case выхода и отзыва refresh-сессии."""
     return LogoutUseCase(SqlAlchemyUnitOfWork())
 
 
 def get_update_current_user_settings_uc() -> UpdateCurrentUserSettingsUseCase:
+    """Use case обновления настроек текущего пользователя."""
     return UpdateCurrentUserSettingsUseCase(SqlAlchemyUnitOfWork())
 
 
@@ -54,6 +61,7 @@ def get_complete_telegram_login_uc(
     storage: S3ObjectStorage = Depends(get_storage),
     cfg: Settings = Depends(get_settings),
 ) -> CompleteTelegramLoginUseCase:
+    """Use case завершения логина из webhook бота (сохранение аватара в S3)."""
     return CompleteTelegramLoginUseCase(
         SqlAlchemyUnitOfWork(),
         storage,
@@ -62,6 +70,7 @@ def get_complete_telegram_login_uc(
 
 
 def _decode_user_id(jwt_service: JwtService, raw_token: str | None) -> uuid.UUID:
+    """Извлекает user_id из access JWT или бросает 401."""
     if not raw_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -83,6 +92,7 @@ async def get_current_user_id(
     jwt_service: JwtService = Depends(get_jwt_service),
     cfg: Settings = Depends(get_settings),
 ) -> uuid.UUID:
+    """Требует авторизацию: Bearer или access-cookie, возвращает UUID пользователя."""
     raw: str | None = None
     if credentials is not None and credentials.scheme.lower() == "bearer":
         raw = credentials.credentials
@@ -97,6 +107,7 @@ async def get_optional_current_user_id(
     jwt_service: JwtService = Depends(get_jwt_service),
     cfg: Settings = Depends(get_settings),
 ) -> uuid.UUID | None:
+    """Как get_current_user_id, но без ошибки при отсутствии или невалидном токене."""
     raw: str | None = None
     if credentials is not None and credentials.scheme.lower() == "bearer":
         raw = credentials.credentials
@@ -114,6 +125,7 @@ async def verify_bot_api_secret(
     x_bot_api_secret: str | None = Header(default=None),
     cfg: Settings = Depends(get_settings),
 ) -> None:
+    """Проверяет заголовок X-Bot-Api-Secret для webhook бота."""
     expected = cfg.bot_api_secret
     if not expected or x_bot_api_secret != expected:
         raise HTTPException(

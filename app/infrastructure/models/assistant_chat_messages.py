@@ -1,3 +1,4 @@
+"""ORM-модель сообщений чата ассистента."""
 import uuid
 from datetime import datetime
 
@@ -8,6 +9,8 @@ from app.infrastructure.models.base import Base
 
 
 class AssistantChatMessageModel(Base):
+    """Сообщение в треде ассистента; soft-hide через hidden_at."""
+
     __tablename__ = "assistant_chat_messages"
     __table_args__ = (
         Index(

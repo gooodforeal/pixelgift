@@ -1,3 +1,5 @@
+"""Заголовок подарочного бокса (до 30 символов)."""
+
 from dataclasses import dataclass
 
 from app.domain.exceptions.boxes import (
@@ -12,6 +14,7 @@ MAX_LENGTH = 30
 
 @dataclass(frozen=True)
 class BoxTitle(BaseValueObject[str]):
+    """Не пустой заголовок без краевых пробелов и с лимитом длины."""
     def __post_init__(self) -> None:
         self.validate(self.value)
 

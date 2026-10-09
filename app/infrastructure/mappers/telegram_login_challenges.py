@@ -1,3 +1,5 @@
+"""Маппинг TelegramLoginChallenge ↔ ORM."""
+
 from app.domain.entities.telegram_login_challenges import (
     LoginChallengeStatus,
     TelegramLoginChallenge,

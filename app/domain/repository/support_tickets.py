@@ -1,3 +1,5 @@
+"""Контракт персистентности тикетов поддержки."""
+
 from abc import ABC, abstractmethod
 import uuid
 
@@ -5,6 +7,8 @@ from app.domain.entities.support_tickets import SupportTicket, SupportTicketStat
 
 
 class BaseSupportTicketsRepository(ABC):
+    """CRUD тикетов с фильтром по статусу и постраничным списком."""
+
     @abstractmethod
     async def add(self, entity: SupportTicket) -> None: ...
 

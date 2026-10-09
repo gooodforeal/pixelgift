@@ -1,3 +1,5 @@
+"""Обращение в поддержку и вложения к нему."""
+
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import StrEnum
@@ -7,6 +9,8 @@ from app.domain.entities.base import BaseEntity
 
 
 class SupportTicketStatus(StrEnum):
+    """Этап обработки тикета поддержки."""
+
     NEW = "new"
     IN_PROGRESS = "in_progress"
     RESOLVED = "resolved"
@@ -15,6 +19,8 @@ class SupportTicketStatus(StrEnum):
 
 @dataclass(frozen=False, kw_only=True)
 class SupportTicketAttachment(BaseEntity):
+    """Файл, приложенный к тикету поддержки."""
+
     ticket_id: uuid.UUID
     storage_key: str
     mime_type: str
@@ -24,6 +30,8 @@ class SupportTicketAttachment(BaseEntity):
 
 @dataclass(frozen=False, kw_only=True)
 class SupportTicket(BaseEntity):
+    """Заявка пользователя с контактом, темой, описанием и статусом."""
+
     contact: str
     subject: str
     description: str
@@ -31,5 +39,6 @@ class SupportTicket(BaseEntity):
     attachments: list[SupportTicketAttachment] = field(default_factory=list)
 
     def set_status(self, status: SupportTicketStatus) -> None:
+        """Меняет статус и обновляет updated_at."""
         self.status = status
         self.updated_at = datetime.now(timezone.utc)

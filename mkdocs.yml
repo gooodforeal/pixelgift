@@ -32,6 +32,7 @@ plugins:
             show_source: true
             show_root_heading: true
             show_root_full_path: false
+            show_if_no_docstring: true
             members_order: source
             merge_init_into_class: true
             filters:

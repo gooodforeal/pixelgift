@@ -1,3 +1,5 @@
+"""Каталожный дизайн оформления подарочного бокса."""
+
 from dataclasses import dataclass, field
 from typing import Any
 import uuid
@@ -15,6 +17,8 @@ def _default_sort_order() -> SortOrder:
 
 @dataclass(frozen=False, kw_only=True)
 class BoxDesign(BaseEntity):
+    """Шаблон темы с превью, конфигом и флагом доступности в каталоге."""
+
     code: str
     name: BoxDesignName
     preview_image_url: Url

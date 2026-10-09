@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий медиафайлов."""
 import uuid
 
 from sqlalchemy import select
@@ -14,6 +15,8 @@ from app.infrastructure.models.media_files import MediaFileModel
 
 
 class SqlAlchemyMediaFilesRepository(BaseMediaFilesRepository):
+    """SQLAlchemy-репозиторий медиафайлов пользователя."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

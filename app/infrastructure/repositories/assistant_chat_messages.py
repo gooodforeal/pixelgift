@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий сообщений чата ассистента."""
 import uuid
 from datetime import datetime, timezone
 
@@ -16,6 +17,8 @@ from app.infrastructure.models.assistant_chat_messages import AssistantChatMessa
 
 
 class SqlAlchemyAssistantChatMessagesRepository(BaseAssistantChatMessagesRepository):
+    """SQLAlchemy-репозиторий сообщений; hide_oldest_beyond выставляет hidden_at."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

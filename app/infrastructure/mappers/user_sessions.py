@@ -1,3 +1,5 @@
+"""Маппинг UserSession ↔ UserSessionModel."""
+
 from app.domain.entities.user_sessions import UserSession
 from app.infrastructure.models.user_sessions import UserSessionModel
 

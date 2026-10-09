@@ -1,3 +1,5 @@
+"""Положительный порядковый номер элемента в списке."""
+
 from dataclasses import dataclass
 
 from app.domain.exceptions.sort_order import (
@@ -9,6 +11,7 @@ from app.domain.values.base import BaseValueObject
 
 @dataclass(frozen=True)
 class SortOrder(BaseValueObject[int]):
+    """Целое число > 0 для сортировки элементов или дизайнов."""
     def __post_init__(self) -> None:
         self.validate(self.value)
 

@@ -1,3 +1,4 @@
+"""ORM-модель боксов."""
 import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -12,6 +13,8 @@ if TYPE_CHECKING:
 
 
 class BoxModel(TimestampMixin, Base):
+    """Подарочная коробка: slug, расписание активации, статус и items."""
+
     __tablename__ = "boxes"
     __table_args__ = (
         Index("ix_boxes_owner_id_created_at", "owner_id", "created_at"),

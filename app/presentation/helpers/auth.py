@@ -1,3 +1,5 @@
+"""Вспомогательные функции для JWT-cookie аутентификации."""
+
 from datetime import timedelta
 
 from fastapi import Response
@@ -6,6 +8,7 @@ from app.settings import Settings
 
 
 def set_access_cookie(response: Response, token: str, settings: Settings) -> None:
+    """Устанавливает HttpOnly cookie с access-токеном."""
     response.set_cookie(
         key=settings.access_cookie_name,
         value=token,
@@ -18,6 +21,7 @@ def set_access_cookie(response: Response, token: str, settings: Settings) -> Non
 
 
 def set_refresh_cookie(response: Response, token: str, settings: Settings) -> None:
+    """Устанавливает HttpOnly cookie с refresh-токеном."""
     response.set_cookie(
         key=settings.refresh_cookie_name,
         value=token,
@@ -32,6 +36,7 @@ def set_refresh_cookie(response: Response, token: str, settings: Settings) -> No
 
 
 def clear_access_cookie(response: Response, settings: Settings) -> None:
+    """Удаляет cookie access-токена."""
     response.delete_cookie(
         key=settings.access_cookie_name,
         path="/",
@@ -42,6 +47,7 @@ def clear_access_cookie(response: Response, settings: Settings) -> None:
 
 
 def clear_refresh_cookie(response: Response, settings: Settings) -> None:
+    """Удаляет cookie refresh-токена."""
     response.delete_cookie(
         key=settings.refresh_cookie_name,
         path="/",
@@ -52,5 +58,6 @@ def clear_refresh_cookie(response: Response, settings: Settings) -> None:
 
 
 def clear_auth_cookies(response: Response, settings: Settings) -> None:
+    """Удаляет обе auth-cookie."""
     clear_access_cookie(response, settings)
     clear_refresh_cookie(response, settings)

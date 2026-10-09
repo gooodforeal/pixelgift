@@ -1,3 +1,5 @@
+"""Момент активации бокса (должен быть в будущем при создании)."""
+
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -13,12 +15,13 @@ def _to_utc(value: datetime) -> datetime:
 
 @dataclass(frozen=True)
 class ActivatesAt(BaseValueObject[datetime]):
+    """UTC-datetime открытия подарка для получателя."""
     def __post_init__(self) -> None:
         self.validate(self.value)
 
     @classmethod
     def reconstitute(cls, value: datetime) -> "ActivatesAt":
-        """Build from persistence without the 'must be in the future' rule."""
+        """Сборка из БД без проверки «должно быть в будущем»."""
         instance = object.__new__(cls)
         object.__setattr__(instance, "value", value)
         return instance

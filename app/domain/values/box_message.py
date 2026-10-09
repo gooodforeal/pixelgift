@@ -1,3 +1,5 @@
+"""Личное сообщение получателю в боксе (до 300 символов)."""
+
 from dataclasses import dataclass
 
 from app.domain.exceptions.boxes import (
@@ -12,6 +14,7 @@ MAX_LENGTH = 300
 
 @dataclass(frozen=True)
 class BoxMessage(BaseValueObject[str]):
+    """Не пустой текст без краевых пробелов и с лимитом длины."""
     def __post_init__(self) -> None:
         self.validate(self.value)
 

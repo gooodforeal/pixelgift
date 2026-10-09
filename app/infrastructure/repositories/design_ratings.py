@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий рейтингов дизайнов."""
 import uuid
 
 from sqlalchemy import func, select
@@ -17,6 +18,8 @@ from app.infrastructure.models.design_ratings import DesignRatingModel
 
 
 class SqlAlchemyDesignRatingsRepository(BaseDesignRatingsRepository):
+    """SQLAlchemy-репозиторий оценок; агрегаты avg/count по design_id."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

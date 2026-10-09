@@ -1,3 +1,4 @@
+"""ORM-модель товаров."""
 import uuid
 from typing import TYPE_CHECKING
 
@@ -15,6 +16,8 @@ if TYPE_CHECKING:
 
 
 class ProductModel(TimestampMixin, Base):
+    """Товар витрины; цены в минорных единицах (копейки)."""
+
     __tablename__ = "products"
 
     id: Mapped[uuid.UUID] = mapped_column(

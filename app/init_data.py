@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seed design preview assets into MinIO + design_assets / box_designs."""
+"""Сид превью дизайнов: загрузка в MinIO и связка с box_designs / design_assets."""
 from __future__ import annotations
 
 import mimetypes
@@ -32,6 +32,7 @@ DESIGN_COVERS: dict[str, dict[str, str]] = {
 
 
 def _env(name: str, default: str | None = None) -> str:
+    """Читает обязательную переменную окружения или завершает процесс."""
     value = os.environ.get(name, default)
     if value is None or value == "":
         raise SystemExit(f"Missing required env var: {name}")
@@ -39,6 +40,7 @@ def _env(name: str, default: str | None = None) -> str:
 
 
 def _load_dotenv() -> None:
+    """Подгружает первый найденный `.env` в os.environ (setdefault)."""
     for env_path in (ROOT / "app" / ".env", ROOT / "docker" / "app" / ".env"):
         if not env_path.is_file():
             continue
@@ -54,11 +56,13 @@ def _load_dotenv() -> None:
 
 
 def _content_type(path: Path) -> str:
+    """Определяет MIME-тип файла по имени."""
     guessed, _ = mimetypes.guess_type(path.name)
     return guessed or "application/octet-stream"
 
 
 def _database_url() -> str:
+    """URL PostgreSQL для psycopg (без asyncpg-драйвера)."""
     return (
         _env(
             "DATABASE_URL",
@@ -70,14 +74,17 @@ def _database_url() -> str:
 
 
 def _api_base_url() -> str:
+    """Базовый URL API для публичных ссылок на ассеты."""
     return _env("API_BASE_URL", "http://localhost:8080/api").rstrip("/")
 
 
 def _design_asset_id(code: str, variant: str = "dark") -> uuid.UUID:
+    """Стабильный UUID ассета превью по коду дизайна и варианту темы."""
     return uuid.uuid5(_SEED_NAMESPACE, f"design-preview-v2:{variant}:{code}")
 
 
 def _object_matches(client: BaseClient, bucket: str, key: str, path: Path) -> bool:
+    """True, если объект в S3 существует и совпадает по размеру с локальным файлом."""
     try:
         head = client.head_object(Bucket=bucket, Key=key)
     except ClientError as exc:
@@ -89,6 +96,7 @@ def _object_matches(client: BaseClient, bucket: str, key: str, path: Path) -> bo
 
 
 def _ensure_bucket(client: BaseClient, bucket: str, *, attempts: int = 60) -> None:
+    """Ждёт доступности бакета MinIO или создаёт его."""
     last_error: Exception | None = None
     for attempt in range(attempts):
         try:
@@ -141,7 +149,7 @@ def _ensure_object(
     key: str,
     path: Path,
 ) -> str:
-    """Upload if missing/changed. Returns 'put' or 'skip'."""
+    """Загружает объект, если его нет или размер изменился; возвращает put или skip."""
     if _object_matches(client, bucket, key, path):
         print(f"  skip  {key}", flush=True)
         return "skip"
@@ -164,6 +172,7 @@ def _upsert_design_asset(
     path: Path,
     asset_id: uuid.UUID,
 ) -> str:
+    """Upsert строки design_assets и загрузка файла в S3."""
     extension = path.suffix.lower()
     storage_key = f"designs/{asset_id}{extension}"
     mime = _content_type(path)
@@ -196,6 +205,7 @@ def _upsert_design_asset(
 
 
 def _seed_designs(client: BaseClient, bucket: str) -> tuple[int, int]:
+    """Загружает превью и обновляет preview URL в box_designs."""
     designs_dir = ASSETS_ROOT / "designs"
     if not designs_dir.is_dir():
         raise SystemExit(f"Seed directory not found: {designs_dir}")
@@ -268,6 +278,7 @@ def _seed_designs(client: BaseClient, bucket: str) -> tuple[int, int]:
 
 
 def main() -> int:
+    """Точка входа CLI: бакет MinIO и сид превью дизайнов."""
     _load_dotenv()
     endpoint = _env("MINIO_ENDPOINT", "http://localhost:9000")
     access_key = _env("MINIO_ACCESS_KEY", "minioadmin")

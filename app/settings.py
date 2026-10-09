@@ -1,3 +1,5 @@
+"""Конфигурация приложения из переменных окружения и `.env`."""
+
 from pathlib import Path
 from typing import Literal
 
@@ -8,6 +10,7 @@ _ENV_FILE = Path(__file__).resolve().parent / ".env"
 
 
 class Settings(BaseSettings):
+    """Параметры API, интеграций и инфраструктуры Pixelgift."""
     model_config = SettingsConfigDict(env_file=_ENV_FILE, extra="ignore")
 
     database_url: str = (
@@ -80,6 +83,7 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> list[str]:
+        """Список разрешённых CORS origins из строки `cors_origins`."""
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 

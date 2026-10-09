@@ -1,3 +1,5 @@
+"""Админ-API управления дизайнами и загрузкой ассетов."""
+
 from typing import Any
 import uuid
 
@@ -35,6 +37,7 @@ router = APIRouter(prefix="/admin/designs", tags=["admin-designs"])
 
 
 def _theme_config_dict(value: BaseModel | dict[str, Any]) -> dict[str, Any]:
+    """Приводит theme_config к dict для use case."""
     if isinstance(value, BaseModel):
         return value.model_dump(exclude_none=False)
     return dict(value)
@@ -45,6 +48,7 @@ async def list_all_designs(
     _: User = Depends(require_admin),
     uc: ListAllBoxDesignsUseCase = Depends(get_list_all_designs_uc),
 ) -> AdminBoxDesignListResponse:
+    """GET /admin/designs — все дизайны."""
     designs = await uc.execute()
     return AdminBoxDesignListResponse(
         message="Success",
@@ -62,6 +66,7 @@ async def upload_design_asset(
     _: User = Depends(require_admin),
     uc: UploadDesignAssetUseCase = Depends(get_upload_design_asset_uc),
 ) -> DesignAssetUploadResponse:
+    """POST /admin/designs/upload — загрузка файла в S3."""
     data = await file.read()
     if not data:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Empty file")
@@ -94,6 +99,7 @@ async def create_design(
     _: User = Depends(require_admin),
     uc: CreateBoxDesignUseCase = Depends(get_create_design_uc),
 ) -> AdminBoxDesignResponse:
+    """POST /admin/designs — создание дизайна."""
     design = await uc.execute(
         code=body.code,
         name=body.name,
@@ -114,6 +120,7 @@ async def get_design(
     _: User = Depends(require_admin),
     uc: GetBoxDesignUseCase = Depends(get_get_design_uc),
 ) -> AdminBoxDesignResponse:
+    """GET /admin/designs/{design_id} — один дизайн."""
     design = await uc.execute(design_id=design_id)
     return AdminBoxDesignResponse(
         message="Success", result=admin_box_design_to_response(design)
@@ -127,6 +134,7 @@ async def update_design(
     _: User = Depends(require_admin),
     uc: UpdateBoxDesignUseCase = Depends(get_update_design_uc),
 ) -> AdminBoxDesignResponse:
+    """PUT /admin/designs/{design_id} — полное обновление."""
     design = await uc.execute(
         design_id=design_id,
         code=body.code,
@@ -149,6 +157,7 @@ async def patch_design(
     _: User = Depends(require_admin),
     uc: UpdateBoxDesignUseCase = Depends(get_update_design_uc),
 ) -> AdminBoxDesignResponse:
+    """PATCH /admin/designs/{design_id} — частичное обновление."""
     payload = body.model_dump(exclude_unset=True)
     theme_config = payload.pop("theme_config", None)
     if theme_config is not None and body.theme_config is not None:

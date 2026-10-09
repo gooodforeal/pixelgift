@@ -1,3 +1,5 @@
+"""Загрузка медиа в storage и отдача владельцу для редактора."""
+
 from datetime import datetime, timezone
 import uuid
 
@@ -95,7 +97,14 @@ def resolve_media_kind(
     *,
     preferred_kind: MediaKind | None = None,
 ) -> tuple[MediaKind, str]:
-    """Return (media_kind, normalized_mime_type)."""
+    """Определяет тип медиа и нормализованный MIME по заголовку и имени файла.
+
+    Returns:
+        Пара (media_kind, normalized_mime_type).
+
+    Raises:
+        UnsupportedMediaTypeError: Тип не поддерживается или конфликтует с preferred_kind.
+    """
     mime = _normalize_mime(content_type)
     kind_from_mime = _MIME_TO_KIND.get(mime) if mime else None
     ext = _file_extension(original_filename)
@@ -154,6 +163,8 @@ def _file_extension(filename: str | None) -> str:
 
 
 class UploadMediaUseCase:
+    """Сохраняет файл пользователя в storage и регистрирует ``MediaFile``."""
+
     def __init__(self, uow: BaseUnitOfWork, storage: BaseObjectStorage) -> None:
         self._uow = uow
         self._storage = storage
@@ -196,7 +207,7 @@ class UploadMediaUseCase:
 
 
 class GetOwnMediaContentUseCase:
-    """Streams a media file back to its owner (used for editor previews)."""
+    """Отдаёт байты медиа только владельцу (превью в редакторе)."""
 
     def __init__(self, uow: BaseUnitOfWork, storage: BaseObjectStorage) -> None:
         self._uow = uow

@@ -1,3 +1,4 @@
+"""ORM-модель дизайнов боксов."""
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, Uuid
@@ -8,6 +9,8 @@ from app.infrastructure.models.base import Base, TimestampMixin
 
 
 class BoxDesignModel(TimestampMixin, Base):
+    """Каталог тем оформления коробки и preview-ассеты."""
+
     __tablename__ = "box_designs"
 
     id: Mapped[uuid.UUID] = mapped_column(

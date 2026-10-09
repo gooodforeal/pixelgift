@@ -1,3 +1,5 @@
+"""Команды use case'ов магазина: корзина, заказы, товары, промокоды."""
+
 from dataclasses import dataclass
 from datetime import datetime
 import uuid
@@ -5,6 +7,8 @@ import uuid
 
 @dataclass(frozen=True, kw_only=True)
 class AddCartItemCommand:
+    """Добавление позиции в корзину по SKU."""
+
     actor_id: uuid.UUID
     sku: str
     quantity: int
@@ -12,6 +16,8 @@ class AddCartItemCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class UpdateCartItemCommand:
+    """Изменение количества товара в корзине."""
+
     actor_id: uuid.UUID
     product_id: uuid.UUID
     quantity: int
@@ -19,18 +25,24 @@ class UpdateCartItemCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class RemoveCartItemCommand:
+    """Удаление позиции из корзины."""
+
     actor_id: uuid.UUID
     product_id: uuid.UUID
 
 
 @dataclass(frozen=True, kw_only=True)
 class CheckoutCartCommand:
+    """Оформление заказа из текущей корзины."""
+
     actor_id: uuid.UUID
     promo_code: str | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
 class CreatePromoCodeCommand:
+    """Создание промокода (админ)."""
+
     actor_id: uuid.UUID
     code: str
     discount_percent: int
@@ -40,6 +52,8 @@ class CreatePromoCodeCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class SetPromoCodeActiveCommand:
+    """Включение или отключение промокода."""
+
     actor_id: uuid.UUID
     promo_id: uuid.UUID
     is_active: bool
@@ -47,6 +61,8 @@ class SetPromoCodeActiveCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class CreateProductCommand:
+    """Создание товара каталога."""
+
     actor_id: uuid.UUID
     sku: str
     name: str
@@ -61,6 +77,8 @@ class CreateProductCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class UpdateProductCommand:
+    """Частичное обновление товара; ``update_sale`` управляет блоком скидки."""
+
     actor_id: uuid.UUID
     product_id: uuid.UUID
     name: str | None = None
@@ -74,12 +92,16 @@ class UpdateProductCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class GetOrderCommand:
+    """Запрос одного заказа владельцем."""
+
     actor_id: uuid.UUID
     order_id: uuid.UUID
 
 
 @dataclass(frozen=True, kw_only=True)
 class ListBalanceLogsCommand:
+    """Постраничный журнал операций с балансом пользователя."""
+
     actor_id: uuid.UUID
     page: int = 1
     page_size: int = 20
@@ -87,6 +109,8 @@ class ListBalanceLogsCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class ListOrdersCommand:
+    """Постраничный список заказов пользователя."""
+
     actor_id: uuid.UUID
     page: int = 1
     page_size: int = 20
@@ -94,11 +118,15 @@ class ListOrdersCommand:
 
 @dataclass(frozen=True, kw_only=True)
 class ListPromoCodesCommand:
+    """Постраничный список всех промокодов."""
+
     page: int = 1
     page_size: int = 10
 
 
 @dataclass(frozen=True, kw_only=True)
 class HandleYookassaWebhookCommand:
+    """Тело webhook YooKassa: тип события и объект payment."""
+
     event: str
     object_payload: dict

@@ -1,3 +1,5 @@
+"""Агрегат подарочного бокса: корень, элементы и переходы жизненного цикла."""
+
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timezone as dt_timezone
@@ -38,6 +40,8 @@ MAX_BOX_ITEMS = 12
 
 
 class BoxStatus(StrEnum):
+    """Статус бокса в жизненном цикле от черновика до архива."""
+
     DRAFT = "draft"
     SCHEDULED = "scheduled"
     ACTIVE = "active"
@@ -47,6 +51,8 @@ class BoxStatus(StrEnum):
 
 @dataclass(frozen=False, kw_only=True)
 class Box(BaseEntity):
+    """Подарочный бокс владельца с содержимым, настройками открытия и публикации."""
+
     owner_id: uuid.UUID
     design_id: uuid.UUID
     public_slug: PublicSlug
@@ -73,6 +79,7 @@ class Box(BaseEntity):
         caption: BoxItemCaption | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> BoxItem:
+        """Добавляет элемент с проверкой типа, лимита и уникальности sort_order."""
         if item_type == BoxItemType.TEXT:
             if media_file_id is not None:
                 raise BoxItemInvalidError("Text item must not reference a media file")
@@ -134,6 +141,7 @@ class Box(BaseEntity):
         return item
 
     def remove_item(self, item_id: uuid.UUID) -> None:
+        """Удаляет элемент по id и перенумеровывает sort_order."""
         for index, item in enumerate(self.items):
             if item.id == item_id:
                 del self.items[index]
@@ -149,6 +157,7 @@ class Box(BaseEntity):
         caption: BoxItemCaption | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> BoxItem:
+        """Обновляет подпись и/или metadata существующего элемента."""
         for item in self.items:
             if item.id == item_id:
                 item.caption = caption
@@ -159,6 +168,7 @@ class Box(BaseEntity):
         raise BoxItemNotFoundError(item_id)
 
     def reorder_items(self, item_ids: Sequence[uuid.UUID]) -> None:
+        """Задаёт порядок элементов списком id (каждый id ровно один раз)."""
         current_ids = {item.id for item in self.items}
         if len(item_ids) != len(self.items) or set(item_ids) != current_ids:
             raise BoxItemReorderError()
@@ -186,6 +196,7 @@ class Box(BaseEntity):
         preview_title: BoxPreviewTitle | None = None,
         preview_image_url: Url | None = None,
     ) -> None:
+        """Обновляет оформление, получателя, активацию и опциональные поля превью."""
         self.design_id = design_id
         self.title = title
         self.recipient_name = recipient_name
@@ -199,6 +210,7 @@ class Box(BaseEntity):
         self._touch()
 
     def publish(self, *, now: datetime | None = None) -> None:
+        """Переводит черновик в scheduled, если есть хотя бы один элемент."""
         if self.status != BoxStatus.DRAFT:
             raise BoxNotPublishableError(self.id, self.status.value)
         if not self.items:
@@ -209,6 +221,7 @@ class Box(BaseEntity):
         self._touch()
 
     def activate_if_due(self, *, now: datetime | None = None) -> bool:
+        """Активирует scheduled-бокс, если наступило время activates_at."""
         moment = now or datetime.now(dt_timezone.utc)
         if self.status != BoxStatus.SCHEDULED:
             return False
@@ -219,6 +232,7 @@ class Box(BaseEntity):
         return True
 
     def mark_opened(self, *, now: datetime | None = None) -> bool:
+        """Фиксирует первое открытие получателем; повторный вызов не меняет состояние."""
         moment = now or datetime.now(dt_timezone.utc)
         if self.first_opened_at is not None:
             return False
@@ -232,6 +246,7 @@ class Box(BaseEntity):
         return True
 
     def archive(self) -> None:
+        """Переводит бокс в статус archived."""
         if self.status == BoxStatus.ARCHIVED:
             raise BoxAlreadyArchivedError(self.id)
 
@@ -239,6 +254,7 @@ class Box(BaseEntity):
         self._touch()
 
     def unarchive(self, *, now: datetime | None = None) -> None:
+        """Восстанавливает статус draft, scheduled или active в зависимости от публикации и даты."""
         if self.status != BoxStatus.ARCHIVED:
             raise BoxNotArchivedError(self.id)
         if self.first_opened_at is not None:

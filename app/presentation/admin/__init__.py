@@ -1,3 +1,5 @@
+"""Подключение SQLAdmin к FastAPI-приложению."""
+
 from fastapi import FastAPI
 from sqladmin import Admin, I18nConfig
 
@@ -7,6 +9,7 @@ from app.presentation.admin.views import ADMIN_VIEWS
 
 
 def setup_admin(app: FastAPI) -> Admin:
+    """Регистрирует панель `/admin` с аутентификацией и представлениями моделей."""
     admin = Admin(
         app,
         engine=get_engine(),

@@ -1,3 +1,5 @@
+"""Загруженный медиафайл пользователя в хранилище."""
+
 from dataclasses import dataclass
 from enum import StrEnum
 import uuid
@@ -6,6 +8,8 @@ from app.domain.entities.base import BaseEntity
 
 
 class MediaKind(StrEnum):
+    """Категория медиа для валидации и отображения."""
+
     IMAGE = "image"
     GIF = "gif"
     VIDEO = "video"
@@ -14,6 +18,8 @@ class MediaKind(StrEnum):
 
 @dataclass(frozen=False, kw_only=True)
 class MediaFile(BaseEntity):
+    """Метаданные файла в object storage, принадлежащего пользователю."""
+
     owner_id: uuid.UUID
     storage_key: str
     mime_type: str

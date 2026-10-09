@@ -1,3 +1,5 @@
+"""Обращения в поддержку: создание с вложениями и админские операции."""
+
 from dataclasses import dataclass
 from pathlib import Path
 import uuid
@@ -56,6 +58,8 @@ def _validate_text_fields(*, contact: str, subject: str, description: str) -> tu
 
 
 class CreateSupportTicketUseCase:
+    """Принимает обращение, валидирует текст и загружает изображения в storage."""
+
     def __init__(self, uow: BaseUnitOfWork, storage: BaseObjectStorage) -> None:
         self._uow = uow
         self._storage = storage
@@ -125,6 +129,8 @@ class CreateSupportTicketUseCase:
 
 @dataclass(frozen=True, kw_only=True)
 class SupportTicketsPage:
+    """Постраничный список тикетов для админки."""
+
     items: list[SupportTicket]
     total: int
     page: int
@@ -132,6 +138,8 @@ class SupportTicketsPage:
 
 
 class ListSupportTicketsUseCase:
+    """Фильтруемый список тикетов поддержки."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -161,6 +169,8 @@ class ListSupportTicketsUseCase:
 
 
 class GetSupportTicketUseCase:
+    """Возвращает тикет с вложениями по id."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -173,6 +183,8 @@ class GetSupportTicketUseCase:
 
 
 class UpdateSupportTicketStatusUseCase:
+    """Меняет статус обработки тикета."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -190,6 +202,8 @@ class UpdateSupportTicketStatusUseCase:
 
 
 class GetSupportTicketAttachmentContentUseCase:
+    """Скачивает вложение тикета из storage для просмотра админом."""
+
     def __init__(self, uow: BaseUnitOfWork, storage: BaseObjectStorage) -> None:
         self._uow = uow
         self._storage = storage

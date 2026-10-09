@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий challenge Telegram-логина."""
 import uuid
 
 from sqlalchemy import select
@@ -20,6 +21,8 @@ from app.infrastructure.models.telegram_login_challenges import (
 class SqlAlchemyTelegramLoginChallengesRepository(
     BaseTelegramLoginChallengesRepository
 ):
+    """SQLAlchemy-репозиторий challenge входа; get_by_code с опциональным FOR UPDATE."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

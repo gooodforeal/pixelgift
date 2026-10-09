@@ -1,3 +1,5 @@
+"""Отправка HTML-писем через aiosmtplib."""
+
 from email.message import EmailMessage
 
 import aiosmtplib
@@ -7,6 +9,8 @@ from app.settings import Settings
 
 
 class SmtpEmailSender(BaseEmailSender):
+    """Поддержка implicit TLS (465) и STARTTLS (587) по настройкам."""
+
     def __init__(self, settings: Settings) -> None:
         self._host = settings.smtp_host
         self._port = settings.smtp_port

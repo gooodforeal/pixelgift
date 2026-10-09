@@ -1,3 +1,5 @@
+"""Преобразование сущностей поддержки в API-схемы."""
+
 from app.domain.entities.support_tickets import SupportTicket, SupportTicketAttachment
 from app.presentation.schemas.support import (
     SupportTicketAttachmentSchema,
@@ -8,6 +10,7 @@ from app.presentation.schemas.support import (
 def support_attachment_to_response(
     item: SupportTicketAttachment,
 ) -> SupportTicketAttachmentSchema:
+    """Маппинг вложения тикета в схему ответа."""
     return SupportTicketAttachmentSchema(
         id=item.id,
         mime_type=item.mime_type,
@@ -17,6 +20,7 @@ def support_attachment_to_response(
 
 
 def support_ticket_to_response(ticket: SupportTicket) -> SupportTicketSchema:
+    """Маппинг тикета поддержки в схему ответа."""
     return SupportTicketSchema(
         id=ticket.id,
         contact=ticket.contact,

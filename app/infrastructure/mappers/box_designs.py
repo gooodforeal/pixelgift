@@ -1,3 +1,5 @@
+"""Маппинг BoxDesign ↔ BoxDesignModel."""
+
 from app.domain.entities.box_designs import BoxDesign
 from app.domain.values.box_design_description import BoxDesignDescription
 from app.domain.values.box_design_name import BoxDesignName

@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий заказов."""
 import uuid
 
 from sqlalchemy import func, select
@@ -11,6 +12,8 @@ from app.infrastructure.models.orders import OrderModel
 
 
 class SqlAlchemyOrdersRepository(BaseOrdersRepository):
+    """SQLAlchemy-репозиторий заказов; items eager-load; поиск по payment/idempotency."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

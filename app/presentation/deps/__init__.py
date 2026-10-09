@@ -1,4 +1,4 @@
-"""FastAPI dependencies, split by entity."""
+"""Реэкспорт FastAPI-зависимостей по доменным модулям."""
 
 from app.presentation.deps.assistant import (
     get_chat_box_assistant_uc,

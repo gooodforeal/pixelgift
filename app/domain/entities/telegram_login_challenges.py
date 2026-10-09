@@ -1,3 +1,5 @@
+"""Одноразовый код входа через Telegram-бота."""
+
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -8,6 +10,8 @@ from app.domain.values.telegram_id import TelegramId
 
 
 class LoginChallengeStatus(StrEnum):
+    """Жизненный цикл challenge от выдачи кода до использования или истечения."""
+
     PENDING = "pending"
     COMPLETED = "completed"
     CONSUMED = "consumed"
@@ -16,6 +20,8 @@ class LoginChallengeStatus(StrEnum):
 
 @dataclass(frozen=False, kw_only=True)
 class TelegramLoginChallenge(BaseEntity):
+    """Challenge с кодом, сроком действия и привязкой к пользователю после подтверждения."""
+
     code: str
     status: LoginChallengeStatus
     expires_at: datetime

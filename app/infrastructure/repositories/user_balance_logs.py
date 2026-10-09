@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий логов баланса."""
 import uuid
 
 from sqlalchemy import func, select
@@ -13,6 +14,8 @@ from app.infrastructure.models.user_balance_logs import UserBalanceLogModel
 
 
 class SqlAlchemyUserBalanceLogsRepository(BaseUserBalanceLogsRepository):
+    """SQLAlchemy-репозиторий журнала баланса; update не поддерживается (append-only)."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

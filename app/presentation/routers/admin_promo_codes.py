@@ -1,3 +1,5 @@
+"""Админ-API промокодов."""
+
 from fastapi import APIRouter, Depends, Query, status
 import uuid
 
@@ -37,6 +39,7 @@ async def list_promo_codes(
     page_size: int = Query(10, ge=1, le=100),
     uc: ListPromoCodesUseCase = Depends(get_list_promo_codes_uc),
 ) -> PromoCodesResponse:
+    """GET /admin/promo-codes — список промокодов."""
     result = await uc.execute(
         ListPromoCodesCommand(page=page, page_size=page_size)
     )
@@ -74,6 +77,7 @@ async def create_promo_code(
     admin: User = Depends(require_admin),
     uc: CreatePromoCodeUseCase = Depends(get_create_promo_code_uc),
 ) -> PromoCodeResponse:
+    """POST /admin/promo-codes — создание промокода."""
     promo = await uc.execute(
         CreatePromoCodeCommand(
             actor_id=admin.id,
@@ -106,6 +110,7 @@ async def set_promo_code_active(
     admin: User = Depends(require_admin),
     uc: SetPromoCodeActiveUseCase = Depends(get_set_promo_code_active_uc),
 ) -> PromoCodeResponse:
+    """PATCH /admin/promo-codes/{promo_id} — активность промокода."""
     promo = await uc.execute(
         SetPromoCodeActiveCommand(
             actor_id=admin.id,

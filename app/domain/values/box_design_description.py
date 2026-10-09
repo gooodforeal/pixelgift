@@ -1,3 +1,5 @@
+"""Краткое описание дизайна бокса (до 40 символов)."""
+
 from dataclasses import dataclass
 
 from app.domain.exceptions.box_designs import (
@@ -12,6 +14,7 @@ MAX_LENGTH = 40
 
 @dataclass(frozen=True)
 class BoxDesignDescription(BaseValueObject[str]):
+    """Не пустая строка без краевых пробелов и с лимитом длины."""
     def __post_init__(self) -> None:
         self.validate(self.value)
 

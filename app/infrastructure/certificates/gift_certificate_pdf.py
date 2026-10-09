@@ -1,3 +1,5 @@
+"""Генерация PDF подарочного сертификата (ReportLab + QR)."""
+
 from io import BytesIO
 from functools import lru_cache
 from pathlib import Path
@@ -214,6 +216,8 @@ def _render_brand_wordmark(*, pixel_rgb: tuple[int, int, int]) -> ImageReader:
 
 
 class ReportLabGiftCertificateRenderer(BaseGiftCertificateRenderer):
+    """Рендер A4 с темой light/dark, брендом Pixelgift и QR на gift_url."""
+
     def render(self, data: GiftCertificateData) -> bytes:
         font, font_bold = _register_fonts()
         pal = _palette(data.theme)

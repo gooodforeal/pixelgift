@@ -1,3 +1,5 @@
+"""Экспорт SQLAlchemy-реализаций доменных репозиториев."""
+
 from app.infrastructure.repositories.assistant_chat_messages import (
     SqlAlchemyAssistantChatMessagesRepository,
 )

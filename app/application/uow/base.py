@@ -1,3 +1,5 @@
+"""Абстракция unit of work для use case'ов application-слоя."""
+
 from abc import ABC, abstractmethod
 from types import TracebackType
 from typing import Self
@@ -30,6 +32,34 @@ from app.domain.repository.users import BaseUsersRepository
 
 
 class BaseUnitOfWork(ABC):
+    """Контракт единицы работы: один транзакционный контекст и репозитории домена.
+
+    Реализация (адаптер инфраструктуры) открывает сессию БД, прокидывает репозитории
+    в атрибуты и фиксирует или откатывает изменения через ``commit`` / ``rollback``.
+    При выходе из ``async with`` при исключении вызывается ``rollback``.
+
+    Attributes:
+        users: Пользователи и профили.
+        boxes: Подарочные боксы.
+        box_designs: Темы оформления боксов.
+        design_assets: Медиа-активы для дизайнов.
+        design_ratings: Оценки дизайнов.
+        media_files: Загруженные медиафайлы пользователей.
+        notification_jobs: Отложенные задачи уведомлений.
+        support_tickets: Обращения в поддержку.
+        assistant_chat_threads: Потоки чата ассистента.
+        assistant_chat_messages: Сообщения ассистента.
+        telegram_login_challenges: Челленджи входа через Telegram.
+        user_sessions: Сессии с refresh-токенами.
+        products: Товары магазина.
+        product_sales: Скидки на товары.
+        promo_codes: Промокоды.
+        carts: Корзины.
+        orders: Заказы.
+        user_balances: Балансы кредитов по товарам.
+        user_balance_logs: Журнал операций с балансом.
+    """
+
     users: BaseUsersRepository
     boxes: BaseBoxesRepository
     box_designs: BaseBoxDesignsRepository
@@ -63,7 +93,9 @@ class BaseUnitOfWork(ABC):
             await self.rollback()
 
     @abstractmethod
-    async def commit(self) -> None: ...
+    async def commit(self) -> None:
+        """Сохраняет накопленные изменения в хранилище."""
 
     @abstractmethod
-    async def rollback(self) -> None: ...
+    async def rollback(self) -> None:
+        """Отменяет незафиксированные изменения в текущей транзакции."""

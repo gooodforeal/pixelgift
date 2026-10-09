@@ -1,3 +1,5 @@
+"""Точка входа FastAPI: сборка приложения, middleware, роутеры и админка."""
+
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 

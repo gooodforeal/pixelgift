@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий дизайнов боксов."""
 import uuid
 
 from sqlalchemy import select
@@ -14,6 +15,8 @@ from app.infrastructure.models.box_designs import BoxDesignModel
 
 
 class SqlAlchemyBoxDesignsRepository(BaseBoxDesignsRepository):
+    """SQLAlchemy-репозиторий тем коробок; list_active по sort_order."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

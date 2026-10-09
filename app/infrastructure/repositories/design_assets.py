@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий ассетов дизайнов."""
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +14,8 @@ from app.infrastructure.models.design_assets import DesignAssetModel
 
 
 class SqlAlchemyDesignAssetsRepository(BaseDesignAssetsRepository):
+    """SQLAlchemy-репозиторий метаданных design-ассетов."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

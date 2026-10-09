@@ -1,3 +1,5 @@
+"""Порт рендеринга PDF подарочного сертификата."""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Literal
@@ -8,6 +10,8 @@ CertificateTheme = Literal["dark", "light"]
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class GiftCertificateData:
+    """Данные для отрисовки сертификата на одной странице PDF."""
+
     brand: str
     title: str
     recipient_name: str
@@ -19,5 +23,8 @@ class GiftCertificateData:
 
 
 class BaseGiftCertificateRenderer(ABC):
+    """Контракт адаптера генерации PDF (ReportLab, WeasyPrint и т.д.)."""
+
     @abstractmethod
-    def render(self, data: GiftCertificateData) -> bytes: ...
+    def render(self, data: GiftCertificateData) -> bytes:
+        """Формирует бинарное содержимое PDF по переданным полям подарка."""

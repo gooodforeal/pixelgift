@@ -1,3 +1,5 @@
+"""CRUD боксов и элементов для авторизованного владельца."""
+
 import uuid
 
 from fastapi import APIRouter, Depends, Query, status
@@ -86,6 +88,7 @@ async def create_box(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: CreateBoxUseCase = Depends(get_create_box_uc),
 ) -> BoxResponse:
+    """POST /boxes — создание бокса."""
     box = await uc.execute(
         CreateBoxCommand(
             owner_id=user_id,
@@ -116,6 +119,7 @@ async def list_boxes(
     pagination: PaginationParams = Depends(pagination_dep),
     uc: ListBoxesUseCase = Depends(get_list_boxes_uc),
 ) -> PaginatedBoxesResponse:
+    """GET /boxes — постраничный список боксов владельца."""
     page = await uc.execute(
         owner_id=user_id,
         page=pagination.page,
@@ -137,6 +141,7 @@ async def list_boxes(
 async def get_box_opens(
     uc: GetOpenedThisMonthStatsUseCase = Depends(get_opened_this_month_stats_uc),
 ) -> OpenedThisMonthStatsResponse:
+    """GET /boxes/opens — статистика открытий за месяц."""
     result = await uc.execute()
     return OpenedThisMonthStatsResponse(
         message="Success",
@@ -155,6 +160,7 @@ async def get_box(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: GetBoxUseCase = Depends(get_get_box_uc),
 ) -> BoxResponse:
+    """GET /boxes/{box_id} — один бокс."""
     box = await uc.execute(box_id=box_id, actor_id=user_id)
     return BoxResponse(message="Success", result=box_to_response(box))
 
@@ -166,6 +172,7 @@ async def download_gift_certificate(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: GenerateGiftCertificateUseCase = Depends(get_gift_certificate_uc),
 ) -> Response:
+    """GET /boxes/{box_id}/certificate.pdf — PDF сертификат."""
     certificate = await uc.execute(
         box_id=box_id,
         actor_id=user_id,
@@ -188,6 +195,7 @@ async def update_box(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: UpdateBoxUseCase = Depends(get_update_box_uc),
 ) -> BoxResponse:
+    """PUT /boxes/{box_id} — обновление бокса."""
     box = await uc.execute(
         UpdateBoxCommand(
             box_id=box_id,
@@ -217,6 +225,7 @@ async def publish_box(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: PublishBoxUseCase = Depends(get_publish_box_uc),
 ) -> BoxResponse:
+    """POST /boxes/{box_id}/publish — публикация."""
     box = await uc.execute(PublishBoxCommand(box_id=box_id, actor_id=user_id))
     return BoxResponse(message="Success", result=box_to_response(box))
 
@@ -227,6 +236,7 @@ async def archive_box(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: ArchiveBoxUseCase = Depends(get_archive_box_uc),
 ) -> BoxResponse:
+    """POST /boxes/{box_id}/archive — архивация."""
     box = await uc.execute(ArchiveBoxCommand(box_id=box_id, actor_id=user_id))
     return BoxResponse(message="Success", result=box_to_response(box))
 
@@ -237,6 +247,7 @@ async def unarchive_box(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: UnarchiveBoxUseCase = Depends(get_unarchive_box_uc),
 ) -> BoxResponse:
+    """POST /boxes/{box_id}/unarchive — возврат из архива."""
     box = await uc.execute(UnarchiveBoxCommand(box_id=box_id, actor_id=user_id))
     return BoxResponse(message="Success", result=box_to_response(box))
 
@@ -248,6 +259,7 @@ async def add_box_item(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: AddBoxItemUseCase = Depends(get_add_box_item_uc),
 ) -> BoxResponse:
+    """POST /boxes/{box_id}/items — добавление элемента."""
     box = await uc.execute(
         AddBoxItemCommand(
             box_id=box_id,
@@ -270,6 +282,7 @@ async def update_box_item(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: UpdateBoxItemUseCase = Depends(get_update_box_item_uc),
 ) -> BoxResponse:
+    """PATCH /boxes/{box_id}/items/{item_id} — изменение элемента."""
     box = await uc.execute(
         UpdateBoxItemCommand(
             box_id=box_id,
@@ -289,6 +302,7 @@ async def remove_box_item(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: RemoveBoxItemUseCase = Depends(get_remove_box_item_uc),
 ) -> BoxResponse:
+    """DELETE /boxes/{box_id}/items/{item_id} — удаление элемента."""
     box = await uc.execute(
         RemoveBoxItemCommand(box_id=box_id, actor_id=user_id, item_id=item_id)
     )
@@ -302,6 +316,7 @@ async def reorder_box_items(
     user_id: uuid.UUID = Depends(get_current_user_id),
     uc: ReorderBoxItemsUseCase = Depends(get_reorder_box_items_uc),
 ) -> BoxResponse:
+    """PUT /boxes/{box_id}/items/reorder — сортировка элементов."""
     box = await uc.execute(
         ReorderBoxItemsCommand(
             box_id=box_id,

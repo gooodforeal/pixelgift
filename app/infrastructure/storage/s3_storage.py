@@ -1,3 +1,5 @@
+"""Object storage на S3-совместимом API (aioboto3)."""
+
 from collections.abc import AsyncIterator
 from datetime import timedelta
 
@@ -8,6 +10,8 @@ from app.application.ports.storage.base import BaseObjectStorage
 
 
 class S3ObjectStorage(BaseObjectStorage):
+    """Загрузка, скачивание, presigned URL и потоковое чтение объектов."""
+
     def __init__(
         self,
         *,

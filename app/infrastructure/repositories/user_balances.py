@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий балансов пользователей."""
 import uuid
 
 from sqlalchemy import select
@@ -14,6 +15,8 @@ from app.infrastructure.models.user_balances import UserBalanceModel
 
 
 class SqlAlchemyUserBalancesRepository(BaseUserBalancesRepository):
+    """SQLAlchemy-репозиторий балансов user×product."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

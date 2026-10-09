@@ -1,3 +1,5 @@
+"""HTTP middleware приложения."""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,6 +7,7 @@ from app.settings import settings
 
 
 def setup_middleware(app: FastAPI) -> None:
+    """Подключает CORS с origins из настроек и поддержкой credentials."""
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,

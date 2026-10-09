@@ -1,3 +1,5 @@
+"""Схемы обращений в поддержку."""
+
 from datetime import datetime
 from typing import Literal
 import uuid
@@ -8,14 +10,17 @@ from app.presentation.schemas.base import BaseResponseSchema
 
 
 class SupportConfigSchema(BaseModel):
+    """Публичные ссылки поддержки."""
     telegram_url: str
 
 
 class SupportConfigResponse(BaseResponseSchema[SupportConfigSchema]):
+    """Ответ GET /support/config."""
     pass
 
 
 class SupportTicketAttachmentSchema(BaseModel):
+    """Метаданные вложения тикета."""
     id: uuid.UUID
     mime_type: str
     size_bytes: int
@@ -23,6 +28,7 @@ class SupportTicketAttachmentSchema(BaseModel):
 
 
 class SupportTicketSchema(BaseModel):
+    """Тикет поддержки."""
     id: uuid.UUID
     contact: str
     subject: str
@@ -34,14 +40,17 @@ class SupportTicketSchema(BaseModel):
 
 
 class SupportTicketResponse(BaseResponseSchema[SupportTicketSchema]):
+    """Ответ с одним тикетом."""
     pass
 
 
 class UpdateSupportTicketStatusRequest(BaseModel):
+    """Смена статуса тикета (админ)."""
     status: Literal["new", "in_progress", "resolved", "closed"]
 
 
 class PaginatedSupportTicketsSchema(BaseModel):
+    """Страница тикетов."""
     items: list[SupportTicketSchema]
     total: int
     page: int
@@ -49,4 +58,5 @@ class PaginatedSupportTicketsSchema(BaseModel):
 
 
 class PaginatedSupportTicketsResponse(BaseResponseSchema[PaginatedSupportTicketsSchema]):
+    """Ответ списка тикетов (админ)."""
     pass

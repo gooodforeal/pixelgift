@@ -1,3 +1,5 @@
+"""Маппинг AssistantChatThread ↔ ORM."""
+
 from app.domain.entities.assistant_chat_threads import AssistantChatThread
 from app.infrastructure.models.assistant_chat_threads import AssistantChatThreadModel
 

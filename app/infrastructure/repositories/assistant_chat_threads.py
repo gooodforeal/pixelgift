@@ -1,3 +1,4 @@
+"""SQLAlchemy-репозиторий тредов чата ассистента."""
 import uuid
 
 from sqlalchemy import select, update
@@ -15,6 +16,8 @@ from app.infrastructure.models.assistant_chat_threads import AssistantChatThread
 
 
 class SqlAlchemyAssistantChatThreadsRepository(BaseAssistantChatThreadsRepository):
+    """SQLAlchemy-репозиторий тредов; bind_box — условный UPDATE по user_id."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

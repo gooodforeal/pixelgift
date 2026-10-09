@@ -1,3 +1,4 @@
+"""ORM-модель корзин."""
 import uuid
 from typing import TYPE_CHECKING
 
@@ -11,6 +12,8 @@ if TYPE_CHECKING:
 
 
 class CartModel(TimestampMixin, Base):
+    """Корзина пользователя (одна на user_id)."""
+
     __tablename__ = "carts"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -32,6 +35,8 @@ class CartModel(TimestampMixin, Base):
 
 
 class CartItemModel(TimestampMixin, Base):
+    """Позиция корзины: product и quantity."""
+
     __tablename__ = "cart_items"
     __table_args__ = (
         UniqueConstraint("cart_id", "product_id", name="uq_cart_items_cart_product"),

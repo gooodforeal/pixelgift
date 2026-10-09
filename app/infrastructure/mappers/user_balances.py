@@ -1,3 +1,5 @@
+"""Маппинг UserBalance ↔ UserBalanceModel."""
+
 from app.domain.entities.user_balances import UserBalance
 from app.infrastructure.models.user_balances import UserBalanceModel
 

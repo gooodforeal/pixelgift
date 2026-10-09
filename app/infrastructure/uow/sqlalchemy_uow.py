@@ -1,3 +1,4 @@
+"""Реализация Unit of Work на SQLAlchemy AsyncSession."""
 from collections.abc import Callable
 from typing import Self
 
@@ -29,6 +30,8 @@ from app.infrastructure.repositories import (
 
 
 class SqlAlchemyUnitOfWork(BaseUnitOfWork):
+    """Unit of Work: одна AsyncSession и все SQLAlchemy-репозитории на транзакцию."""
+
     def __init__(
         self,
         session_factory: Callable[[], AsyncSession] | None = None,

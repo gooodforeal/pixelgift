@@ -1,3 +1,4 @@
+"""ORM-модель логов баланса."""
 import uuid
 
 from sqlalchemy import ForeignKey, Index, Integer, String, UniqueConstraint, Uuid
@@ -7,6 +8,8 @@ from app.infrastructure.models.base import Base, CreatedAtMixin
 
 
 class UserBalanceLogModel(CreatedAtMixin, Base):
+    """Append-only журнал баланса; идемпотентность по reason+reference."""
+
     __tablename__ = "user_balance_logs"
     __table_args__ = (
         UniqueConstraint(

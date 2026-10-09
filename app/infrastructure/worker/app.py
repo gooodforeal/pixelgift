@@ -1,3 +1,5 @@
+"""Taskiq broker на Redis и scheduler для cron-задач."""
+
 from taskiq import TaskiqScheduler
 from taskiq.schedule_sources import LabelScheduleSource
 from taskiq_redis import ListQueueBroker

@@ -1,3 +1,5 @@
+"""Сценарии редактора бокса: создание, наполнение, публикация и фоновая активация."""
+
 import logging
 import secrets
 import uuid
@@ -62,6 +64,7 @@ async def _kick_notification_dispatch(task_queue: BaseTaskQueue | None) -> None:
 
 
 def generate_public_slug() -> PublicSlug:
+    """Генерирует случайный публичный slug для ссылки ``/b/...``."""
     return PublicSlug(secrets.token_hex(8))
 
 
@@ -136,6 +139,8 @@ async def _consume_box_credit(
 
 
 class CreateBoxUseCase:
+    """Создаёт черновик бокса, списывает кредит и опционально привязывает чат ассистента."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -213,6 +218,8 @@ class CreateBoxUseCase:
 
 
 class UpdateBoxUseCase:
+    """Обновляет реквизиты редактируемого бокса и пересчитывает job «письмо получателю»."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -245,6 +252,8 @@ class UpdateBoxUseCase:
 
 
 class AddBoxItemUseCase:
+    """Добавляет карточку содержимого с валидацией типа и владения медиа."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -369,6 +378,8 @@ class AddBoxItemUseCase:
 
 
 class UpdateBoxItemUseCase:
+    """Меняет подпись и metadata существующей карточки."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -388,6 +399,8 @@ class UpdateBoxItemUseCase:
 
 
 class RemoveBoxItemUseCase:
+    """Удаляет карточку из бокса."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -403,6 +416,8 @@ class RemoveBoxItemUseCase:
 
 
 class ReorderBoxItemsUseCase:
+    """Задаёт порядок карточек списком id."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 
@@ -418,6 +433,8 @@ class ReorderBoxItemsUseCase:
 
 
 class PublishBoxUseCase:
+    """Публикует бокс, планирует уведомления и будит воркер dispatch."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -445,6 +462,8 @@ class PublishBoxUseCase:
 
 
 class ArchiveBoxUseCase:
+    """Переводит бокс в архив и уведомляет владельца в Telegram."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -473,6 +492,8 @@ class ArchiveBoxUseCase:
 
 
 class UnarchiveBoxUseCase:
+    """Восстанавливает бокс из архива с повторным уведомлением при необходимости."""
+
     def __init__(
         self,
         uow: BaseUnitOfWork,
@@ -501,6 +522,8 @@ class UnarchiveBoxUseCase:
 
 
 class ActivateDueBoxesUseCase:
+    """Фоновый job: переводит запланированные боксы в active по ``activates_at``."""
+
     def __init__(self, uow: BaseUnitOfWork) -> None:
         self._uow = uow
 

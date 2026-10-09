@@ -40,14 +40,22 @@ plugins:
 
 nav:
   - Главная: index.md
+  - Getting started: getting-started.md
   - Архитектура: architecture.md
+  - Потоки: flows.md
+  - Карта HTTP API: http-api.md
+  - Env reference: env.md
   - Экраны: screens.md
   - API Reference: reference/
 
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
   - tables

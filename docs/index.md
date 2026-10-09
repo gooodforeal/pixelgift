@@ -1,11 +1,15 @@
 # Pixelgift
 
-Документация backend-приложения Pixelgift (FastAPI).
+Документация backend и веб-клиента Pixelgift (FastAPI + React).
 
 ## Разделы
 
-- [Архитектура](architecture.md) — слои и поток запросов
-- [Экраны](screens.md) — скриншоты веб-клиента
+- [Getting started](getting-started.md) — env → compose → логин → первый бокс
+- [Архитектура](architecture.md) — слои backend
+- [Потоки](flows.md) — Telegram-логин, YooKassa, публикация бокса
+- [Карта HTTP API](http-api.md) — домены и основные эндпоинты
+- [Env reference](env.md) — переменные окружения
+- [Экраны](screens.md) — скриншоты UI
 - [API Reference](reference/app/index.md) — автоген из исходников `app/`
 
 ## Локальный просмотр

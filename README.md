@@ -135,7 +135,11 @@ uv run mkdocs serve
 
 ## Документация
 
-- Архитектура backend: [docs/architecture.md](docs/architecture.md)
-- Экраны UI (скриншоты): [docs/screens.md](docs/screens.md)
-- API Reference (автоген из `app/`): https://gooodforeal.github.io/pixelgift/reference/
-- HTTP OpenAPI: `/docs` и `/redoc` у запущенного API
+- Getting started: [docs/getting-started.md](docs/getting-started.md)
+- Архитектура: [docs/architecture.md](docs/architecture.md)
+- Потоки (Mermaid): [docs/flows.md](docs/flows.md)
+- Карта HTTP API: [docs/http-api.md](docs/http-api.md)
+- Env reference: [docs/env.md](docs/env.md)
+- Экраны UI: [docs/screens.md](docs/screens.md)
+- API Reference: https://gooodforeal.github.io/pixelgift/reference/
+- Сайт docs: https://gooodforeal.github.io/pixelgift/

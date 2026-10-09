@@ -41,6 +41,7 @@ plugins:
 nav:
   - Главная: index.md
   - Архитектура: architecture.md
+  - Экраны: screens.md
   - API Reference: reference/
 
 markdown_extensions:

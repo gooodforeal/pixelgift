@@ -136,5 +136,6 @@ uv run mkdocs serve
 ## Документация
 
 - Архитектура backend: [docs/architecture.md](docs/architecture.md)
+- Экраны UI (скриншоты): [docs/screens.md](docs/screens.md)
 - API Reference (автоген из `app/`): https://gooodforeal.github.io/pixelgift/reference/
 - HTTP OpenAPI: `/docs` и `/redoc` у запущенного API

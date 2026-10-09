@@ -1,0 +1,56 @@
+site_name: Pixelgift
+site_description: Backend documentation for Pixelgift
+site_url: https://gooodforeal.github.io/pixelgift/
+repo_url: https://github.com/gooodforeal/pixelgift
+repo_name: gooodforeal/pixelgift
+
+theme:
+  name: material
+  language: ru
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - content.code.copy
+    - search.suggest
+    - toc.follow
+
+plugins:
+  - search
+  - gen-files:
+      scripts:
+        - docs/scripts/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - section-index
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [.]
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            members_order: source
+            merge_init_into_class: true
+            filters:
+              - "!^_"
+
+nav:
+  - Главная: index.md
+  - Архитектура: architecture.md
+  - API Reference: reference/
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - tables
+  - toc:
+      permalink: true
+
+watch:
+  - app

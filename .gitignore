@@ -21,3 +21,7 @@ commands.txt
 .ruff_cache/
 
 .DS_Store
+
+# MkDocs
+site/
+docs/reference/
